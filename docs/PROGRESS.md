@@ -12,7 +12,7 @@
 | [`docs/PRD.md`](./PRD.md) | `v1.1` | ✅ Finalized | 100% SEP490 Academic Compliance, 19 Functional Requirements, 10 Milestones Checklist, Vietnamese Typography NFR. |
 | [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.0` | ✅ Finalized | Modular Monolith (Java 21 / Spring Boot 3.3+) + Next.js 14 App Router + PostgreSQL 16 + Docker VPS (8 vCPU / 16GB RAM / 180GB SSD). |
 | [`docs/DESIGN.md`](./DESIGN.md) | `v1.2` | ✅ Finalized | Part I: Icon-First UI/UX (`lucide-react`, `Be Vietnam Pro` + `JetBrains Mono`); Part II: 17-table PostgreSQL ERD; Part III: REST API Specs. |
-| [`docs/RULES.md`](./RULES.md) | `v1.0` | ✅ Finalized | AI Coding Rules, Atomic Commits, `ddl-auto=validate`, Hibernate 6.4+ `@SQLRestriction`, Project-Scope IDOR protection, Strict TypeScript. |
+| [`docs/RULES.md`](./RULES.md) | `v1.1` | ✅ Finalized | AI Coding Rules, Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR protection, `@Transactional`/N+1 prevention, File Upload Safety. |
 | [`docs/TASKS.md`](./TASKS.md) | `v1.0` | 🔄 Active | Sprint 0 documentation tasks completed; ready for detailed task breakdown & boilerplate initialization. |
 
 ---
@@ -35,6 +35,7 @@
   - Upgraded to `docs/DESIGN.md` v1.2 (Full DB & API): Integrated 17 PostgreSQL tables with Partial Unique Indexes (`WHERE is_deleted = FALSE`), `JSONB` screen authorization matrix, `system_actors`, 3-criteria `peer_reviews`, complete `tracking_logs` columns, and core REST API endpoints.
 - **[DONE] AI Coding Rules & Constraints (`cbcdbe0`, `9c4b408`):**
   - Finalized `docs/RULES.md` v1.0 enforcing Context-First Execution, Minimal Diff, Auto-Update Progress, Atomic Commits (1 feature/fix = 1 commit), `ddl-auto=validate` with Flyway, `@SQLRestriction("is_deleted = false")`, Project-Scope Isolation (anti-IDOR), and Next.js App Router client/server boundaries.
+  - Upgraded `docs/RULES.md` to v1.1 adding `@Transactional` / `@EntityGraph` (`JOIN FETCH`) N+1 query optimization and File Upload Safety (`50MB` limit, extension whitelist, anti-Path Traversal).
 
 ---
 

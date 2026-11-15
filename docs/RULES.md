@@ -24,6 +24,7 @@
    - **Project-Scope Isolation:** Mọi thao tác đọc/sửa/xóa thực thể con (`taskId`, `useCaseId`, `screenId`, `testCaseId`...) bắt buộc phải truy vấn kèm `projectId` (`findByIdAndProjectId(id, projectId)`) sau khi đã xác thực user thuộc `project_members` (hoặc có `X-Supervisor-Token` hợp lệ của chính project đó).
    - Mọi REST API trả về JSON đều phải bọc trong class chuẩn `ApiResponse<T>`.
    - Mọi Exception nghiệp vụ phải ném ra `AppException` (kèm `ErrorCode` enum) và được bắt tập trung tại `GlobalExceptionHandler`.
+   - **Transaction & Query Optimization:** Mọi phương thức Service ghi dữ liệu (Create/Update/Soft-Delete) bắt buộc gắn `@Transactional`; các phương thức chỉ đọc gắn `@Transactional(readOnly = true)`. Tránh lỗi N+1 query bằng `@EntityGraph` hoặc `JOIN FETCH` khi tải danh sách có quan hệ cha-con (như Traceability Matrix).
 3. **Audit & Soft-Delete (Chuẩn Hibernate 6.4+):**
    - Không dùng `repository.delete()` (Hard Delete) cho các thực thể nghiệp vụ. Bắt buộc cập nhật `is_deleted = true`.
    - Sử dụng **`@SQLRestriction("is_deleted = false")`** (chuẩn Hibernate 6.3+, không dùng `@Where` đã bị deprecated) trên các Entity có Soft-Delete, và bắt buộc thêm điều kiện `is_deleted = FALSE` trong mọi câu native query thống kê (`Test Coverage`, `Total Man-days`, `Contribution`).
@@ -48,6 +49,7 @@
 
 ## 4. Git & Security Constraints
 - **Secrets Protection:** Tuyệt đối không hardcode mật khẩu DB, JWT Secret, hoặc Webhook Secret vào source code. Luôn đọc từ biến môi trường (`application.yml` / `.env`).
+- **File Upload Safety:** Mọi endpoint nhận file upload bắt buộc kiểm tra đồng thời kích thước tối đa (`50MB`), whitelist phần mở rộng (`.docx`, `.pdf`, `.xlsx`, `.zip`, `.png`, `.jpg`) và chống lỗ hổng Path Traversal khi lưu file xuống ổ đĩa.
 - **Commit Convention:** Tuân thủ Conventional Commits gắn mã Task (VD: `feat(wbs): [TASK-3.1] implement complexity auto-calculator`).
 - **Atomic Commits (Lằn ranh đỏ):**
   - Mỗi tính năng mới (`feat`), mỗi bản sửa lỗi (`fix`), hoặc mỗi file migration/cấu hình độc lập bắt buộc phải được tách thành **1 commit riêng biệt**.
