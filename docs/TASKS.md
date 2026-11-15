@@ -9,6 +9,7 @@
 - [x] Initialize Git repository & documentation tree
 - [x] Draft Architecture & Component Design (`ARCHITECTURE.md`)
 - [x] Draft Database Schema & API Design (`DESIGN.md`)
+- [x] Finalize AI Coding Rules & Constraints (`RULES.md`)
 - [ ] Choose tech stack & project boilerplate setup
 
 ---
