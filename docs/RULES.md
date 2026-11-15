@@ -12,6 +12,9 @@
   - `feat(auth): [TASK-01] implement jwt login & registration`
   - `fix(kanban): [TASK-15] resolve drag-and-drop state mismatch`
   - `docs(prd): update prd v1.1 compliance notes`
+- **Atomic Commits Rule (Bắt buộc):**
+  - **Mỗi tính năng mới (`feat`), mỗi bản sửa lỗi (`fix`) hoặc mỗi thay đổi cấu hình/tài liệu độc lập phải được tách thành 1 commit riêng biệt.**
+  - Tuyệt đối không gộp nhiều tính năng hoặc dồn hàng ngàn dòng code vào một commit duy nhất (tránh "mega-commit"), giúp dễ dàng code review, truy vết lịch sử và `git revert` khi cần.
 
 ---
 
