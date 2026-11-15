@@ -88,6 +88,7 @@ Xây dựng một nền tảng quản trị dự án tập trung, tuân thủ 10
 - **Security:** Mật khẩu hash bằng BCrypt; phân quyền chặt chẽ theo `ProjectMember`; xác thực chữ ký HMAC-SHA256 cho GitHub Webhook; Magic Link cho GVHD sử dụng UUID v4 ngẫu nhiên.
 - **Data Integrity:** Sử dụng Soft-Delete cho các thực thể quan trọng (`UseCase`, `WBS_Task`, `Defect`) để không làm gãy liên kết trong Ma trận truy xuất và giữ nguyên lịch sử `Record of Changes`.
 - **Performance:** Thời gian phản hồi API dưới 300ms; tác vụ xuất file `.xlsx` và `.md` xử lý dưới 2 giây.
+- **Usability & Typography:** Giao diện web sử dụng bộ font chữ tối ưu cho tiếng Việt (`Be Vietnam Pro`, `Inter` hoặc `Plus Jakarta Sans` hỗ trợ đầy đủ bảng mã Unicode dựng sẵn) nhằm tránh lỗi hiển thị dấu thanh khi ghi chú song ngữ Việt – Anh; các file `.xlsx` xuất ra sử dụng font `Calibri` hoặc `Arial` chuẩn Unicode để hiển thị chính xác trên mọi phiên bản Excel.
 
 ---
 

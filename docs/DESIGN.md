@@ -22,4 +22,10 @@
 ---
 
 ## 3. UI/UX Wireframes & Component Specs
+### 3.1 Typography & Vietnamese Font Standard
+- **Primary Sans-serif (UI & Content):** `Be Vietnam Pro` (hoặc `Inter`) cấu hình qua `next/font/google` với `subsets: ["vietnamese", "latin"]` để đảm bảo hiển thị dấu tiếng Việt cân đối, sắc nét trên cả tiêu đề lẫn nội dung bảng biểu mật độ cao.
+- **Monospace (IDs, Codes & PR Links):** `JetBrains Mono` cho các mã `FE-01`, `UC-01`, `BR-01`, `TASK-15`.
+- **Excel Export (Apache POI):** Sử dụng `Calibri` hoặc `Arial` chuẩn Unicode (UTF-8) trong toàn bộ các sheet xuất ra (`.xlsx`) để tương thích tốt khi mở trên Microsoft Excel / Google Sheets.
+
+### 3.2 Wireframes & Components
 *(TBD)*

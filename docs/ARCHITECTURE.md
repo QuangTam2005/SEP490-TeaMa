@@ -17,6 +17,7 @@
 ### 1.2 Frontend (`frontend/`)
 - **Framework:** Next.js 14+ (App Router), React 18, TypeScript (Strict Mode)
 - **Styling & UI:** TailwindCSS, Shadcn/UI (Radix Primitives), Lucide React Icons
+- **Typography:** Sử dụng font chữ hỗ trợ đầy đủ dấu tiếng Việt (`Be Vietnam Pro`, `Inter` hoặc `Plus Jakarta Sans` nạp qua `next/font/google` với `subsets: ['vietnamese', 'latin']`) và `JetBrains Mono` cho các mã định danh/code (`FE-01`, `UC-01`, `TASK-15`)
 - **State & Data Fetching:** TanStack Query (React Query v5), Zustand (Client Global State), React Hook Form + Zod (Form Validation)
 - **Visualization:** Recharts (Biểu đồ tiến độ OGA, Target vs Actual Quality và thống kê đóng góp thành viên)
 
