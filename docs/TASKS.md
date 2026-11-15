@@ -13,7 +13,7 @@
 - [x] `[TASK-0.5]` Finalize `docs/DESIGN.md` v1.2 (Icon-First UI/UX, `Be Vietnam Pro`, 17-table ERD & REST APIs)
 - [x] `[TASK-0.6]` Finalize `docs/RULES.md` v1.1 (AI Coding Rules, Atomic Commits, Anti-IDOR, Hibernate 6.4+ rules)
 - [x] `[TASK-0.7]` Break down granular backlog in `docs/TASKS.md` with atomic `[TASK-X.Y]` codes
-- [ ] `[TASK-0.8]` Setup `docker-compose.yml` & `.env.example` (PostgreSQL 16, named volumes `postgres_data` & `uploads_data`)
+- [x] `[TASK-0.8]` Setup `docker-compose.yml` & `.env.example` (PostgreSQL 16, named volumes `postgres_data` & `uploads_data`)
 - [ ] `[TASK-0.9]` Initialize `backend/` Spring Boot 3.3 project skeleton (`pom.xml`, `application.yml` with `ddl-auto=validate`)
 - [ ] `[TASK-0.10]` Implement backend core foundation (`ApiResponse<T>`, `AppException`, `ErrorCode`, `GlobalExceptionHandler`, `BaseEntity` with `@SQLRestriction("is_deleted = false")`)
 - [ ] `[TASK-0.11]` Create Flyway migration `V1__init_schema.sql` (17 core PostgreSQL tables & Partial Unique Indexes `WHERE is_deleted = FALSE`)

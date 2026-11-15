@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sep490-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sep490_teama}
+      POSTGRES_USER: ${POSTGRES_USER:-sep490_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sep490_user} -d ${POSTGRES_DB:-sep490_teama}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sep490_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sep490-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sep490_teama}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-sep490_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      APP_UPLOAD_DIR: ${APP_UPLOAD_DIR:-/app/uploads}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - sep490_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sep490-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://backend:8080}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - sep490_network
+
+volumes:
+  postgres_data:
+    name: sep490_postgres_data
+  uploads_data:
+    name: sep490_uploads_data
+
+networks:
+  sep490_network:
+    name: sep490_network
+    driver: bridge

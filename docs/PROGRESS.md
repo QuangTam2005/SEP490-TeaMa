@@ -36,14 +36,15 @@
 - **[DONE] AI Coding Rules & Constraints (`cbcdbe0`, `9c4b408`, `38e64f2`):**
   - Finalized `docs/RULES.md` v1.0 enforcing Context-First Execution, Minimal Diff, Auto-Update Progress, Atomic Commits (1 feature/fix = 1 commit), `ddl-auto=validate` with Flyway, `@SQLRestriction("is_deleted = false")`, Project-Scope Isolation (anti-IDOR), and Next.js App Router client/server boundaries.
   - Upgraded `docs/RULES.md` to v1.1 adding `@Transactional` / `@EntityGraph` (`JOIN FETCH`) N+1 query optimization and File Upload Safety (`50MB` limit, extension whitelist, anti-Path Traversal).
-- **[DONE] `[TASK-0.7]` Granular Task Backlog Breakdown:**
+- **[DONE] `[TASK-0.7]` Granular Task Backlog Breakdown (`b38cd95`):**
   - Upgraded `docs/TASKS.md` to v1.1 with 52 atomic tasks (`[TASK-0.1]` to `[TASK-3.12]`) across Sprint 0–3, mapping 1:1 with `PRD.md` (FR-01..FR-19), `DESIGN.md` (17 DB tables, REST APIs, UI screens), and GitHub Webhook PR tracking.
+- **[DONE] `[TASK-0.8]` Docker Compose & Environment Template:**
+  - Created `docker-compose.yml` (`postgres:16-alpine`, `backend`, `frontend` services, healthcheck, named volumes `sep490_postgres_data` & `sep490_uploads_data`) and `.env.example` without hardcoded secrets. Validated configuration via `docker compose --env-file .env.example config`.
 
 ---
 
 ## 3. Next Steps Queue (Remaining Sprint 0 Boilerplate Tasks)
-1. `[TASK-0.8]` Setup `docker-compose.yml` & `.env.example` (PostgreSQL 16, named volumes `postgres_data` & `uploads_data`).
-2. `[TASK-0.9]` Initialize `backend/` Spring Boot 3.3 project skeleton (`pom.xml`, `application.yml` with `ddl-auto=validate`).
+1. `[TASK-0.9]` Initialize `backend/` Spring Boot 3.3 project skeleton (`pom.xml`, `application.yml` with `ddl-auto=validate`).
 3. `[TASK-0.10]` Implement backend core foundation (`ApiResponse<T>`, `AppException`, `ErrorCode`, `GlobalExceptionHandler`, `BaseEntity` with `@SQLRestriction("is_deleted = false")`).
 4. `[TASK-0.11]` Create Flyway migration `V1__init_schema.sql` (17 core PostgreSQL tables & Partial Unique Indexes `WHERE is_deleted = FALSE`).
 5. `[TASK-0.12]` Initialize `frontend/` Next.js 14 App Router skeleton (TypeScript strict, TailwindCSS, `Be Vietnam Pro` & `JetBrains Mono` fonts, `lucide-react`).
