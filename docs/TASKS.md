@@ -7,8 +7,8 @@
 - [x] Analyze SEP490 curriculum materials & student guides
 - [x] Finalize PRD v1.1 (Academic Compliance)
 - [x] Initialize Git repository & documentation tree
-- [ ] Draft Architecture & Component Design (`ARCHITECTURE.md`)
-- [ ] Draft Database Schema & API Design (`DESIGN.md`)
+- [x] Draft Architecture & Component Design (`ARCHITECTURE.md`)
+- [x] Draft Database Schema & API Design (`DESIGN.md`)
 - [ ] Choose tech stack & project boilerplate setup
 
 ---
