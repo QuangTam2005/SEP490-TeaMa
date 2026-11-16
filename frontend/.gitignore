@@ -1,0 +1,17 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js build outputs
+/.next/
+/out/
+/build
+
+# TypeScript build cache & Next.js generated types
+*.tsbuildinfo
+next-env.d.ts
+
+# Local env files
+.env*.local
+npm-debug.log*
