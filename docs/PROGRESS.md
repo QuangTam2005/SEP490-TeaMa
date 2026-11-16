@@ -86,9 +86,15 @@
   - Created `RegisterRequest`, `LoginRequest` (with compact constructors trimming whitespace before Jakarta `@Email` validation, accepting any valid email domain), `UserResponse`, and `AuthResponse`.
   - Implemented MapStruct `UserMapper`, `AuthService` (single-query `BCrypt` login throwing `AUTH_002`, `saveAndFlush` catching `DataIntegrityViolationException` for concurrent duplicate emails as `409 AUTH_005`), and `AuthController`.
   - Added `AuthServiceTest` (6 tests) & `AuthControllerTest` (4 standalone MockMvc tests using `AuthenticationPrincipalArgumentResolver`); verified `.\mvnw.cmd test` (`Tests run: 30, Failures: 0` — `BUILD SUCCESS`).
+- **[DONE] `[TASK-1.3]` Project, Milestone, Member, GitRepo Entities, Repositories & `ProjectAccessGuard`:**
+  - Created domain enums (`ProjectRole`, `MilestoneStatus`, `DeliverableStatus`) aligned with `V1` DB check constraints.
+  - Implemented `Project` (`projects`) and `ProjectGitRepository` (`project_repositories`, avoiding collision with `ProjectRepository`) extending `BaseEntity` with `@SQLRestriction("is_deleted = false")` and `V2` column alignment (`github_repo_url`/`webhook_secret` removed from `Project`).
+  - Implemented `ProjectMember` (`project_members`), `Milestone` (`milestones`), and `MilestoneDeliverable` (`milestone_deliverables`) matching `V1` columns without `BaseEntity` or `@SQLRestriction`.
+  - Created `ProjectRepository`, `ProjectGitRepositoryRepository`, `ProjectMemberRepository`, `MilestoneRepository`, and `MilestoneDeliverableRepository` with `@EntityGraph`/`JOIN FETCH` N+1 prevention and `findByIdAndProjectId` project-scope isolation queries.
+  - Implemented `ProjectAccessGuard` (`requireProjectExists` `PROJ_001`, `requireMember` `PROJ_002`, `requireLeader` `PROJ_003`, `requireProjectByMagicToken` `AUTH_006`).
+  - Added `ProjectEntityTest` (4 tests) and `ProjectAccessGuardTest` (11 tests); verified `.\mvnw.cmd test` (`Tests run: 45, Failures: 0` — `BUILD SUCCESS`).
 
 ---
 
 ## 3. Next Steps Queue (Sprint 1)
-1. `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper.
-2. `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*.
+1. `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*.
