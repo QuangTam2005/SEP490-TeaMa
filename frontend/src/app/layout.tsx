@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { QueryProvider } from '@/components/providers/query-provider';
+import { AppToaster } from '@/components/providers/toaster';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import './globals.css';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -36,7 +39,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
       className={`${beVietnamPro.variable} ${jetBrainsMono.variable}`}
     >
       <body className="min-h-screen bg-canvas font-sans text-slate-900 antialiased dark:bg-background dark:text-foreground">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+            <AppToaster />
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

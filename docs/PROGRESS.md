@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
-**Current Phase:** Sprint 0 — Requirements, Architecture, UI/UX & Monorepo Boilerplate  
+**Current Phase:** Sprint 1 — Authentication, Project Setup, Milestones & Planning  
 **Last Updated:** 2026-11-16  
 
 ---
@@ -66,13 +66,19 @@
   - Synchronized `PRD.md` (`v1.3`), `DESIGN.md` (`v1.4`), `RULES.md` (added `.webp` & 5MB/2-image evidence safety rules), and `TASKS.md` (`v1.3`).
   - Created `backend/src/main/resources/db/migration/V3__add_test_evidence_and_wbs_category.sql` adding `actual_result`, `executed_at`, `evidence_attachments JSONB` on `test_cases`, and `work_category` with `CHECK` constraint & partial index on `wbs_tasks`.
   - Added `TEST_002` (`MAX_EVIDENCE_EXCEEDED`) to `ErrorCode.java` and verified with `.\mvnw.cmd test` (`Tests run: 10, Failures: 0` — `BUILD SUCCESS`).
-- **[DONE] `[TASK-0.12]` Frontend Next.js 14.2 App Router Skeleton (`frontend/`):**
+- **[DONE] `[TASK-0.12]` Frontend Next.js 14.2 App Router Skeleton (`frontend/` - `9c44d50`):**
   - Initialized `frontend/` with Next.js `14.2.35` (React `18.3.1`), strict TypeScript (`strict: true`, `noImplicitAny: true`), and ESLint 8 (`@typescript-eslint` `^7.18.0` banning `any` & `@ts-ignore`).
   - Configured TailwindCSS + `DESIGN.md` tokens (`#F27024` FPT Academic Orange, Light Mode default + `next-themes` `ThemeProvider` with `suppressHydrationWarning`), Google Fonts (`Be Vietnam Pro` + `JetBrains Mono`), `lucide-react`, and `src/lib/utils.ts` (`cn`).
   - Configured `next.config.mjs` (`output: 'standalone'`, `experimental.proxyTimeout: 120000`, `/api/*` rewrite), multi-stage `frontend/Dockerfile`, and directory placeholders matching `ARCHITECTURE.md` §3.
   - Verified cleanly via `npm install`, `npm run typecheck`, `npm run lint`, and `npm run build` (0 errors, 0 warnings).
+- **[DONE] `[TASK-0.13]` Frontend Core Utilities & Base Shadcn/UI Primitives (Sprint 0 Complete):**
+  - Added strict API contracts (`src/types/api.ts`) matching `ApiResponse<T>` & `ErrorCode` 1-to-1.
+  - Implemented `src/lib/auth-token.ts` and `src/lib/api-client.ts` with Dual Auth Interceptor (`Authorization: Bearer` vs `X-Supervisor-Token`), multipart `FormData` `Content-Type` safety, `apiUpload` / `apiDownload`, null-safe `ApiResponse` unwrapping, and `ApiClientError`.
+  - Configured `QueryProvider` (TanStack Query v5), `AppToaster` (`Sonner` bottom-right), `TooltipProvider`, and 8 base Shadcn/UI primitives (`button`, `badge`, `card`, `input`, `label`, `tooltip`, `dialog`, `sheet` with `tailwindcss-animate`).
+  - Verified cleanly via `npm install`, `npm run typecheck`, `npm run lint`, and `npm run build`.
 
 ---
 
-## 3. Next Steps Queue (Remaining Sprint 0 Boilerplate Tasks)
-1. `[TASK-0.13]` Setup frontend core utilities (`src/lib/api-client.ts` with Dual Auth Interceptor, TanStack Query Provider, `Sonner` toast, base Shadcn/UI primitives).
+## 3. Next Steps Queue (Sprint 1 Start)
+1. `[TASK-1.1]` Implement `User` entity, repository & JWT security foundation (`JwtTokenProvider`, `JwtAuthFilter`, `SecurityConfig`).
+2. `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*.
