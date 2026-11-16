@@ -5,7 +5,7 @@
 ---
 
 ## 1. General & Workflow Rules
-1. **Context-First Execution:** Trước khi viết bất kỳ dòng code nào, AI bắt buộc phải đọc `docs/PROGRESS.md` và `docs/TASKS.md` để xác định đúng task hiện tại, và đối chiếu schema/API trong `docs/DESIGN.md` (v1.2).
+1. **Context-First Execution:** Trước khi bắt đầu bất kỳ tác vụ nào (lập kế hoạch, viết code, sửa cấu hình), AI bắt buộc phải đọc lại toàn bộ các file `.md` trong `docs/*.md` (`PRD.md`, `ARCHITECTURE.md`, `DESIGN.md`, `RULES.md`, `TASKS.md`, `PROGRESS.md` và mọi file tài liệu bổ sung nếu có) để nắm chính xác ngữ cảnh, ràng buộc kỹ thuật và trạng thái hiện tại.
 2. **Minimal Diff Principle:** Chỉ sửa đổi hoặc thêm mới các file liên quan trực tiếp đến task đang thực hiện. Tuyệt đối không tự ý format lại toàn bộ file cũ, không đổi tên biến/hàm đang chạy ổn định ở các module khác.
 3. **Auto-Update Progress:** Ngay sau khi hoàn thành và kiểm thử xong một task trong `TASKS.md`, AI phải đánh dấu `[x]` vào `TASKS.md` và cập nhật trạng thái vào `docs/PROGRESS.md`.
 4. **Language Convention:**
