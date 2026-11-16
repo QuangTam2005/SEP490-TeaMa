@@ -71,14 +71,18 @@
   - Configured TailwindCSS + `DESIGN.md` tokens (`#F27024` FPT Academic Orange, Light Mode default + `next-themes` `ThemeProvider` with `suppressHydrationWarning`), Google Fonts (`Be Vietnam Pro` + `JetBrains Mono`), `lucide-react`, and `src/lib/utils.ts` (`cn`).
   - Configured `next.config.mjs` (`output: 'standalone'`, `experimental.proxyTimeout: 120000`, `/api/*` rewrite), multi-stage `frontend/Dockerfile`, and directory placeholders matching `ARCHITECTURE.md` §3.
   - Verified cleanly via `npm install`, `npm run typecheck`, `npm run lint`, and `npm run build` (0 errors, 0 warnings).
-- **[DONE] `[TASK-0.13]` Frontend Core Utilities & Base Shadcn/UI Primitives (Sprint 0 Complete):**
+- **[DONE] `[TASK-0.13]` Frontend Core Utilities & Base Shadcn/UI Primitives (`b5890f4` — Sprint 0 Complete):**
   - Added strict API contracts (`src/types/api.ts`) matching `ApiResponse<T>` & `ErrorCode` 1-to-1.
   - Implemented `src/lib/auth-token.ts` and `src/lib/api-client.ts` with Dual Auth Interceptor (`Authorization: Bearer` vs `X-Supervisor-Token`), multipart `FormData` `Content-Type` safety, `apiUpload` / `apiDownload`, null-safe `ApiResponse` unwrapping, and `ApiClientError`.
   - Configured `QueryProvider` (TanStack Query v5), `AppToaster` (`Sonner` bottom-right), `TooltipProvider`, and 8 base Shadcn/UI primitives (`button`, `badge`, `card`, `input`, `label`, `tooltip`, `dialog`, `sheet` with `tailwindcss-animate`).
   - Verified cleanly via `npm install`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+- **[DONE] `[TASK-1.1]` User Entity, Repository & JWT Security Foundation (`module/auth/`, `security/`, `config/`):**
+  - Created `User` entity extending `BaseTimestampEntity` (matching `users` table without `is_deleted`) and `UserRepository` (`findByEmailIgnoreCase`, `existsByEmailIgnoreCase`).
+  - Implemented `JwtProperties`, `UserPrincipal` (`getUsername()` returns `String.valueOf(id)` for `SecurityAuditorHelper`), `CustomUserDetailsService`, `JwtTokenProvider` (UTF-8 default secret with explicit `base64:` prefix support & $\ge 32$-byte check), `JwtAuthFilter` (safe `401` JSON delegation on expired/missing-user tokens, skips `X-Supervisor-Token`), `RestAuthenticationEntryPoint`, `RestAccessDeniedHandler`, and `SecurityConfig` (stateless JWT, `BCryptPasswordEncoder`, comma-split CORS + `Content-Disposition` exposure).
+  - Verified with 20 passing unit & security filter tests (`.\mvnw.cmd test` — `Tests run: 20, Failures: 0`).
 
 ---
 
-## 3. Next Steps Queue (Sprint 1 Start)
-1. `[TASK-1.1]` Implement `User` entity, repository & JWT security foundation (`JwtTokenProvider`, `JwtAuthFilter`, `SecurityConfig`).
-2. `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*.
+## 3. Next Steps Queue (Sprint 1)
+1. `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*.
+2. `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper.
