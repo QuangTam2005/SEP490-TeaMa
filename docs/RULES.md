@@ -49,7 +49,7 @@
 
 ## 4. Git & Security Constraints
 - **Secrets Protection:** Tuyệt đối không hardcode mật khẩu DB, JWT Secret, hoặc Webhook Secret vào source code. Luôn đọc từ biến môi trường (`application.yml` / `.env`).
-- **File Upload Safety:** Mọi endpoint nhận file upload bắt buộc kiểm tra đồng thời kích thước tối đa (`50MB`), whitelist phần mở rộng (`.docx`, `.pdf`, `.xlsx`, `.zip`, `.png`, `.jpg`) và chống lỗ hổng Path Traversal khi lưu file xuống ổ đĩa.
+- **File Upload Safety:** Mọi endpoint nhận file upload bắt buộc kiểm tra đồng thời kích thước tối đa (`50MB` cho Deliverables; `5MB`/ảnh và tối đa `2` ảnh cho Test Case Evidence), whitelist phần mở rộng (`.docx`, `.pdf`, `.xlsx`, `.zip`, `.png`, `.jpg`, `.webp` — riêng Test Evidence chỉ cho phép ảnh `.png`, `.jpg`, `.webp`) và chống lỗ hổng Path Traversal khi lưu file xuống ổ đĩa.
 - **Commit Convention:** Tuân thủ Conventional Commits gắn mã Task (VD: `feat(wbs): [TASK-3.1] implement complexity auto-calculator`).
 - **Atomic Commits (Lằn ranh đỏ):**
   - Mỗi tính năng mới (`feat`), mỗi bản sửa lỗi (`fix`), hoặc mỗi file migration/cấu hình độc lập bắt buộc phải được tách thành **1 commit riêng biệt**.

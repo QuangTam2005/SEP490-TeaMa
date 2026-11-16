@@ -9,11 +9,11 @@
 
 | Document | Version | Status | Summary |
 | :--- | :---: | :---: | :--- |
-| [`docs/PRD.md`](./PRD.md) | `v1.2` | ✅ Finalized | 100% SEP490 Academic Compliance, 19 FRs (incl. Multi-Repo GitHub FR-14), 10 Milestones Checklist, Vietnamese Typography NFR. |
+| [`docs/PRD.md`](./PRD.md) | `v1.3` | ✅ Finalized | 100% SEP490 Academic Compliance, 19 FRs (incl. Multi-Repo GitHub, WBS Work Category & Test Evidence), 10 Milestones Checklist, Vietnamese Typography. |
 | [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.1` | ✅ Finalized | Modular Monolith (Java 21 / Spring Boot 3.4+) + Next.js 14 App Router + PostgreSQL 16 + Multi-Repo Webhook Architecture. |
-| [`docs/DESIGN.md`](./DESIGN.md) | `v1.3` | ✅ Finalized | Part I: Icon-First UI/UX & Multi-PR Kanban chips; Part II: 21-table PostgreSQL ERD (`project_repositories`, `github_prs JSONB`); Part III: REST APIs. |
-| [`docs/RULES.md`](./RULES.md) | `v1.2` | ✅ Finalized | AI Coding Rules, Mandatory `docs/*.md` Context-First (`AGENTS.md`), Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR & Upload Safety. |
-| [`docs/TASKS.md`](./TASKS.md) | `v1.2` | ✅ Finalized | 53 granular atomic tasks (`[TASK-0.1]` to `[TASK-3.12]` + `[TASK-1.17]`) synced with Multi-Repo GitHub schema & APIs. |
+| [`docs/DESIGN.md`](./DESIGN.md) | `v1.4` | ✅ Finalized | Part I: Icon-First UI/UX & Multi-PR Kanban chips; Part II: 21-table PostgreSQL ERD (`work_category`, `evidence_attachments JSONB`); Part III: REST APIs. |
+| [`docs/RULES.md`](./RULES.md) | `v1.2` | ✅ Finalized | AI Coding Rules, Mandatory `docs/*.md` Context-First (`AGENTS.md`), Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR & Upload Safety (incl. `.webp` & 5MB Test Evidence). |
+| [`docs/TASKS.md`](./TASKS.md) | `v1.3` | ✅ Finalized | 53 granular atomic tasks (`[TASK-0.1]` to `[TASK-3.12]` + `[TASK-1.17]`) synced with Multi-Repo, WBS Work Category & Test Evidence. |
 
 ---
 
@@ -58,10 +58,14 @@
 - **[DONE] `[TASK-0.11]` Flyway Initial Schema Migration (`V1__init_schema.sql` - `3a75eae`):**
   - Created `backend/src/main/resources/db/migration/V1__init_schema.sql` defining all 20 physical PostgreSQL tables (covering all 17 ERD groups in `DESIGN.md` v1.2), foreign keys, `CHECK` constraints, `JSONB` `auth_matrix_json`, and 9 Partial Unique Indexes (`WHERE is_deleted = FALSE`).
   - Verified project build & unit tests (`.\mvnw.cmd test` — `Tests run: 10, Failures: 0`); live PostgreSQL execution pending Docker daemon startup.
-- **[DONE] Multi-Repo GitHub Upgrade (Specs, Flyway `V2` & Error Codes):**
+- **[DONE] Multi-Repo GitHub Upgrade (`3b66418`, `3c5014a`):**
   - Upgraded `PRD.md` (`v1.2`), `ARCHITECTURE.md` (`v1.1`), `DESIGN.md` (`v1.3`), and `TASKS.md` (`v1.2`, added `[TASK-1.17]`) for `1-to-N` `project_repositories`, `/api/webhooks/github/{repoId}`, `wbs_tasks.github_prs JSONB`, multi-PR state aggregation (`OPEN -> IN_REVIEW`; `>=1 MERGED & 0 OPEN -> DONE`), and multi-PR Kanban card chips.
   - Created `backend/src/main/resources/db/migration/V2__support_multi_repo_github.sql` and added `PROJ_006` (`REPOSITORY_NOT_FOUND`) & `PROJ_007` (`DUPLICATE_REPOSITORY`) to `ErrorCode.java`.
   - Verified with `.\mvnw.cmd test` (`Tests run: 10, Failures: 0` — `BUILD SUCCESS`); live PostgreSQL execution pending Docker daemon startup.
+- **[DONE] Test Case Evidence & WBS Work Category Upgrade (`V3`):**
+  - Synchronized `PRD.md` (`v1.3`), `DESIGN.md` (`v1.4`), `RULES.md` (added `.webp` & 5MB/2-image evidence safety rules), and `TASKS.md` (`v1.3`).
+  - Created `backend/src/main/resources/db/migration/V3__add_test_evidence_and_wbs_category.sql` adding `actual_result`, `executed_at`, `evidence_attachments JSONB` on `test_cases`, and `work_category` with `CHECK` constraint & partial index on `wbs_tasks`.
+  - Added `TEST_002` (`MAX_EVIDENCE_EXCEEDED`) to `ErrorCode.java` and verified with `.\mvnw.cmd test` (`Tests run: 10, Failures: 0` — `BUILD SUCCESS`).
 
 ---
 

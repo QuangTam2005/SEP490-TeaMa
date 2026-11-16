@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 **Product Name:** SEP490 Capstone Copilot  
 **Target Domain:** FPT University Software Engineering Capstone Project (`SEP490`)  
-**Document Version:** 1.2 (MVP - Full Academic Compliance & Multi-Repo GitHub)  
+**Document Version:** 1.3 (MVP - Full Academic Compliance & Multi-Repo GitHub)  
 
 ---
 
@@ -36,8 +36,8 @@ Xây dựng một nền tảng quản trị dự án tập trung, tuân thủ 10
 - **FR-04 (Deliverable File Upload):** Tại từng hạng mục trong Checklist của mỗi Milestone, thành viên có thể upload file báo cáo/source package tương ứng (`.docx`, `.pdf`, `.xlsx`, `.zip`) và cập nhật trạng thái (`Pending`, `Submitted`, `Approved`).
 
 ### Module 2: Planning, WBS, RACI & Quality Targets (Report 2)
-- **FR-05 (Feature, WBS & Auto-Complexity Estimator):**
-  - Quản lý danh sách tính năng (`FE-01`, `FE-02`...) và phân rã thành các hạng mục WBS gắn ước lượng `man-days` (tự động tính tổng effort).
+- **FR-05 (Feature, WBS, Work Category & Auto-Complexity Estimator):**
+  - Quản lý danh sách tính năng (`FE-01`, `FE-02`...) và phân rã thành các hạng mục WBS gắn phân loại công việc (`REQUIREMENT`, `DESIGN`, `CODING`, `TESTING`, `PM`) cùng ước lượng `man-days` (tự động tính tổng effort và bảng phân bổ % công sức *Allocated Effort Distribution* theo Report 2).
   - Tích hợp quy tắc tính độ phức tạp chuẩn của bộ môn (`Report3_Project Tracking`): cho phép nhập số `Fields` (input/cột DB) và số `Transactions` (nút bấm/xử lý nghiệp vụ) để tự động gợi ý mức độ:
     - `Simple`: $\le 7$ fields và $\le 3$ transactions.
     - `Medium`: $\le 15$ fields và $\le 7$ transactions.
@@ -56,7 +56,7 @@ Xây dựng một nền tảng quản trị dự án tập trung, tuân thủ 10
 - **FR-10 (Traceability Matrix):** Liên kết dữ liệu xuyên suốt: `Feature` $\leftrightarrow$ `Use Case` $\leftrightarrow$ `Screen/Function` $\leftrightarrow$ `WBS Task` $\leftrightarrow$ `Test Case` $\leftrightarrow$ `Defect`.
 
 ### Module 4: Quality Assurance & Testing (Report 5)
-- **FR-11 (Test Case Management):** Tạo và quản lý Test Case gắn với từng Use Case, phân loại theo cấp độ (`Unit Test`, `Integration Test`, `System Test`, `Acceptance Test`) và trạng thái thực thi (`Untested`, `Pass`, `Fail`).
+- **FR-11 (Test Case Management & Execution Evidence):** Tạo và quản lý Test Case gắn với từng Use Case, phân loại theo cấp độ (`Unit Test`, `Integration Test`, `System Test`, `Acceptance Test`), trạng thái thực thi (`Untested`, `Pass`, `Fail`), kèm `Actual Result`, thời điểm thực thi (`Executed At`) và tối đa **2 ảnh chụp màn hình bằng chứng** ($\le 5\text{MB}$/ảnh, `.png`/`.jpg`/`.webp`).
 - **FR-12 (Target vs. Actual Quality Metrics):** Tự động tính toán `Actual Test Coverage (%)` và `Actual Defect Rate (%)` từ dữ liệu Test Case & Defect Log, đối chiếu trực tiếp với bảng `Quality Objectives` đã thiết lập ở FR-07.
 
 ### Module 5: Iteration Execution, Tracking Registers & GitHub Webhook

@@ -2,7 +2,7 @@
 **Product Name:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Design Philosophy:** Academic Precision meets Modern SaaS (Linear / Notion / Jira hybrid) — **Icon-First, Minimal Text**  
 **Database Engine:** PostgreSQL 16 (Managed via Flyway Migrations)  
-**Document Version:** 1.3 (Full UI/UX + Multi-Repo Database + API Specification)  
+**Document Version:** 1.4 (Full UI/UX + Multi-Repo & Test Evidence Database + API Specification)  
 
 ---
 
@@ -213,6 +213,7 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
    - `field_count INT NOT NULL DEFAULT 0` *(Hỗ trợ tính Complexity ngay từ giai đoạn lập WBS)*
    - `transaction_count INT NOT NULL DEFAULT 0`
    - `complexity VARCHAR(20) NOT NULL DEFAULT 'SIMPLE'` (`SIMPLE` | `MEDIUM` | `COMPLEX`)
+   - `work_category VARCHAR(30) NOT NULL DEFAULT 'CODING'` (`REQUIREMENT` | `DESIGN` | `CODING` | `TESTING` | `PM`) *(Phục vụ bảng Allocated Effort Distribution trong Report 2 §1.2)*
    - `est_mandays DECIMAL(5,2) NOT NULL DEFAULT 1.0`
    - `actual_mandays DECIMAL(5,2) NOT NULL DEFAULT 0.0` *(Phục vụ thống kê đóng góp thực tế FR-16)*
    - `iteration VARCHAR(20) NOT NULL DEFAULT 'ITER_1'` (`ITER_1` | `ITER_2` | `ITER_3` | `ITER_4`)
@@ -306,8 +307,24 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
     - `test_level VARCHAR(10) NOT NULL` (`UT` | `IT` | `ST` | `AT`)
     - `description TEXT NOT NULL`
     - `expected_result TEXT NOT NULL`
+    - `actual_result TEXT`
     - `status VARCHAR(20) NOT NULL DEFAULT 'UNTESTED'` (`UNTESTED` | `PASS` | `FAIL`)
     - `executed_by BIGINT REFERENCES users(id)`
+    - `executed_at TIMESTAMPTZ`
+    - `evidence_attachments JSONB NOT NULL DEFAULT '[]'::jsonb` *(Tối đa 2 ảnh minh chứng, <= 5MB/ảnh, `.png`/`.jpg`/`.webp`)*
+      > **JSONB Schema Example:**
+      > ```json
+      > [
+      >   {
+      >     "id": "b1f2c3d4-1111-4444-8888-1234567890ab",
+      >     "fileName": "tc01-login-pass.png",
+      >     "filePath": "projects/1/test-evidence/b1f2c3d4-tc01-login-pass.png",
+      >     "fileSize": 245120,
+      >     "uploadedBy": 5,
+      >     "uploadedAt": "2026-11-16T02:30:00Z"
+      >   }
+      > ]
+      > ```
     - + Audit & Soft-Delete columns
 
 16. **`tracking_logs`** (Gộp 4 sổ theo dõi vận hành chuẩn mẫu Excel FPTU)
@@ -380,7 +397,8 @@ Tất cả endpoint dưới `/api/projects/{projectId}/**` đều yêu cầu hea
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
 | `GET / POST` | `/api/projects/{id}/features` | Quản lý danh sách Features (`FE-xx`) | Member |
-| `GET / POST` | `/api/projects/{id}/wbs-tasks` | Quản lý WBS & Kanban Tasks (tự tính Complexity) | Member |
+| `GET / POST` | `/api/projects/{id}/wbs-tasks` | Quản lý WBS & Kanban Tasks (tự tính Complexity, phân loại `work_category`) | Member |
+| `GET` | `/api/projects/{id}/wbs-tasks/effort-distribution` | Thống kê phân bổ công sức (`est_mandays` & `actual_mandays`) theo `work_category` cho Report 2 | Member |
 | `PATCH` | `/api/projects/{id}/wbs-tasks/{taskId}/status` | Kéo thả trạng thái Kanban (`TODO` -> `DONE`) | Member |
 | `GET / PUT` | `/api/projects/{id}/raci` | Lấy & cập nhật ma trận RACI (`D/R/S/I`) | Member |
 | `GET / POST` | `/api/projects/{id}/actors` | Quản lý System Actors/Roles (phục vụ Report 3 & cột Auth Matrix) | Member |
@@ -393,7 +411,10 @@ Tất cả endpoint dưới `/api/projects/{projectId}/**` đều yêu cầu hea
 ### 7.4 Testing, Tracking, Analytics & Export
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
-| `GET / POST` | `/api/projects/{id}/test-cases` | Quản lý Test Cases & cập nhật trạng thái `PASS/FAIL` | Member |
+| `GET / POST` | `/api/projects/{id}/test-cases` | Quản lý Test Cases, `actual_result`, cập nhật `PASS/FAIL` (tự điền `executed_by` & `executed_at`) | Member |
+| `POST` | `/api/projects/{id}/test-cases/{tcId}/evidence` | Upload ảnh minh chứng Test Case (tối đa 2 ảnh, `<= 5MB`/ảnh, `.png`/`.jpg`/`.webp`) | Member |
+| `DELETE` | `/api/projects/{id}/test-cases/{tcId}/evidence/{fileId}` | Gỡ ảnh minh chứng & xóa file vật lý trên ổ đĩa | Member |
+| `GET` | `/api/projects/{id}/test-cases/{tcId}/evidence/{fileId}/download` | Tải/xem ảnh minh chứng bảo mật (kiểm tra quyền thành viên/GVHD) | Member / Supervisor |
 | `GET` | `/api/projects/{id}/quality-metrics` | Tính `Actual vs Target` Test Coverage & Defect Rate | Member |
 | `GET / POST` | `/api/projects/{id}/tracking/{logType}` | Quản lý `ISSUE`, `DEFECT`, `QA`, `WEEKLY_MATTER` | Member |
 | `GET / POST` | `/api/projects/{id}/peer-reviews` | Nộp & xem kết quả đánh giá chéo 3 tiêu chí theo Iteration | Member |
