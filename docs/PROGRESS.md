@@ -47,16 +47,20 @@
   - Configured `application.yml` with `ddl-auto: validate`, Flyway (`db/migration`), multipart max file size `50MB`, and environment-variable placeholders for secrets.
   - Created `Dockerfile` (multi-stage build), `Sep490Application.java`, `Sep490ApplicationTests.java`, and Modular Monolith package folders (`config`, `common`, `security`, `aspect`, `module/*`).
   - Verified build & tests via `.\mvnw.cmd test` (`Tests run: 1, Failures: 0` — `BUILD SUCCESS`).
-- **[DONE] `[TASK-0.10]` Backend Core Foundation (`common/` & `config/`):**
+- **[DONE] `[TASK-0.10]` Backend Core Foundation (`common/` & `config/` - `9822e69`):**
   - Locked UTC JDBC timezone (`hibernate.jdbc.time_zone: UTC`) and ISO-8601 Jackson date serialization (`write-dates-as-timestamps: false`) in `application.yml`.
   - Created `JpaAuditingConfig` (`@EnableJpaAuditing`) and `SecurityAuditorHelper` for safe user ID extraction.
   - Separated `BaseTimestampEntity` (`createdAt`, `updatedAt`) from `BaseEntity` (`createdBy`, `updatedBy`, `isDeleted` with `@SuperBuilder` + `@Builder.Default`), keeping `@SQLRestriction("is_deleted = false")` off `@MappedSuperclass` and preserving `updatedBy` on background/webhook updates.
   - Implemented `ApiResponse<T>` (`success`, `message`, `data`, `errorCode`, `timestamp`), domain-prefixed `ErrorCode` enum, `AppException`, and `GlobalExceptionHandler` handling 10 exception types.
   - Verified with 10 passing unit & MockMvc tests (`.\mvnw.cmd test` — `Tests run: 10, Failures: 0`).
+- **[DONE] Workspace Agent Rule (`AGENTS.md` & `RULES.md` v1.2 - `7c422fb`):**
+  - Added root `AGENTS.md` (always-on workspace rule) and updated `docs/RULES.md` §1.1 to enforce reading all `docs/*.md` files before starting any task.
+- **[DONE] `[TASK-0.11]` Flyway Initial Schema Migration (`V1__init_schema.sql`):**
+  - Created `backend/src/main/resources/db/migration/V1__init_schema.sql` defining all 20 physical PostgreSQL tables (covering all 17 ERD groups in `DESIGN.md` v1.2), foreign keys, `CHECK` constraints, `JSONB` `auth_matrix_json`, and 9 Partial Unique Indexes (`WHERE is_deleted = FALSE`).
+  - Verified project build & unit tests (`.\mvnw.cmd test` — `Tests run: 10, Failures: 0`); live PostgreSQL execution pending Docker daemon startup.
 
 ---
 
 ## 3. Next Steps Queue (Remaining Sprint 0 Boilerplate Tasks)
-1. `[TASK-0.11]` Create Flyway migration `V1__init_schema.sql` (17 core PostgreSQL tables & Partial Unique Indexes `WHERE is_deleted = FALSE`).
-3. `[TASK-0.12]` Initialize `frontend/` Next.js 14 App Router skeleton (TypeScript strict, TailwindCSS, `Be Vietnam Pro` & `JetBrains Mono` fonts, `lucide-react`).
-4. `[TASK-0.13]` Setup frontend core utilities (`src/lib/api-client.ts` with Dual Auth Interceptor, TanStack Query Provider, `Sonner` toast, base Shadcn/UI primitives).
+1. `[TASK-0.12]` Initialize `frontend/` Next.js 14 App Router skeleton (TypeScript strict, TailwindCSS, `Be Vietnam Pro` & `JetBrains Mono` fonts, `lucide-react`).
+2. `[TASK-0.13]` Setup frontend core utilities (`src/lib/api-client.ts` with Dual Auth Interceptor, TanStack Query Provider, `Sonner` toast, base Shadcn/UI primitives).
