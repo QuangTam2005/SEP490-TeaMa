@@ -67,6 +67,7 @@ public enum ErrorCode {
 
     // Testing (Report 5) Errors
     TEST_CASE_NOT_FOUND("TEST_001", HttpStatus.NOT_FOUND, "Không tìm thấy Test Case"),
+    MAX_EVIDENCE_EXCEEDED("TEST_002", HttpStatus.BAD_REQUEST, "Mỗi Test Case chỉ được đính kèm tối đa 2 ảnh minh chứng"),
 
     // Tracking Registers Errors
     TRACKING_LOG_NOT_FOUND("TRACK_001", HttpStatus.NOT_FOUND, "Không tìm thấy bản ghi theo dõi"),
