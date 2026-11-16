@@ -1,7 +1,7 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
-**Current Phase:** Sprint 0 — Requirements, Architecture, UI/UX & Database Standardization  
-**Last Updated:** 2026-11-15  
+**Current Phase:** Sprint 0 — Requirements, Architecture, UI/UX & Monorepo Boilerplate  
+**Last Updated:** 2026-11-16  
 
 ---
 
@@ -38,14 +38,20 @@
   - Upgraded `docs/RULES.md` to v1.1 adding `@Transactional` / `@EntityGraph` (`JOIN FETCH`) N+1 query optimization and File Upload Safety (`50MB` limit, extension whitelist, anti-Path Traversal).
 - **[DONE] `[TASK-0.7]` Granular Task Backlog Breakdown (`b38cd95`):**
   - Upgraded `docs/TASKS.md` to v1.1 with 52 atomic tasks (`[TASK-0.1]` to `[TASK-3.12]`) across Sprint 0–3, mapping 1:1 with `PRD.md` (FR-01..FR-19), `DESIGN.md` (17 DB tables, REST APIs, UI screens), and GitHub Webhook PR tracking.
-- **[DONE] `[TASK-0.8]` Docker Compose & Environment Template:**
+- **[DONE] `[TASK-0.8]` Docker Compose & Environment Template (`3202785`):**
   - Created `docker-compose.yml` (`postgres:16-alpine`, `backend`, `frontend` services, healthcheck, named volumes `sep490_postgres_data` & `sep490_uploads_data`) and `.env.example` without hardcoded secrets. Validated configuration via `docker compose --env-file .env.example config`.
+
+### 2026-11-16 — Sprint 0: Backend Boilerplate
+- **[DONE] `[TASK-0.9]` Backend Spring Boot 3.4 Skeleton (`backend/`):**
+  - Initialized Maven Wrapper (`mvnw`, `mvnw.cmd`, `.mvn/`), `pom.xml` (Java 21, Spring Boot `3.4.13`, Spring Web, Data JPA, Security, Validation, AOP, Flyway, PostgreSQL, `jjwt` `0.12.6`, Apache POI `5.5.1`, Lombok, MapStruct `1.6.3`).
+  - Configured `application.yml` with `ddl-auto: validate`, Flyway (`db/migration`), multipart max file size `50MB`, and environment-variable placeholders for secrets.
+  - Created `Dockerfile` (multi-stage build), `Sep490Application.java`, `Sep490ApplicationTests.java`, and Modular Monolith package folders (`config`, `common`, `security`, `aspect`, `module/*`).
+  - Verified build & tests via `.\mvnw.cmd test` (`Tests run: 1, Failures: 0` — `BUILD SUCCESS`).
 
 ---
 
 ## 3. Next Steps Queue (Remaining Sprint 0 Boilerplate Tasks)
-1. `[TASK-0.9]` Initialize `backend/` Spring Boot 3.3 project skeleton (`pom.xml`, `application.yml` with `ddl-auto=validate`).
-3. `[TASK-0.10]` Implement backend core foundation (`ApiResponse<T>`, `AppException`, `ErrorCode`, `GlobalExceptionHandler`, `BaseEntity` with `@SQLRestriction("is_deleted = false")`).
-4. `[TASK-0.11]` Create Flyway migration `V1__init_schema.sql` (17 core PostgreSQL tables & Partial Unique Indexes `WHERE is_deleted = FALSE`).
-5. `[TASK-0.12]` Initialize `frontend/` Next.js 14 App Router skeleton (TypeScript strict, TailwindCSS, `Be Vietnam Pro` & `JetBrains Mono` fonts, `lucide-react`).
-6. `[TASK-0.13]` Setup frontend core utilities (`src/lib/api-client.ts` with Dual Auth Interceptor, TanStack Query Provider, `Sonner` toast, base Shadcn/UI primitives).
+1. `[TASK-0.10]` Implement backend core foundation (`ApiResponse<T>`, `AppException`, `ErrorCode`, `GlobalExceptionHandler`, `BaseEntity` with `@SQLRestriction("is_deleted = false")`).
+2. `[TASK-0.11]` Create Flyway migration `V1__init_schema.sql` (17 core PostgreSQL tables & Partial Unique Indexes `WHERE is_deleted = FALSE`).
+3. `[TASK-0.12]` Initialize `frontend/` Next.js 14 App Router skeleton (TypeScript strict, TailwindCSS, `Be Vietnam Pro` & `JetBrains Mono` fonts, `lucide-react`).
+4. `[TASK-0.13]` Setup frontend core utilities (`src/lib/api-client.ts` with Dual Auth Interceptor, TanStack Query Provider, `Sonner` toast, base Shadcn/UI primitives).
