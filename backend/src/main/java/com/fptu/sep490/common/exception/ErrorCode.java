@@ -37,6 +37,8 @@ public enum ErrorCode {
     LEADER_ONLY_ACTION("PROJ_003", HttpStatus.FORBIDDEN, "Chỉ Nhóm trưởng (Leader) mới có quyền thực hiện thao tác này"),
     MEMBER_ALREADY_EXISTS("PROJ_004", HttpStatus.CONFLICT, "Thành viên đã tồn tại trong dự án"),
     USER_NOT_FOUND("PROJ_005", HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản người dùng"),
+    REPOSITORY_NOT_FOUND("PROJ_006", HttpStatus.NOT_FOUND, "Không tìm thấy repository của dự án"),
+    DUPLICATE_REPOSITORY("PROJ_007", HttpStatus.CONFLICT, "Repository này đã được liên kết với dự án"),
 
     // Milestone & Deliverable Errors
     MILESTONE_NOT_FOUND("MILE_001", HttpStatus.NOT_FOUND, "Không tìm thấy cột mốc"),
