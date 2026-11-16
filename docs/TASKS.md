@@ -26,7 +26,7 @@
 
 ### 1.1 Backend (`backend/`)
 - [x] `[TASK-1.1]` Implement `User` entity, repository & JWT security foundation (`JwtTokenProvider`, `JwtAuthFilter`, `SecurityConfig`)
-- [ ] `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*
+- [x] `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*
 - [ ] `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper
 - [ ] `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*
 - [ ] `[TASK-1.5]` Implement Project Member management & Supervisor Magic Link rotation APIs (`POST /api/projects/{id}/members`, `POST /api/projects/{id}/magic-link/rotate`) — *FR-02, FR-18*

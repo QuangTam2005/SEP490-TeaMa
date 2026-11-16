@@ -80,11 +80,15 @@
   - Created `User` entity extending `BaseTimestampEntity` (matching `users` table without `is_deleted`) and `UserRepository` (`findByEmailIgnoreCase`, `existsByEmailIgnoreCase`).
   - Implemented `JwtProperties`, `UserPrincipal` (`getUsername()` returns `String.valueOf(id)` for `SecurityAuditorHelper`), `CustomUserDetailsService`, `JwtTokenProvider` (UTF-8 default secret with explicit `base64:` prefix support & $\ge 32$-byte check), `JwtAuthFilter` (safe `401` JSON delegation on expired/missing-user tokens, skips `X-Supervisor-Token`), `RestAuthenticationEntryPoint`, `RestAccessDeniedHandler`, and `SecurityConfig` (stateless JWT, `BCryptPasswordEncoder`, comma-split CORS + `Content-Disposition` exposure).
   - Verified with 20 passing unit & security filter tests (`.\mvnw.cmd test` — `Tests run: 20, Failures: 0`).
-- **[DONE] Email Policy Rule (`docs/RULES.md` v1.3):**
+- **[DONE] Email Policy Rule (`docs/RULES.md` v1.3 - `4a072f1`):**
   - Added `Email Validation Policy` forbidding `@fpt.edu.vn` domain restrictions, validation messages, or UI placeholders (accept any valid email).
+- **[DONE] `[TASK-1.2]` Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`):**
+  - Created `RegisterRequest`, `LoginRequest` (with compact constructors trimming whitespace before Jakarta `@Email` validation, accepting any valid email domain), `UserResponse`, and `AuthResponse`.
+  - Implemented MapStruct `UserMapper`, `AuthService` (single-query `BCrypt` login throwing `AUTH_002`, `saveAndFlush` catching `DataIntegrityViolationException` for concurrent duplicate emails as `409 AUTH_005`), and `AuthController`.
+  - Added `AuthServiceTest` (6 tests) & `AuthControllerTest` (4 standalone MockMvc tests using `AuthenticationPrincipalArgumentResolver`); verified `.\mvnw.cmd test` (`Tests run: 30, Failures: 0` — `BUILD SUCCESS`).
 
 ---
 
 ## 3. Next Steps Queue (Sprint 1)
-1. `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*.
-2. `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper.
+1. `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper.
+2. `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*.
