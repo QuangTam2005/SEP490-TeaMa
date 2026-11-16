@@ -1,7 +1,7 @@
 # SYSTEM ARCHITECTURE DOCUMENT (ARCHITECTURE.md)
 **Product Name:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Architecture Style:** Modular Monolith (Backend) + App Router SPA/SSR (Frontend) in a Monorepo  
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 
 ---
 
@@ -77,7 +77,7 @@ flowchart TB
     %% Interactions
     Leader -->|HTTPS / JWT| Proxy
     Supervisor -->|HTTPS / Magic Link| Proxy
-    GitHub -->|POST /api/v1/webhooks/github| Proxy
+    GitHub -->|POST /api/webhooks/github/{repoId}| Proxy
 
     Proxy -->|/*| ClientLayer
     Proxy -->|/api/*| Security
@@ -115,7 +115,7 @@ SEP490-TeaMa/
 │   │   ├── aspect/                 # AuditLogAspect (Auto Record of Changes)
 │   │   └── module/
 │   │       ├── auth/               # Login, Register, User Profile
-│   │       ├── project/            # Project, ProjectMember, Milestones (10 mốc), Deliverables
+│   │       ├── project/            # Project, ProjectMember, ProjectRepository, Milestones (10 mốc), Deliverables
 │   │       ├── planning/           # Features, WBS, Complexity Estimator, RACI, Risks, QualityTargets
 │   │       ├── srs/                # Actors, UseCases, Screens, AuthMatrix, BusinessRules, AppMessages, Diagrams
 │   │       ├── testing/            # TestCases, Coverage & Defect Metrics
@@ -162,9 +162,11 @@ SEP490-TeaMa/
 - **Không** mở static file mapping công khai. Tất cả thao tác tải file đi qua endpoint bảo mật: `GET /api/v1/deliverables/{id}/download` có kiểm tra JWT (thành viên trong `ProjectMember`) hoặc `X-Supervisor-Token` hợp lệ.
 - **Giới hạn kích thước:** Cấu hình giới hạn `max-file-size = 50MB` trên cả Reverse Proxy và Spring Boot (`spring.servlet.multipart.max-file-size=50MB`) để tránh quá tải khi sinh viên nén nhầm `node_modules/` hoặc `target/`.
 
-### 4.4 GitHub Webhook Verification (FR-14)
-- Endpoint `POST /api/v1/webhooks/github/{projectId}` mở công khai trên Spring Security nhưng bắt buộc xác thực chữ ký HMAC-SHA256 từ header `X-Hub-Signature-256` đối chiếu với `webhook_secret` riêng của từng dự án.
-- Tự động trích xuất mã task `[TASK-XX]` từ PR title hoặc branch name để chuyển trạng thái Task sang `IN_REVIEW` (`opened`) hoặc `DONE` (`closed` + `merged=true`).
+### 4.4 GitHub Webhook Verification & Multi-PR Aggregation (FR-14)
+- Hỗ trợ nhiều GitHub Repository cho mỗi dự án thông qua bảng `project_repositories` (VD: `Backend`, `Frontend`, `Mobile`).
+- Endpoint `POST /api/webhooks/github/{repoId}` mở công khai trên Spring Security nhưng bắt buộc xác thực chữ ký HMAC-SHA256 từ header `X-Hub-Signature-256` đối chiếu với `project_repositories.webhook_secret` của repository tương ứng và kiểm tra khớp `payload.repository.full_name`.
+- Tự động trích xuất mã task `[TASK-XX]` từ PR title hoặc branch name, upsert thông tin PR vào mảng `wbs_tasks.github_prs` (`JSONB`) theo khóa `(repoId, prNumber)`.
+- **Quy tắc tổng hợp trạng thái Multi-PR:** Chuyển Task sang `IN_REVIEW` khi có ít nhất 1 PR `OPEN` (kể cả khi Task trước đó ở `TODO`, `IN_PROGRESS` hoặc `DONE`), và chỉ chuyển sang `DONE` khi có ít nhất 1 PR `MERGED` và không còn PR nào đang `OPEN` (bỏ qua các PR đóng nhầm `CLOSED` chưa merge). Đồng thời tự động ghi nhận `M` vào `document_change_logs` (`report_target = 'R2'`).
 
 ### 4.5 VPS Backup & High Availability
 - Cấu hình Cronjob hàng đêm trên VPS chạy `pg_dump` xuất dữ liệu PostgreSQL kết hợp nén thư mục `uploads_data` lưu trữ snapshot (giữ tối thiểu 14 ngày gần nhất trên ổ SSD 180GB và đồng bộ thêm ra cloud storage nếu cần).

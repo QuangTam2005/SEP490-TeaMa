@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 **Product Name:** SEP490 Capstone Copilot  
 **Target Domain:** FPT University Software Engineering Capstone Project (`SEP490`)  
-**Document Version:** 1.1 (MVP - Full Academic Compliance)  
+**Document Version:** 1.2 (MVP - Full Academic Compliance & Multi-Repo GitHub)  
 
 ---
 
@@ -61,10 +61,11 @@ Xây dựng một nền tảng quản trị dự án tập trung, tuân thủ 10
 
 ### Module 5: Iteration Execution, Tracking Registers & GitHub Webhook
 - **FR-13 (Iteration-based Kanban Board):** Quản lý công việc trên Kanban board (`TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`) có bộ lọc phân tách rõ ràng theo **4 đợt Iteration** (`Iteration 1` - W7, `Iteration 2` - W9, `Iteration 3` - W11, `Iteration 4 / System Test` - W13).
-- **FR-14 (GitHub Webhook Integration):**
-  - Cung cấp Webhook URL và Secret Token cho mỗi dự án.
+- **FR-14 (GitHub Webhook Integration - Multi-Repo):**
+  - Hỗ trợ gắn nhiều Repository cho mỗi dự án (VD: `Backend`, `Frontend`, `Mobile`), cung cấp Webhook URL (`/api/webhooks/github/{repoId}`) và Secret Token riêng biệt cho từng repository.
   - Tự động parse mã Task (ví dụ `[TASK-15]`) từ tiêu đề Pull Request hoặc tên nhánh.
-  - Tự động chuyển trạng thái Task sang `IN_REVIEW` khi PR mở (`opened`) và `DONE` khi PR được merge (`closed` + `merged=true`), lưu kèm link PR và người thực hiện.
+  - Cập nhật danh sách PR liên kết (`github_prs`) trên Task kèm `repoLabel`, `prNumber`, `prUrl`, `status` (`OPEN`, `MERGED`, `CLOSED`) và tác giả.
+  - Tự động chuyển Task sang `IN_REVIEW` khi có PR `OPEN`, và chỉ chuyển sang `DONE` khi có ít nhất 1 PR `MERGED` và không còn PR nào đang `OPEN`.
 - **FR-15 (3 Operational Tracking Registers & Weekly Report Data):** Số hóa 3 sổ theo dõi vận hành chuẩn `Report3_Project Tracking`:
   - `Project Issues`: Theo dõi các vấn đề phát sinh trong quá trình làm nhóm.
   - `Product Defects`: Theo dõi lỗi phần mềm (gắn với Test Case bị Fail).

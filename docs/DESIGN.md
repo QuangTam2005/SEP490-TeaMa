@@ -2,7 +2,7 @@
 **Product Name:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Design Philosophy:** Academic Precision meets Modern SaaS (Linear / Notion / Jira hybrid) — **Icon-First, Minimal Text**  
 **Database Engine:** PostgreSQL 16 (Managed via Flyway Migrations)  
-**Document Version:** 1.2 (Full UI/UX + Database + API Specification)  
+**Document Version:** 1.3 (Full UI/UX + Multi-Repo Database + API Specification)  
 
 ---
 
@@ -100,7 +100,7 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
    - Mọi mã `UC-01`, `TASK-15`, `TC-04`, `BUG-02` khi xuất hiện trong bảng đều là **Clickable Badge** (font `JetBrains Mono`) mở ra Slide-over Drawer (Sheet bên phải) hiển thị chi tiết thực thể đó mà không làm mất trang hiện tại.
 5. **Iteration Kanban Board & Task Card:**
    - Thanh lọc nhanh 4 đợt Iteration (`Iter 1` – `Iter 4`) và thành viên.
-   - Mỗi Task Card tối giản chữ, hiển thị: Mã `[TASK-15]` (`JetBrains Mono`), tiêu đề ngắn (tối đa 2 dòng), badge Iteration, **Icon GitHub PR `#42`** (click mở link PR), số `man-days` (icon đồng hồ) và Avatar người phụ trách.
+   - Mỗi Task Card tối giản chữ, hiển thị: Mã `[TASK-15]` (`JetBrains Mono`), tiêu đề ngắn (tối đa 2 dòng), badge Iteration, **Multi-Repo GitHub PR chips** (VD: `BE #12`, `FE #08` kèm icon trạng thái `OPEN`/`MERGED`/`CLOSED` và click mở link PR), số `man-days` (icon đồng hồ) và Avatar người phụ trách.
 6. **Anonymous Peer-Review Matrix:**
    - Giao diện đánh giá chéo cuối mỗi Iteration dạng bảng lưới nhỏ gọn: Hàng là tên thành viên, Cột là 3 tiêu chí (*Thái độ*, *Đúng hạn*, *Chất lượng*) chấm bằng **Icon Star Rating / Thanh chọn điểm 1–10**, tự động gắn icon cảnh báo (`AlertTriangle`) khi điểm trung bình dưới ngưỡng an toàn (nguy cơ *free-rider*).
 7. **Feedback & Empty States:**
@@ -127,9 +127,9 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
 
 ---
 
-## 6. Detailed PostgreSQL Schema (17 Core Tables)
+## 6. Detailed PostgreSQL Schema (21 Core Tables / 18 ERD Groups)
 
-### 6.1 Identity & Project Core
+### 6.1 Identity, Project & Repositories Core
 1. **`users`**
    - `id BIGSERIAL PRIMARY KEY`
    - `email VARCHAR(255) UNIQUE NOT NULL`
@@ -147,12 +147,20 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
    - `group_name VARCHAR(50) NOT NULL` (VD: `SEP490-G4`)
    - `software_type VARCHAR(100)` (Web App, Mobile App...)
    - `start_date DATE NOT NULL` (Mốc tính Tuần 1 -> Tuần 15)
-   - `github_repo_url VARCHAR(500)`
-   - `webhook_secret VARCHAR(255)`
    - `supervisor_magic_token UUID UNIQUE NOT NULL`
    - `supervisor_name VARCHAR(150)`
    - `supervisor_email VARCHAR(255)`
    - + Audit & Soft-Delete columns
+
+2.1. **`project_repositories`** *(Hỗ trợ Multi-Repo: Backend, Frontend, Mobile...)*
+   - `id BIGSERIAL PRIMARY KEY`
+   - `project_id BIGINT NOT NULL REFERENCES projects(id)`
+   - `repo_label VARCHAR(50) NOT NULL` (VD: `Backend`, `Frontend`, `Mobile`)
+   - `repo_full_name VARCHAR(255) NOT NULL` (VD: `owner/repo-name`)
+   - `github_repo_url VARCHAR(500) NOT NULL`
+   - `webhook_secret VARCHAR(255) NOT NULL`
+   - + Audit & Soft-Delete columns
+   - Partial Unique Index: `CREATE UNIQUE INDEX uq_project_repositories_active ON project_repositories (project_id, repo_full_name) WHERE is_deleted = FALSE;`
 
 3. **`project_members`**
    - `id BIGSERIAL PRIMARY KEY`
@@ -210,8 +218,22 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
    - `iteration VARCHAR(20) NOT NULL DEFAULT 'ITER_1'` (`ITER_1` | `ITER_2` | `ITER_3` | `ITER_4`)
    - `status VARCHAR(20) NOT NULL DEFAULT 'TODO'` (`TODO` | `IN_PROGRESS` | `IN_REVIEW` | `DONE`)
    - `assignee_id BIGINT REFERENCES users(id)`
-   - `github_pr_url VARCHAR(500)`
-   - `github_pr_number INT`
+   - `github_prs JSONB NOT NULL DEFAULT '[]'::jsonb` *(Danh sách PR liên kết từ nhiều repository)*
+     > **JSONB Schema Example:**
+     > ```json
+     > [
+     >   {
+     >     "repoId": 1,
+     >     "repoLabel": "Backend",
+     >     "prNumber": 12,
+     >     "prUrl": "https://github.com/org/repo-be/pull/12",
+     >     "branch": "feat/TASK-01-auth",
+     >     "status": "MERGED",
+     >     "author": "username",
+     >     "updatedAt": "2026-11-16T02:00:00Z"
+     >   }
+     > ]
+     > ```
    - + Audit & Soft-Delete columns
 
 8. **`raci_assignments`**
@@ -343,6 +365,9 @@ Tất cả endpoint dưới `/api/projects/{projectId}/**` đều yêu cầu hea
 | `POST` | `/api/projects` | Tạo dự án mới + Auto-seed 10 Milestones & QualityTargets | Authenticated |
 | `POST` | `/api/projects/{id}/members` | Thêm thành viên vào nhóm bằng Email | `LEADER` |
 | `POST` | `/api/projects/{id}/magic-link/rotate` | Tạo mới / thu hồi Magic Link cho GVHD | `LEADER` |
+| `GET` | `/api/projects/{id}/repositories` | Lấy danh sách GitHub repositories của dự án | Member |
+| `POST` | `/api/projects/{id}/repositories` | Thêm repository mới (tự sinh `webhook_secret`, trả về Webhook URL `/api/webhooks/github/{repoId}`) | `LEADER` |
+| `DELETE` | `/api/projects/{id}/repositories/{repoId}` | Gỡ (soft-delete) repository khỏi dự án | `LEADER` |
 
 ### 7.2 Milestones & File Storage
 | Method | Endpoint | Description | Access |
@@ -380,6 +405,6 @@ Tất cả endpoint dưới `/api/projects/{projectId}/**` đều yêu cầu hea
 ### 7.5 Webhooks & Supervisor Magic Link
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/webhooks/github/{projectId}` | Nhận PR event từ GitHub (`X-Hub-Signature-256`) | GitHub Webhook |
+| `POST` | `/api/webhooks/github/{repoId}` | Nhận PR event từ GitHub theo từng repository (`X-Hub-Signature-256`), cập nhật `github_prs JSONB` & trạng thái Task | GitHub Webhook |
 | `GET` | `/api/supervisor/{magicToken}/overview` | Lấy dữ liệu Read-only toàn dự án cho GVHD | Magic Token |
 | `POST` | `/api/supervisor/{magicToken}/qa/{qaId}/answer` | GVHD gửi câu trả lời trực tiếp vào mục Q&A | Magic Token |

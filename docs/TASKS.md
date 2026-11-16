@@ -1,7 +1,7 @@
 # TASK BACKLOG & WORK BREAKDOWN (TASKS.md)
 **Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Rule:** Every single `[TASK-X.Y]` corresponds to **1 atomic commit** (`feat`/`fix`/`docs`/`chore`) and maps to GitHub PR tracking.  
-**Version:** 1.1  
+**Version:** 1.2  
 
 ---
 
@@ -27,15 +27,16 @@
 ### 1.1 Backend (`backend/`)
 - [ ] `[TASK-1.1]` Implement `User` entity, repository & JWT security foundation (`JwtTokenProvider`, `JwtAuthFilter`, `SecurityConfig`)
 - [ ] `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*
-- [ ] `[TASK-1.3]` Implement `Project`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper
+- [ ] `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper
 - [ ] `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*
 - [ ] `[TASK-1.5]` Implement Project Member management & Supervisor Magic Link rotation APIs (`POST /api/projects/{id}/members`, `POST /api/projects/{id}/magic-link/rotate`) — *FR-02, FR-18*
 - [ ] `[TASK-1.6]` Implement Milestone Deliverables upload & secure download APIs (`POST /deliverables/{delivId}/upload`, `GET /files/download/{fileId}` with `50MB` limit, extension whitelist & anti-Path Traversal) — *FR-04*
 - [ ] `[TASK-1.7]` Implement `DocumentChangeLog` entity & Spring AOP `@AuditLog` aspect for automatic `Record of Changes` (`A/M/D`) tracking — *FR-17*
 - [ ] `[TASK-1.8]` Implement `Feature` CRUD APIs (`GET/POST/PUT/DELETE /api/projects/{id}/features`) — *FR-05*
-- [ ] `[TASK-1.9]` Implement `WbsTask` CRUD APIs with Auto-Complexity Estimator ($\le 7 / \le 15 / > 15$ fields & $\le 3 / \le 7 / > 7$ transactions) & total `man-days` aggregation — *FR-05*
+- [ ] `[TASK-1.9]` Implement `WbsTask` CRUD APIs with `github_prs JSONB`, Auto-Complexity Estimator ($\le 7 / \le 15 / > 15$ fields & $\le 3 / \le 7 / > 7$ transactions) & total `man-days` aggregation — *FR-05*
 - [ ] `[TASK-1.10]` Implement `RaciAssignment` matrix APIs (`GET/PUT /api/projects/{id}/raci`) — *FR-06*
 - [ ] `[TASK-1.11]` Implement `ProjectRisk` & `QualityObjective` CRUD APIs (`/api/projects/{id}/risks`, `/api/projects/{id}/quality-objectives`) — *FR-07*
+- [ ] `[TASK-1.17]` Implement Multi-Repo GitHub Management APIs (`GET/POST/DELETE /api/projects/{id}/repositories` with auto-generated `webhook_secret`) — *FR-14*
 
 ### 1.2 Frontend (`frontend/`)
 - [ ] `[TASK-1.12]` Build Auth pages (`/login`, `/register`) & `authStore` (Zustand) with React Hook Form + Zod
@@ -69,16 +70,16 @@
 
 ### 3.1 Backend (`backend/`)
 - [ ] `[TASK-3.1]` Implement Kanban status update API (`PATCH /api/projects/{id}/wbs-tasks/{taskId}/status`) & Iteration filtering (`ITER_1`..`ITER_4`) — *FR-13*
-- [ ] `[TASK-3.2]` Implement GitHub Webhook receiver (`POST /api/webhooks/github/{projectId}` with `X-Hub-Signature-256` HMAC-SHA256 verification & `[TASK-XX]` PR parser) — *FR-14*
+- [ ] `[TASK-3.2]` Implement Multi-Repo GitHub Webhook receiver (`POST /api/webhooks/github/{repoId}` with `X-Hub-Signature-256` HMAC-SHA256 verification, `[TASK-XX]` PR parser, `github_prs JSONB` upsert & multi-PR state aggregation) — *FR-14*
 - [ ] `[TASK-3.3]` Implement unified `TrackingLog` CRUD APIs (`/api/projects/{id}/tracking/{logType}` for `ISSUE`, `DEFECT`, `QA`, `WEEKLY_MATTER`) — *FR-15*
-- [ ] `[TASK-3.4]` Implement 3-criteria `PeerReview` & Contribution Analytics APIs (`/api/projects/{id}/peer-reviews`, `/api/projects/{id}/analytics/contribution` with free-rider detection) — *FR-16*
+- [ ] `[TASK-3.4]` Implement 3-criteria `PeerReview` & Contribution Analytics APIs (`/api/projects/{id}/peer-reviews`, `/api/projects/{id}/analytics/contribution` counting merged PRs across `github_prs` & free-rider detection) — *FR-16*
 - [ ] `[TASK-3.5]` Implement `MagicLinkFilter` (`X-Supervisor-Token`) & Supervisor Portal APIs (`GET /api/supervisor/{magicToken}/overview`, `POST /api/supervisor/{magicToken}/qa/{qaId}/answer`) — *FR-18*
 - [ ] `[TASK-3.6]` Implement Markdown SRS & `Record of Changes` Exporter (`GET /api/projects/{id}/export/srs-md`) — *FR-17, FR-19*
 - [ ] `[TASK-3.7]` Implement Apache POI 5-Sheet Project Tracking `.xlsx` Exporter (`GET /api/projects/{id}/export/tracking-xlsx`: `WBS`, `Issues`, `Defects`, `Q&A`, `Test Cases` with `Calibri` Unicode font) — *FR-19*
 - [ ] `[TASK-3.8]` Implement Apache POI Weekly Status Report `.xlsx` Exporter (`GET /api/projects/{id}/export/weekly-xlsx` matching 4 sections of `Project Weekly Report_GroupName.xlsx`) — *FR-19*
 
 ### 3.2 Frontend (`frontend/`)
-- [ ] `[TASK-3.9]` Build `Execution & Kanban` Board (Iteration 1–4 filter, drag-and-drop columns, compact Task Cards with `[TASK-XX]`, GitHub PR link & Webhook setup modal)
+- [ ] `[TASK-3.9]` Build `Execution & Kanban` Board (Iteration 1–4 filter, drag-and-drop columns, compact Task Cards with `[TASK-XX]`, Multi-Repo GitHub PR chips & Multi-Repo Webhook setup modal)
 - [ ] `[TASK-3.10]` Build `Tracking Registers` page (`Issues`, `Defects`, `Supervisor Q&A`, `Weekly Matters`) & Top Header `+ Quick Log` modal
 - [ ] `[TASK-3.11]` Build `Analytics & Export` page (Recharts Contribution Chart, Anonymous 3-Criteria `Peer-Review Matrix`, `Record of Changes` log & `Export Center` `.xlsx`/`.md` downloads)
 - [ ] `[TASK-3.12]` Build `Supervisor Portal` (`/supervisor/[token]` Read-only Top Nav layout with Milestones, Contribution, Tracking & Direct Q&A Reply)

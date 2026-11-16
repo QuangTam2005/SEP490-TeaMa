@@ -9,11 +9,11 @@
 
 | Document | Version | Status | Summary |
 | :--- | :---: | :---: | :--- |
-| [`docs/PRD.md`](./PRD.md) | `v1.1` | ✅ Finalized | 100% SEP490 Academic Compliance, 19 Functional Requirements, 10 Milestones Checklist, Vietnamese Typography NFR. |
-| [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.0` | ✅ Finalized | Modular Monolith (Java 21 / Spring Boot 3.3+) + Next.js 14 App Router + PostgreSQL 16 + Docker VPS (8 vCPU / 16GB RAM / 180GB SSD). |
-| [`docs/DESIGN.md`](./DESIGN.md) | `v1.2` | ✅ Finalized | Part I: Icon-First UI/UX (`lucide-react`, `Be Vietnam Pro` + `JetBrains Mono`); Part II: 17-table PostgreSQL ERD; Part III: REST API Specs. |
-| [`docs/RULES.md`](./RULES.md) | `v1.1` | ✅ Finalized | AI Coding Rules, Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR protection, `@Transactional`/N+1 prevention, File Upload Safety. |
-| [`docs/TASKS.md`](./TASKS.md) | `v1.1` | ✅ Finalized | 52 granular atomic tasks (`[TASK-0.1]` to `[TASK-3.12]`) mapped 1:1 to FR-01..FR-19, 17 DB tables, REST APIs & UI specs. |
+| [`docs/PRD.md`](./PRD.md) | `v1.2` | ✅ Finalized | 100% SEP490 Academic Compliance, 19 FRs (incl. Multi-Repo GitHub FR-14), 10 Milestones Checklist, Vietnamese Typography NFR. |
+| [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.1` | ✅ Finalized | Modular Monolith (Java 21 / Spring Boot 3.4+) + Next.js 14 App Router + PostgreSQL 16 + Multi-Repo Webhook Architecture. |
+| [`docs/DESIGN.md`](./DESIGN.md) | `v1.3` | ✅ Finalized | Part I: Icon-First UI/UX & Multi-PR Kanban chips; Part II: 21-table PostgreSQL ERD (`project_repositories`, `github_prs JSONB`); Part III: REST APIs. |
+| [`docs/RULES.md`](./RULES.md) | `v1.2` | ✅ Finalized | AI Coding Rules, Mandatory `docs/*.md` Context-First (`AGENTS.md`), Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR & Upload Safety. |
+| [`docs/TASKS.md`](./TASKS.md) | `v1.2` | ✅ Finalized | 53 granular atomic tasks (`[TASK-0.1]` to `[TASK-3.12]` + `[TASK-1.17]`) synced with Multi-Repo GitHub schema & APIs. |
 
 ---
 
@@ -55,9 +55,13 @@
   - Verified with 10 passing unit & MockMvc tests (`.\mvnw.cmd test` — `Tests run: 10, Failures: 0`).
 - **[DONE] Workspace Agent Rule (`AGENTS.md` & `RULES.md` v1.2 - `7c422fb`):**
   - Added root `AGENTS.md` (always-on workspace rule) and updated `docs/RULES.md` §1.1 to enforce reading all `docs/*.md` files before starting any task.
-- **[DONE] `[TASK-0.11]` Flyway Initial Schema Migration (`V1__init_schema.sql`):**
+- **[DONE] `[TASK-0.11]` Flyway Initial Schema Migration (`V1__init_schema.sql` - `3a75eae`):**
   - Created `backend/src/main/resources/db/migration/V1__init_schema.sql` defining all 20 physical PostgreSQL tables (covering all 17 ERD groups in `DESIGN.md` v1.2), foreign keys, `CHECK` constraints, `JSONB` `auth_matrix_json`, and 9 Partial Unique Indexes (`WHERE is_deleted = FALSE`).
   - Verified project build & unit tests (`.\mvnw.cmd test` — `Tests run: 10, Failures: 0`); live PostgreSQL execution pending Docker daemon startup.
+- **[DONE] Multi-Repo GitHub Upgrade (Specs, Flyway `V2` & Error Codes):**
+  - Upgraded `PRD.md` (`v1.2`), `ARCHITECTURE.md` (`v1.1`), `DESIGN.md` (`v1.3`), and `TASKS.md` (`v1.2`, added `[TASK-1.17]`) for `1-to-N` `project_repositories`, `/api/webhooks/github/{repoId}`, `wbs_tasks.github_prs JSONB`, multi-PR state aggregation (`OPEN -> IN_REVIEW`; `>=1 MERGED & 0 OPEN -> DONE`), and multi-PR Kanban card chips.
+  - Created `backend/src/main/resources/db/migration/V2__support_multi_repo_github.sql` and added `PROJ_006` (`REPOSITORY_NOT_FOUND`) & `PROJ_007` (`DUPLICATE_REPOSITORY`) to `ErrorCode.java`.
+  - Verified with `.\mvnw.cmd test` (`Tests run: 10, Failures: 0` — `BUILD SUCCESS`); live PostgreSQL execution pending Docker daemon startup.
 
 ---
 
