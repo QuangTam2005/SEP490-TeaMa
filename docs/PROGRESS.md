@@ -12,7 +12,7 @@
 | [`docs/PRD.md`](./PRD.md) | `v1.3` | ✅ Finalized | 100% SEP490 Academic Compliance, 19 FRs (incl. Multi-Repo GitHub, WBS Work Category & Test Evidence), 10 Milestones Checklist, Vietnamese Typography. |
 | [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.1` | ✅ Finalized | Modular Monolith (Java 21 / Spring Boot 3.4+) + Next.js 14 App Router + PostgreSQL 16 + Multi-Repo Webhook Architecture. |
 | [`docs/DESIGN.md`](./DESIGN.md) | `v1.4` | ✅ Finalized | Part I: Icon-First UI/UX & Multi-PR Kanban chips; Part II: 21-table PostgreSQL ERD (`work_category`, `evidence_attachments JSONB`); Part III: REST APIs. |
-| [`docs/RULES.md`](./RULES.md) | `v1.2` | ✅ Finalized | AI Coding Rules, Mandatory `docs/*.md` Context-First (`AGENTS.md`), Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR & Upload Safety (incl. `.webp` & 5MB Test Evidence). |
+| [`docs/RULES.md`](./RULES.md) | `v1.3` | ✅ Finalized | AI Coding Rules, Mandatory `docs/*.md` Context-First (`AGENTS.md`), Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR, Upload Safety & Open Email Policy. |
 | [`docs/TASKS.md`](./TASKS.md) | `v1.3` | ✅ Finalized | 53 granular atomic tasks (`[TASK-0.1]` to `[TASK-3.12]` + `[TASK-1.17]`) synced with Multi-Repo, WBS Work Category & Test Evidence. |
 
 ---
@@ -76,10 +76,12 @@
   - Implemented `src/lib/auth-token.ts` and `src/lib/api-client.ts` with Dual Auth Interceptor (`Authorization: Bearer` vs `X-Supervisor-Token`), multipart `FormData` `Content-Type` safety, `apiUpload` / `apiDownload`, null-safe `ApiResponse` unwrapping, and `ApiClientError`.
   - Configured `QueryProvider` (TanStack Query v5), `AppToaster` (`Sonner` bottom-right), `TooltipProvider`, and 8 base Shadcn/UI primitives (`button`, `badge`, `card`, `input`, `label`, `tooltip`, `dialog`, `sheet` with `tailwindcss-animate`).
   - Verified cleanly via `npm install`, `npm run typecheck`, `npm run lint`, and `npm run build`.
-- **[DONE] `[TASK-1.1]` User Entity, Repository & JWT Security Foundation (`module/auth/`, `security/`, `config/`):**
+- **[DONE] `[TASK-1.1]` User Entity, Repository & JWT Security Foundation (`9725ae7`):**
   - Created `User` entity extending `BaseTimestampEntity` (matching `users` table without `is_deleted`) and `UserRepository` (`findByEmailIgnoreCase`, `existsByEmailIgnoreCase`).
   - Implemented `JwtProperties`, `UserPrincipal` (`getUsername()` returns `String.valueOf(id)` for `SecurityAuditorHelper`), `CustomUserDetailsService`, `JwtTokenProvider` (UTF-8 default secret with explicit `base64:` prefix support & $\ge 32$-byte check), `JwtAuthFilter` (safe `401` JSON delegation on expired/missing-user tokens, skips `X-Supervisor-Token`), `RestAuthenticationEntryPoint`, `RestAccessDeniedHandler`, and `SecurityConfig` (stateless JWT, `BCryptPasswordEncoder`, comma-split CORS + `Content-Disposition` exposure).
   - Verified with 20 passing unit & security filter tests (`.\mvnw.cmd test` — `Tests run: 20, Failures: 0`).
+- **[DONE] Email Policy Rule (`docs/RULES.md` v1.3):**
+  - Added `Email Validation Policy` forbidding `@fpt.edu.vn` domain restrictions, validation messages, or UI placeholders (accept any valid email).
 
 ---
 

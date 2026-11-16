@@ -11,6 +11,9 @@
 4. **Language Convention:**
    - Code, tên biến, tên hàm, tên bảng DB, comment kỹ thuật, Git commit message: **100% Tiếng Anh**.
    - Nhãn giao diện (UI Labels), thông báo lỗi hiển thị cho người dùng, tài liệu hướng dẫn: **Tiếng Việt** (kết hợp đúng thuật ngữ chuyên ngành SEP490 như *Use Case, WBS, RACI, Sprint, Iteration, Milestone*).
+5. **Email Validation Policy (Lằn ranh đỏ):**
+   - Hệ thống chấp nhận **mọi địa chỉ Email hợp lệ bất kỳ** (chuẩn `@Email` / Zod `.email()`).
+   - Cấm tuyệt đối ràng buộc, kiểm tra hay nhắc tới domain `@fpt.edu.vn` trong logic validation, thông báo lỗi hoặc placeholder/hint trên giao diện UI (VD: dùng `name@example.com` hoặc `ten.sv@gmail.com` nếu cần placeholder).
 
 ---
 
