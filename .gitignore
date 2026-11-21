@@ -33,3 +33,8 @@ yarn-debug.log*
 yarn-error.log*
 logs/
 *.log
+
+# Local Agent Skills (taste-skill)
+.agents/skills/design-taste-frontend/
+.taste-skill/
+skills-lock.json
