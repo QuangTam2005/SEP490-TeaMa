@@ -1,7 +1,7 @@
 # TASK BACKLOG & WORK BREAKDOWN (TASKS.md)
 **Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Rule:** Every single `[TASK-X.Y]` corresponds to **1 atomic commit** (`feat`/`fix`/`docs`/`chore`) and maps to GitHub PR tracking.  
-**Version:** 1.5 *(UI-First Restructuring: Phase A UI/UX Validation $\rightarrow$ Phase B Backend $\rightarrow$ Phase C API Wiring)*
+**Version:** 1.6 *(UI-First Restructuring + No School-Grading Scope, Supervisor Review, 4-Sheet Tracking Alignment)*
 
 ---
 
@@ -31,8 +31,8 @@
 - [ ] `[TASK-UI.4]` Build `Planning (Report 2)` — Features & WBS Table (`Work Category`, Allocated Effort Distribution, realtime `Complexity Auto-Calculator Widget`), interactive `RaciMatrixTable` (sticky column + Click-to-Cycle `D/R/S/I`), Risk Register & 5 Quality Objectives tabs
 - [ ] `[TASK-UI.5]` Build `SRS & Traceability Hub (Report 3)` — Actors, Use Cases, Screens & interactive `ScreenAuthMatrix` (8 FPTU permission levels click-to-toggle), Business Rules, Application Messages, Diagram Attachments gallery & Traceability Slide-over Drawer (`Sheet`)
 - [ ] `[TASK-UI.6]` Build `Execution Kanban`, `Multi-Repo GitHub` & `Testing QA (Report 5)` — Iteration 1–4 Kanban Board with `[TASK-XX]` & Multi-Repo PR chips, Repositories Webhook modal, Test Case table (`UT/IT/ST/AT`) with `Actual Result`, 2-image Evidence uploader/preview & Target vs. Actual Quality dashboard
-- [ ] `[TASK-UI.7]` Build `Tracking Registers`, `Analytics`, `Peer-Review` & `Export Center` — Issues / Defects / Supervisor Q&A / Weekly Matters + Top Header `+ Quick Log` modal, Contribution Matrix, Anonymous 3-Criteria `Peer-Review Matrix`, `Record of Changes` log & `.xlsx`/`.md` Export Center UI
-- [ ] `[TASK-UI.8]` Build `Supervisor Read-Only Portal` (`/supervisor/[token]` 4-tab layout: Milestones, Contribution, Tracking & Direct Q&A Reply, Traceability) + Full Responsive & `taste-skill` QA (`390px`, `768px`, `1024px`, `1440px`, Light/Dark)
+- [ ] `[TASK-UI.7]` Build `Tracking Registers`, `Objective Contribution Analytics` & `Export Center` — Issues / Defects / Supervisor Q&A / Weekly Matters + Top Header `+ Quick Log` modal, Objective Contribution Matrix (Tasks, Man-days, PRs, Test Cases — no 1–10 scoring), `Record of Changes` log & `.xlsx` (4-sheet Tracking + Test Report)/`.md` Export Center UI
+- [ ] `[TASK-UI.8]` Build `Supervisor Portal` (`/supervisor/[token]` 4-tab layout: Milestones Approve/Needs-Revision Review, Contribution, Tracking & Direct Q&A Reply, Traceability) + Full Responsive & `taste-skill` QA (`390px`, `768px`, `1024px`, `1440px`, Light/Dark)
 
 ---
 
@@ -43,7 +43,7 @@
 - [x] `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*
 - [x] `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper
 - [ ] `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*
-- [ ] `[TASK-1.5]` Implement Flyway `V4__add_project_invitations.sql`, Email Invitation + `MailSender` workflow (`/api/projects/{id}/invitations/**`, `/api/invitations/verify|accept`), Member Role/Removal & Supervisor Magic Link rotation APIs — *FR-02, FR-18*
+- [ ] `[TASK-1.5]` Implement Flyway `V4__add_project_invitations_and_milestone_review.sql` (invitations + milestone `NEEDS_REVISION`/`review_note`), Email Invitation + `MailSender` workflow (`/api/projects/{id}/invitations/**`, `/api/invitations/verify|accept`), Member Role/Removal & Supervisor Magic Link rotation APIs — *FR-02, FR-18*
 - [ ] `[TASK-1.6]` Implement Milestone Deliverables upload & secure download APIs (`POST /deliverables/{delivId}/upload`, `GET /files/download/{fileId}` with `50MB` limit, extension whitelist & anti-Path Traversal) — *FR-04*
 - [ ] `[TASK-1.7]` Implement `DocumentChangeLog` entity & Spring AOP `@AuditLog` aspect for automatic `Record of Changes` (`A/M/D`) tracking — *FR-17*
 - [ ] `[TASK-1.8]` Implement `Feature` CRUD APIs (`GET/POST/PUT/DELETE /api/projects/{id}/features`) — *FR-05*
@@ -64,10 +64,10 @@
 - [ ] `[TASK-3.1]` Implement Kanban status update API (`PATCH /api/projects/{id}/wbs-tasks/{taskId}/status`) & Iteration filtering (`ITER_1`..`ITER_4`) — *FR-13*
 - [ ] `[TASK-3.2]` Implement Multi-Repo GitHub Webhook receiver (`POST /api/webhooks/github/{repoId}` with `X-Hub-Signature-256` HMAC-SHA256 verification, `[TASK-XX]` PR parser, `github_prs JSONB` upsert & multi-PR state aggregation) — *FR-14*
 - [ ] `[TASK-3.3]` Implement unified `TrackingLog` CRUD APIs (`/api/projects/{id}/tracking/{logType}` for `ISSUE`, `DEFECT`, `QA`, `WEEKLY_MATTER`) — *FR-15*
-- [ ] `[TASK-3.4]` Implement 3-criteria `PeerReview` & Contribution Analytics APIs (`/api/projects/{id}/peer-reviews`, `/api/projects/{id}/analytics/contribution` counting merged PRs across `github_prs` & free-rider detection) — *FR-16*
-- [ ] `[TASK-3.5]` Implement `MagicLinkFilter` (`X-Supervisor-Token`) & Supervisor Portal APIs (`GET /api/supervisor/{magicToken}/overview`, `POST /api/supervisor/{magicToken}/qa/{qaId}/answer`) — *FR-18*
-- [ ] `[TASK-3.6]` Implement Markdown SRS & `Record of Changes` Exporter (`GET /api/projects/{id}/export/srs-md`) — *FR-17, FR-19*
-- [ ] `[TASK-3.7]` Implement Apache POI 5-Sheet Project Tracking `.xlsx` Exporter (`GET /api/projects/{id}/export/tracking-xlsx`: `WBS`, `Issues`, `Defects`, `Q&A`, `Test Cases` incl. `Actual Result` & `Executed At` with `Calibri` Unicode font) — *FR-19*
+- [ ] `[TASK-3.4]` Implement Objective Contribution Analytics API (`/api/projects/{id}/analytics/contribution` aggregating WBS tasks, actual man-days, merged PRs across `github_prs` & executed Test Cases) — *FR-16*
+- [ ] `[TASK-3.5]` Implement `MagicLinkFilter` (`X-Supervisor-Token`) & Supervisor Portal APIs (`GET /api/supervisor/{magicToken}/overview`, `POST /api/supervisor/{magicToken}/milestones/{milestoneId}/review`, `POST /api/supervisor/{magicToken}/qa/{qaId}/answer`) — *FR-04, FR-18*
+- [ ] `[TASK-3.6]` Implement Markdown SRS & `Record of Changes` Exporter (`GET /api/projects/{id}/export/srs-md` with English Report 3 headings) — *FR-17, FR-19*
+- [ ] `[TASK-3.7]` Implement Apache POI 4-Sheet `Project Tracking` `.xlsx` (`WBS`, `Issues`, `Defects`, `Q&A` matching `Report3_Project Tracking.xlsx`) & `Test Report` `.xlsx` (`Report 5` Test Cases) Exporters with `Calibri` Unicode font — *FR-19*
 - [ ] `[TASK-3.8]` Implement Apache POI Weekly Status Report `.xlsx` Exporter (`GET /api/projects/{id}/export/weekly-xlsx` matching 4 sections of `Project Weekly Report_GroupName.xlsx`) — *FR-19*
 
 ---

@@ -1,7 +1,7 @@
 # SYSTEM ARCHITECTURE DOCUMENT (ARCHITECTURE.md)
 **Product Name:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Architecture Style:** Modular Monolith (Backend) + App Router SPA/SSR (Frontend) in a Monorepo  
-**Document Version:** 1.1  
+**Document Version:** 1.2  
 
 ---
 
@@ -11,7 +11,7 @@
 - **Language & Framework:** Java 21, Spring Boot 3.3+
 - **Security:** Spring Security 6, Stateless JWT (Access Token), BCrypt Password Hashing, HMAC-SHA256 (GitHub Webhook Verification), UUID v4 Magic Link Filter
 - **Database & Migration:** PostgreSQL 16, Spring Data JPA (Hibernate), Flyway (Schema Versioning)
-- **Document & File Processing:** Apache POI (`poi-ooxml` cho xuất file `.xlsx` 4 sheets Tracking & Weekly Report), Java NIO (`Path`/`Files` cho Local Storage)
+- **Document & File Processing:** Apache POI (`poi-ooxml` cho xuất file `.xlsx` 4 sheets `Project Tracking` chuẩn FPTU, `Test Report`, và `Weekly Report`), Java NIO (`Path`/`Files` cho Local Storage)
 - **Utilities:** Lombok, MapStruct (DTO Mapping), Jakarta Validation, Spring AOP (Auto Audit Logging)
 
 ### 1.2 Frontend (`frontend/`)
@@ -19,7 +19,7 @@
 - **Styling & UI:** TailwindCSS, Shadcn/UI (Radix Primitives), Lucide React Icons
 - **Typography:** Sử dụng font chữ hỗ trợ đầy đủ dấu tiếng Việt (`Be Vietnam Pro`, `Inter` hoặc `Plus Jakarta Sans` nạp qua `next/font/google` với `subsets: ['vietnamese', 'latin']`) và `JetBrains Mono` cho các mã định danh/code (`FE-01`, `UC-01`, `TASK-15`)
 - **State & Data Fetching:** TanStack Query (React Query v5), Zustand (Client Global State), React Hook Form + Zod (Form Validation)
-- **Visualization:** Recharts (Biểu đồ tiến độ OGA, Target vs Actual Quality và thống kê đóng góp thành viên)
+- **Visualization:** Recharts (Biểu đồ tiến độ 10 cột mốc, Target vs Actual Quality và thống kê đóng góp thành viên)
 
 ### 1.3 Infrastructure & Storage (`Docker` on VPS)
 - **Target Server:** VPS (8 vCPU, 16GB RAM, 180GB SSD)
@@ -61,7 +61,7 @@ flowchart TB
             TestMod["testing (TestCases & Metrics)"]
             ExecMod["execution (Kanban & Webhook)"]
             TrackMod["tracking (Issues, Defects, Q&A)"]
-            AnalyticsMod["analytics (Contribution & Peer-Review)"]
+            AnalyticsMod["analytics (Objective Contribution)"]
             ExportMod["export (RecordOfChanges, .md & .xlsx)"]
         end
 
@@ -121,7 +121,7 @@ SEP490-TeaMa/
 │   │       ├── testing/            # TestCases, Coverage & Defect Metrics
 │   │       ├── execution/          # Kanban Tasks, Iterations, GitHub Webhook Handler
 │   │       ├── tracking/           # Issues, Defects, Q&A Log, Weekly Matters
-│   │       ├── analytics/          # Contribution Stats, Peer-Review
+│   │       ├── analytics/          # Contribution Stats (Tasks, Man-days, PRs, TCs)
 │   │       └── export/             # Automatic RecordOfChanges, Markdown & Excel (POI) Generators
 │   └── src/main/resources/
 │       ├── db/migration/           # Flyway SQL scripts (V1__init_schema.sql, ...)

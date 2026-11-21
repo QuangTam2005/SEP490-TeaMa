@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 **Product Name:** SEP490 Capstone Copilot  
 **Target Domain:** FPT University Software Engineering Capstone Project (`SEP490`)  
-**Document Version:** 1.4 (MVP - Full Academic Compliance, Multi-Repo GitHub & Email Invitation)  
+**Document Version:** 1.5 (MVP - Student Self-Management, Supervisor Review Workflow & Template Alignment)  
 
 ---
 
@@ -17,13 +17,13 @@ Xây dựng một nền tảng quản trị dự án tập trung, tuân thủ 10
 ## 2. Target Users & Roles (RBAC)
 1. **Team Leader (Sinh viên nhóm trưởng):**
    - Khởi tạo dự án, cấu hình thông tin nhóm, thiết lập WBS/RACI/Quality Targets và mời thành viên.
-   - Quản lý 10 cột mốc (Milestones), duyệt Peer-Review, tạo/thu hồi Magic Link cho GVHD và xuất dữ liệu báo cáo.
+   - Quản lý 10 cột mốc (Milestones), chuẩn bị hồ sơ báo cáo, tạo/thu hồi Magic Link cho GVHD và xuất dữ liệu báo cáo.
 2. **Team Member (Thành viên nhóm - 4 đến 5 SV/nhóm):**
    - Cập nhật đặc tả (Features, Use Cases, Screens, Business Rules, Messages), quản lý Task theo Iteration, viết Test Case, log Defect/Issue.
-   - Thực hiện đánh giá chéo (Peer-Review) cuối mỗi Iteration và upload các file báo cáo lên checklist của từng Milestone.
+   - Upload các file báo cáo/gói sản phẩm lên checklist của từng Milestone và theo dõi tiến độ đóng góp chung của nhóm.
 3. **Supervisor / Lecturer (Giảng viên hướng dẫn):**
    - Truy cập không cần đăng nhập thông qua **Magic Link** riêng biệt của nhóm.
-   - Xem tổng quan tiến độ 15 tuần, biểu đồ đóng góp từng sinh viên, kiểm tra các sổ Tracking và trả lời trực tiếp vào mục **Q&A**.
+   - Xem tổng quan tiến độ 15 tuần, thống kê đóng góp từng sinh viên, kiểm tra các sổ Tracking, trả lời trực tiếp vào mục **Q&A**, và **Phê duyệt (`Approved`) hoặc Yêu cầu chỉnh sửa (`Needs Revision`)** cho từng Milestone (không chấm điểm số thay hệ thống trường).
 
 ---
 
@@ -32,8 +32,8 @@ Xây dựng một nền tảng quản trị dự án tập trung, tuân thủ 10
 ### Module 1: Authentication, Project Setup & Cumulative Milestones
 - **FR-01 (Auth):** Đăng ký, đăng nhập và quản lý phiên làm việc bằng **Email & Password** truyền thống (JWT Authentication).
 - **FR-02 (Project Initialization & Email Invitation):** Cho phép Leader (Owner) tạo dự án với các trường chuẩn của Report 1 (`Project Name`, `Project Code`, `Group Name`, `Software Type`) và mời thành viên qua **Email** (`Leader` hoặc `Member`). Hệ thống gửi email chứa đường link mời (`MailSender` + token bảo mật); người được mời truy cập link, đăng ký (`Sign Up`) hoặc đăng nhập (`Sign In`) bằng **đúng email đó** để gia nhập dự án tự động.
-- **FR-03 (15-Week Milestone & Cumulative Deliverables Checklist):** Khi tạo dự án, hệ thống tự động khởi tạo **10 cột mốc chuẩn của SEP490** (Tuần 1 đến Tuần 15) kèm trọng số điểm **On-Going Assessment (OGA - 50%)** (R1: 4%, R2: 8%, R3: 16%, R4: 18%, R5: 18%, R6: 4%, R7: 32%). Mỗi Milestone hiển thị sẵn **Checklist các đầu mục lũy tiến bắt buộc phải nộp** (Ví dụ: M3 nộp Report 3 + Updated Report 1, 2 + Tracking; M4 nộp Report 4 + khung Report 5 + Demo Code Package + Updated Report 1, 2, 3...).
-- **FR-04 (Deliverable File Upload):** Tại từng hạng mục trong Checklist của mỗi Milestone, thành viên có thể upload file báo cáo/source package tương ứng (`.docx`, `.pdf`, `.xlsx`, `.zip`) và cập nhật trạng thái (`Pending`, `Submitted`, `Approved`).
+- **FR-03 (15-Week Milestone & Cumulative Deliverables Checklist):** Khi tạo dự án, hệ thống tự động khởi tạo **10 cột mốc chuẩn của SEP490** (Tuần 1 đến Tuần 15) kèm **tỷ trọng Report tham chiếu theo Syllabus** (`R1: 4%, R2: 8%, R3: 16%, R4: 18%, R5: 18%, R6: 4%, R7: 32%` — chỉ mang tính tham chiếu ưu tiên hồ sơ, **không** dùng để chấm/tính điểm). Mỗi Milestone hiển thị sẵn **Checklist các đầu mục lũy tiến bắt buộc cần chuẩn bị**.
+- **FR-04 (Deliverable Upload & Supervisor Milestone Review):** Tại từng hạng mục trong Checklist của mỗi Milestone, thành viên có thể upload file báo cáo/source package tương ứng (`.docx`, `.pdf`, `.xlsx`, `.zip`) để chuyển trạng thái sẵn sàng kiểm tra (`Pending` $\rightarrow$ `Submitted`). GVHD có thể xem và bấm **Phê duyệt (`Approved`)** hoặc **Yêu cầu chỉnh sửa (`Needs Revision`)** kèm góp ý (không chấm điểm số).
 
 ### Module 2: Planning, WBS, RACI & Quality Targets (Report 2)
 - **FR-05 (Feature, WBS, Work Category & Auto-Complexity Estimator):**
@@ -73,14 +73,12 @@ Xây dựng một nền tảng quản trị dự án tập trung, tuân thủ 10
   - Cho phép ghi nhận nhanh các mục `Other Matters / Suggestions` để tổng hợp vào Báo cáo tuần.
 
 ### Module 6: Contribution Analytics, Audit & Data Export
-- **FR-16 (Contribution & Peer-Review):**
-  - Thống kê khách quan số Task hoàn thành, tổng `man-days` thực tế và số PR được merge của từng thành viên.
-  - Tổ chức đánh giá chéo ẩn danh (**Peer-Review**) giữa các thành viên sau mỗi Iteration (chấm điểm thái độ, đúng hạn, chất lượng công việc) để phát hiện sớm rủi ro *free-rider*.
+- **FR-16 (Objective Contribution Analytics):** Thống kê khách quan khối lượng công việc thực tế của từng thành viên từ dữ liệu vận hành (`WBS Tasks` hoàn thành, `Actual Man-days`, `GitHub PRs merged`, `Test Cases` đã thực thi và `%` tỷ trọng đóng góp trong nhóm) để báo cáo minh bạch cho GVHD — **không** bao gồm chức năng chấm điểm chéo 1–10.
 - **FR-17 (Automatic Record of Changes):** Tự động ghi nhận 100% lịch sử Thêm (`A`), Sửa (`M`), Xóa (`D`) trên các hạng mục SRS/WBS kèm tên người thực hiện và ngày giờ để xuất ra bảng `Record of Changes` ở đầu các Report.
-- **FR-18 (Supervisor Magic Link):** Tạo token URL bảo mật (có thể thu hồi/tạo lại) cho phép GVHD truy cập chế độ Read-only (xem Dashboard, Milestone Checklist, Contribution, Tracking) và trả lời trực tiếp vào bảng `Q&A Log`.
+- **FR-18 (Supervisor Magic Link & Review):** Tạo token URL bảo mật (có thể thu hồi/tạo lại) cho phép GVHD xem tổng quan tiến độ, Contribution Analytics, Tracking Logs, trả lời trực tiếp vào bảng `Q&A Log`, và **Phê duyệt / Yêu cầu chỉnh sửa Milestone** kèm nhận xét.
 - **FR-19 (Markdown & Excel Exporter):**
-  - Xuất toàn bộ bảng biểu đặc tả (Use Cases, Screen Auth, Business Rules, Messages, Record of Changes) ra file **`.md` (Markdown)** sạch sẽ để sinh viên copy-paste nhanh vào file Word báo cáo.
-  - Xuất bộ dữ liệu vận hành ra file **`.xlsx` (Excel)** chuẩn 4 sheets (`WBS`, `Issues`, `Defects`, `Q&A` + sheet `Test Cases`).
+  - Xuất toàn bộ bảng biểu đặc tả (Use Cases, Screen Auth, Business Rules, Messages, Record of Changes) ra file **`.md` (Markdown)** dùng tiêu đề bảng Tiếng Anh chuẩn `Report 3` để sinh viên dán trực tiếp vào Word báo cáo.
+  - Xuất **Project Tracking (`.xlsx`)** đúng chuẩn **4 sheets** theo mẫu `Report3_Project Tracking.xlsx` (`WBS`, `Issues`, `Defects`, `Q&A`), kèm file **Test Report (`.xlsx`)** cho `Report 5` (`Test Cases`, `Actual Result`, `Executed At`).
   - Xuất **Weekly Status Report (`.xlsx` / `.md`)** theo đúng 4 phần của mẫu `Project Weekly Report_GroupName.xlsx` (*Status Report*, *Project Issues*, *Next Week Plan*, *Other Matters/Suggestions*).
 
 ---

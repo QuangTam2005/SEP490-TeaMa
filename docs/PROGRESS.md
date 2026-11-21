@@ -9,11 +9,11 @@
 
 | Document | Version | Status | Summary |
 | :--- | :---: | :---: | :--- |
-| [`docs/PRD.md`](./PRD.md) | `v1.4` | ✅ Finalized | 100% SEP490 Academic Compliance, 19 FRs (incl. Owner Email Invitation + `MailSender`, Multi-Repo GitHub, WBS Work Category & Test Evidence), 10 Milestones Checklist. |
-| [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.1` | ✅ Finalized | Modular Monolith (Java 21 / Spring Boot 3.4+) + Next.js 14 App Router + PostgreSQL 16 + Multi-Repo Webhook Architecture. |
-| [`docs/DESIGN.md`](./DESIGN.md) | `v1.5` | ✅ Finalized | Part I: `taste-skill` + `#E85D04` Burnt Orange + Light/Dark Top Bar + Landing `app-frame`; Part II: 22-table PostgreSQL ERD (`project_invitations`); Part III: REST APIs. |
+| [`docs/PRD.md`](./PRD.md) | `v1.5` | ✅ Finalized | Student self-management & GVHD reporting scope (no school grading/1–10 peer-scoring), Supervisor Milestone Review (`Approved`/`Needs Revision`), Email Invitation + `MailSender`, 4-sheet Tracking + Test Report separation. |
+| [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.2` | ✅ Finalized | Modular Monolith (Java 21 / Spring Boot 3.4+) + Next.js 14 App Router + PostgreSQL 16 + Multi-Repo Webhook & Objective Contribution Architecture. |
+| [`docs/DESIGN.md`](./DESIGN.md) | `v1.6` | ✅ Finalized | `taste-skill` + `#E85D04` + Zero-Violet RACI + Supervisor Milestone Review (`NEEDS_REVISION`/`review_note`) + Email Invitation + 4-Sheet Tracking & Report 5 Export Specs. |
 | [`docs/RULES.md`](./RULES.md) | `v1.3` | ✅ Finalized | AI Coding Rules, Mandatory `docs/*.md` Context-First (`AGENTS.md`), Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR, Upload Safety & Open Email Policy. |
-| [`docs/TASKS.md`](./TASKS.md) | `v1.5` | ✅ Finalized | Restructured into UI-First execution: Phase A (`[TASK-UI.0]`–`[TASK-UI.8]`) $\rightarrow$ Phase B Backend (`[TASK-1.4]`–`[TASK-3.8]`) $\rightarrow$ Phase C Wiring (`[TASK-INT.1]`–`[TASK-INT.2]`). |
+| [`docs/TASKS.md`](./TASKS.md) | `v1.6` | ✅ Finalized | UI-First execution (`[TASK-UI.0]`–`[TASK-UI.8]` $\rightarrow$ Phase B Backend $\rightarrow$ Phase C Wiring) synced with Supervisor Review, no 1–10 Peer-Review scoring & 4-sheet FPTU Excel template. |
 
 ---
 
@@ -125,6 +125,11 @@
   - Built `/projects/[projectId]/overview` (`OverviewMilestonesView` + `DeliverableUploadRow`: 4 `tabular-nums` OGA metric tiles, filterable 10-Milestone Accordion, drag-and-drop 50MB file uploader with progress bar & `FILE_413`/`FILE_001` validation, `SUPERVISOR` read-only lock).
   - Built `/projects/[projectId]/settings` (`ProjectSettingsView`: `LEADER`-only Email Invitation sender with Zod, Active Members `DataTable` with inline role update & remove confirmation, Invitations `DataTable` with Copy/Resend/Revoke, and Supervisor Magic Link Copy & Rotate confirmation with `MEMBER` masking).
   - Verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`).
+
+- **[DONE] Materials & Scope Alignment Audit (`PRD.md` v1.5, `ARCHITECTURE.md` v1.2, `DESIGN.md` v1.6, `TASKS.md` v1.6):**
+  - Removed school-grading / 1–10 `Peer-Review` scoring (`peer_reviews` excluded from MVP; replaced with objective `Contribution Analytics` measuring WBS tasks, actual man-days, merged PRs & executed Test Cases).
+  - Retained Supervisor Milestone Review (`Approve` / `Needs Revision` with feedback note, zero numerical grading) on `/supervisor/[token]`.
+  - Reframed `%` milestone weights strictly as Syllabus Reference Weights (`Tỷ trọng Report tham chiếu`), aligned `Report3_Project Tracking.xlsx` to official **4 sheets** (`WBS`, `Issues`, `Defects`, `Q&A`) + separate `Test Report` (`Report 5`) with English export headers, and replaced RACI `R` Purple badge with Sky (`#E0F2FE` / `#0369A1`).
 
 ---
 

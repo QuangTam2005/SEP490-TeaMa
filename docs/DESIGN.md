@@ -2,7 +2,7 @@
 **Product Name:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Design Philosophy:** Academic Precision meets Modern SaaS (Linear / Notion / Jira hybrid) — **Icon-First, Minimal Text**  
 **Database Engine:** PostgreSQL 16 (Managed via Flyway Migrations)  
-**Document Version:** 1.5 (Taste-Skill UI/UX Harmonization + Email Invitation Schema & API Specification)  
+**Document Version:** 1.6 (No School-Grading Scope, Supervisor Milestone Review, 4-Sheet Tracking Alignment)  
 
 ---
 
@@ -17,7 +17,7 @@ Hệ thống mặc định sử dụng **Light Mode** độ tương phản cao (
 - **Backgrounds (Light Mode):**
   - App Canvas: `#F8F9FA` (Clean warm neutral)
   - Card / Surface: `#FFFFFF` (Pure White) với viền **1px hairline** `#E5E7EB` (loại bỏ bóng mờ nặng khi nghỉ; tối đa **2 cấp lồng box**).
-- **Landing Page (`/`):** Áp dụng chuẩn `design-taste-frontend` (`tasteskill 2.5.1`) với **live HTML `app-frame` preview** tương tác ngay trên Hero (10 Milestones OGA, WBS 24h, Multi-Repo GitHub) và không dùng ảnh stock/số liệu giả.
+- **Landing Page (`/`):** Áp dụng chuẩn `design-taste-frontend` (`tasteskill 2.5.1`) với **live HTML `app-frame` preview** tương tác ngay trên Hero (10 Cột mốc 15 tuần, WBS 24h, Multi-Repo GitHub) và không dùng ảnh stock/số liệu giả.
 
 ### 1.2 Semantic & Domain Status Colors
 Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
@@ -25,9 +25,9 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
 - **Warning / In Review / Medium Risk / Submitted:** Amber `#F59E0B` (Bg: `#FFFBEB`, Text: `#B45309`)
 - **Danger / Failed / Out-of-Sync / High Risk / Blocked:** Rose `#EF4444` (Bg: `#FEF2F2`, Text: `#B91C1C`)
 - **Info / In Progress / RACI `D` (Do):** Blue `#3B82F6` (Bg: `#EFF6FF`, Text: `#1D4ED8`)
-- **RACI Badges:**
+- **RACI Badges (Zero Violet per `taste-skill`):**
   - `D` (Do): Blue (`#DBEAFE` / `#1E40AF`)
-  - `R` (Review): Purple (`#F3E8FF` / `#6B21A8`)
+  - `R` (Review): Sky (`#E0F2FE` / `#0369A1`)
   - `S` (Support): Teal (`#CCFBF1` / `#115E59`)
   - `I` (Informed): Gray (`#F1F5F9` / `#475569`)
 
@@ -63,22 +63,22 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
 - **Left Sidebar (Fixed `240px`, collapsible xuống `64px` ở chế độ Icon-only):**
   - Project Switcher ở trên cùng (hiển thị `Project Code` + `Group Name`).
   - Nhóm menu theo đúng vòng đời SEP490 (mỗi mục đi kèm 1 icon `lucide-react` đặc trưng):
-    1. `Overview & Milestones` *(LayoutDashboard)* — Dashboard 15 tuần + OGA Weight + Deliverables Checklist
+    1. `Overview & Milestones` *(LayoutDashboard)* — Dashboard 15 tuần + Tỷ trọng tham chiếu + Deliverables Checklist
     2. `Planning (Report 2)` *(CalendarRange)* — WBS & Complexity, RACI Matrix, Risk Register, Quality Targets
     3. `SRS & Traceability (Report 3)` *(FileCode2)* — Features, Actors, Use Cases, Screens & Auth Matrix, Rules, Messages, Diagrams
     4. `Execution & Kanban` *(Kanban)* — Iteration 1–4 Board, GitHub Webhook Sync
     5. `Testing & QA (Report 5)` *(FlaskConical)* — Test Cases, Coverage vs Target
     6. `Tracking Registers` *(ClipboardList)* — Issues, Defects, Supervisor Q&A, Weekly Matters
-    7. `Analytics & Export` *(BarChart3)* — Contribution Chart, Peer-Review, Record of Changes, Export `.xlsx`/`.md`
+    7. `Analytics & Export` *(BarChart3)* — Objective Contribution Matrix, Record of Changes, Export `.xlsx`/`.md`
 - **Top Header (`56px`):**
   - Breadcrumb điều hướng + Badge hiển thị **W5/15** và **Countdown Milestone** tiếp theo.
   - Nút thao tác nhanh dạng Icon/Compact: `+ Quick Log` (Issue/Defect/Q&A) và `Export Center`.
 
 ### 3.2 Supervisor Portal Layout (`supervisor/[token]/...`)
-- **Không có Sidebar phức tạp**, sử dụng **Top Navigation Bar tinh gọn** với badge/banner ngắn gọn: *"Supervisor Read-Only • [Group Name]"*.
+- **Không có Sidebar phức tạp**, sử dụng **Top Navigation Bar tinh gọn** với badge ngắn gọn: *"Cổng Giảng viên • [Group Name]"*.
 - Tập trung 4 Tab chính cho GVHD:
-  1. `Milestones` (Tiến độ 10 cột mốc + tải file báo cáo nhóm đã nộp)
-  2. `Contribution` (Biểu đồ Task/PR/Man-days từng sinh viên + kết quả Peer-Review)
+  1. `Milestones` (Tiến độ 10 cột mốc, tải file báo cáo nhóm đã nộp, bấm **Phê duyệt / Yêu cầu chỉnh sửa** kèm nhận xét — không chấm điểm số)
+  2. `Contribution` (Thống kê khách quan Task/PR/Man-days/Test Case từng sinh viên)
   3. `Tracking & Q&A` (Xem Issues/Defects và khung trả lời trực tiếp câu hỏi Q&A của nhóm)
   4. `Traceability` (Kiểm tra nhanh độ phủ Use Case – Code – Test)
 
@@ -93,14 +93,14 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
 2. **Complexity Auto-Calculator Widget (Trong Modal tạo/sửa Screen & WBS):**
    - Nhập số `Fields` và `Transactions` -> tự động hiển thị Badge tính toán realtime (`Simple` / `Medium` / `Complex`) kèm Tooltip hiển thị quy chuẩn bộ môn (`<=7 fields & <=3 trans = Simple`, ...).
 3. **Milestone Accordion & Checklist Card:**
-   - 10 cột mốc hiển thị dạng Accordion dọc. Mỗi mốc hiển thị badge trọng số OGA (VD: `16%`), hạn nộp, danh sách checklist lũy tiến kèm Dropzone kéo-thả upload file và icon trạng thái duyệt.
+   - 10 cột mốc hiển thị dạng Accordion dọc. Mỗi mốc hiển thị badge tỷ trọng tham chiếu (VD: `16%`), hạn nộp, danh sách checklist lũy tiến kèm Dropzone kéo-thả upload file và trạng thái duyệt của GVHD (`Chưa nộp` / `Chờ GVHD duyệt` / `Cần chỉnh sửa` / `Đã duyệt`).
 4. **Traceability Pill Links:**
    - Mọi mã `UC-01`, `TASK-15`, `TC-04`, `BUG-02` khi xuất hiện trong bảng đều là **Clickable Badge** (font `JetBrains Mono`) mở ra Slide-over Drawer (Sheet bên phải) hiển thị chi tiết thực thể đó mà không làm mất trang hiện tại.
 5. **Iteration Kanban Board & Task Card:**
    - Thanh lọc nhanh 4 đợt Iteration (`Iter 1` – `Iter 4`) và thành viên.
    - Mỗi Task Card tối giản chữ, hiển thị: Mã `[TASK-15]` (`JetBrains Mono`), tiêu đề ngắn (tối đa 2 dòng), badge Iteration, **Multi-Repo GitHub PR chips** (VD: `BE #12`, `FE #08` kèm icon trạng thái `OPEN`/`MERGED`/`CLOSED` và click mở link PR), số `man-days` (icon đồng hồ) và Avatar người phụ trách.
-6. **Anonymous Peer-Review Matrix:**
-   - Giao diện đánh giá chéo cuối mỗi Iteration dạng bảng lưới nhỏ gọn: Hàng là tên thành viên, Cột là 3 tiêu chí (*Thái độ*, *Đúng hạn*, *Chất lượng*) chấm bằng **Icon Star Rating / Thanh chọn điểm 1–10**, tự động gắn icon cảnh báo (`AlertTriangle`) khi điểm trung bình dưới ngưỡng an toàn (nguy cơ *free-rider*).
+6. **Objective Contribution Summary:**
+   - Bảng & biểu đồ tổng hợp khối lượng công việc thực tế theo thành viên (`WBS Tasks` xong, `Actual Man-days`, `GitHub PRs merged`, `Test Cases` đã thực thi và `%` tỷ trọng đóng góp) phục vụ minh bạch nhóm và báo cáo GVHD — **không** sử dụng ma trận chấm điểm 1–10.
 7. **Feedback & Empty States:**
    - Mọi thao tác lưu/xóa/export đều phản hồi bằng `Sonner` Toast ở góc dưới bên phải.
    - Bảng trống hiển thị **Empty State** gồm Icon minh họa lớn + 1 dòng hướng dẫn ngắn + 1 nút CTA chính (VD: `+ Thêm Use Case`).
@@ -191,8 +191,10 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
    - `name VARCHAR(255) NOT NULL`
    - `week_number INT NOT NULL` (`1`..`15`)
    - `due_date DATE`
-   - `oga_weight_percent DECIMAL(5,2) NOT NULL DEFAULT 0` (R1: 4%, R2: 8%, R3: 16%, R4: 18%, R5: 18%, R6: 4%, R7: 32%)
-   - `status VARCHAR(20) NOT NULL DEFAULT 'PENDING'` (`PENDING` | `SUBMITTED` | `APPROVED`)
+   - `oga_weight_percent DECIMAL(5,2) NOT NULL DEFAULT 0` *(Tỷ trọng tham chiếu Syllabus: R1 4%, R2 8%, R3 16%, R4 18%, R5 18%, R6 4%, R7 32%)*
+   - `status VARCHAR(20) NOT NULL DEFAULT 'PENDING'` (`PENDING` | `SUBMITTED` | `NEEDS_REVISION` | `APPROVED`)
+   - `review_note TEXT` *(Nhận xét góp ý của GVHD khi duyệt hoặc yêu cầu chỉnh sửa — mở rộng ở V4)*
+   - `reviewed_at TIMESTAMPTZ` *(Mở rộng ở V4)*
 
 5. **`milestone_deliverables`**
    - `id BIGSERIAL PRIMARY KEY`
@@ -311,7 +313,7 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
     - `app_messages`: `id`, `project_id`, `code` (`MSG01`), `message_type` (`INLINE` | `TOAST` | `FIELD_ERROR`), `context`, `content`, + Audit/Soft-Delete *(Khớp 3 loại chuẩn Report 3: In line, Toast message, In red under text box)*.
     - `diagram_attachments`: `id`, `project_id`, `diagram_type` (`CONTEXT` | `USE_CASE` | `SCREEN_FLOW` | `ERD` | `ARCHITECTURE`), `title`, `file_path`, `file_name`, + Audit/Soft-Delete.
 
-### 6.5 Testing, Tracking, Peer-Review & Audit Logs
+### 6.5 Testing, Tracking & Audit Logs
 15. **`test_cases`**
     - `id BIGSERIAL PRIMARY KEY`
     - `project_id BIGINT NOT NULL REFERENCES projects(id)`
@@ -358,27 +360,14 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
     - `answer_or_resolution TEXT` *(GVHD hoặc Leader nhập câu trả lời/cách xử lý)*
     - + Audit & Soft-Delete columns
 
-17. **`peer_reviews`** & **`document_change_logs`**
-    - `peer_reviews`:
-      - `id BIGSERIAL PRIMARY KEY`
-      - `project_id BIGINT NOT NULL REFERENCES projects(id)`
-      - `iteration VARCHAR(20) NOT NULL` (`ITER_1`..`ITER_4`)
-      - `reviewer_id BIGINT NOT NULL REFERENCES users(id)`
-      - `reviewee_id BIGINT NOT NULL REFERENCES users(id)`
-      - `attitude_score INT NOT NULL CHECK (attitude_score BETWEEN 1 AND 10)` *(Tiêu chí 1: Thái độ)*
-      - `timeliness_score INT NOT NULL CHECK (timeliness_score BETWEEN 1 AND 10)` *(Tiêu chí 2: Đúng hạn)*
-      - `quality_score INT NOT NULL CHECK (quality_score BETWEEN 1 AND 10)` *(Tiêu chí 3: Chất lượng công việc)*
-      - `comment TEXT`
-      - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
-      - `UNIQUE (project_id, iteration, reviewer_id, reviewee_id)`
-    - `document_change_logs`:
-      - `id BIGSERIAL PRIMARY KEY`
-      - `project_id BIGINT NOT NULL REFERENCES projects(id)`
-      - `report_target VARCHAR(10) NOT NULL` (`R1`..`R7`)
-      - `change_type VARCHAR(5) NOT NULL` (`A` | `M` | `D`)
-      - `in_charge_user_id BIGINT REFERENCES users(id)`
-      - `change_description TEXT NOT NULL`
-      - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+17. **`document_change_logs`** *(Lưu ý: bảng `peer_reviews` trong `V1` không sử dụng trong MVP nhằm tránh trùng phạm vi chấm điểm của trường)*
+    - `id BIGSERIAL PRIMARY KEY`
+    - `project_id BIGINT NOT NULL REFERENCES projects(id)`
+    - `report_target VARCHAR(10) NOT NULL` (`R1`..`R7`)
+    - `change_type VARCHAR(5) NOT NULL` (`A` | `M` | `D`)
+    - `in_charge_user_id BIGINT REFERENCES users(id)`
+    - `change_description TEXT NOT NULL`
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 
 ---
 
@@ -437,15 +426,16 @@ Tất cả endpoint dưới `/api/projects/{projectId}/**` đều yêu cầu hea
 | `GET` | `/api/projects/{id}/test-cases/{tcId}/evidence/{fileId}/download` | Tải/xem ảnh minh chứng bảo mật (kiểm tra quyền thành viên/GVHD) | Member / Supervisor |
 | `GET` | `/api/projects/{id}/quality-metrics` | Tính `Actual vs Target` Test Coverage & Defect Rate | Member |
 | `GET / POST` | `/api/projects/{id}/tracking/{logType}` | Quản lý `ISSUE`, `DEFECT`, `QA`, `WEEKLY_MATTER` | Member |
-| `GET / POST` | `/api/projects/{id}/peer-reviews` | Nộp & xem kết quả đánh giá chéo 3 tiêu chí theo Iteration | Member |
-| `GET` | `/api/projects/{id}/analytics/contribution` | Thống kê Task, Man-days, PR merged & cảnh báo Free-rider | Member |
-| `GET` | `/api/projects/{id}/export/tracking-xlsx` | Tải file Excel 5 sheets (`WBS`, `Issues`, `Defects`, `Q&A`, `TC`) | Member |
-| `GET` | `/api/projects/{id}/export/weekly-xlsx` | Tải file Excel Báo cáo tuần chuẩn FPTU | Member |
-| `GET` | `/api/projects/{id}/export/srs-md` | Tải file Markdown bảng biểu SRS & `Record of Changes` | Member |
+| `GET` | `/api/projects/{id}/analytics/contribution` | Thống kê khách quan Task, Man-days, PR merged & Test Cases theo thành viên | Member |
+| `GET` | `/api/projects/{id}/export/tracking-xlsx` | Tải file Excel 4 sheets chuẩn `Report3_Project Tracking.xlsx` (`WBS`, `Issues`, `Defects`, `Q&A`, header Tiếng Anh) | Member |
+| `GET` | `/api/projects/{id}/export/test-report-xlsx` | Tải file Excel `Test Report` cho `Report 5` (`Test Cases`, `Actual Result`, `Executed At`, header Tiếng Anh) | Member |
+| `GET` | `/api/projects/{id}/export/weekly-xlsx` | Tải file Excel Báo cáo tuần chuẩn `Project Weekly Report_GroupName.xlsx` | Member |
+| `GET` | `/api/projects/{id}/export/srs-md` | Tải file Markdown bảng biểu SRS (header Tiếng Anh chuẩn Report 3) & `Record of Changes` | Member |
 
 ### 7.5 Webhooks & Supervisor Magic Link
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/webhooks/github/{repoId}` | Nhận PR event từ GitHub theo từng repository (`X-Hub-Signature-256`), cập nhật `github_prs JSONB` & trạng thái Task | GitHub Webhook |
-| `GET` | `/api/supervisor/{magicToken}/overview` | Lấy dữ liệu Read-only toàn dự án cho GVHD | Magic Token |
+| `GET` | `/api/supervisor/{magicToken}/overview` | Lấy dữ liệu tổng quan dự án cho GVHD | Magic Token |
+| `POST` | `/api/supervisor/{magicToken}/milestones/{milestoneId}/review` | GVHD Phê duyệt (`APPROVED`) hoặc Yêu cầu chỉnh sửa (`NEEDS_REVISION`) kèm nhận xét cho Milestone | Magic Token |
 | `POST` | `/api/supervisor/{magicToken}/qa/{qaId}/answer` | GVHD gửi câu trả lời trực tiếp vào mục Q&A | Magic Token |
