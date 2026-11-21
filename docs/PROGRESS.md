@@ -120,9 +120,14 @@
   - Built public `/invite?token=...` gate (`InviteAcceptView`) handling all 4 scenarios (`valid-new`, `valid-existing`, `mismatch` `INV_003`, `expired` `INV_001`) plus mock quick-test token switcher.
   - Built `/projects` Directory (`ProjectsDirectoryView` with search, `QueryStateBoundary` 3-card skeleton/empty/error states, linked `1px hairline` project cards) and `CreateProjectDialog` wizard (auto-seeding 10 Milestones & 5 Quality Objectives).
   - Verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`, `8/8` static pages).
+- **[DONE] `[TASK-UI.3]` Student Workspace `AppShell`, `Overview & 10 Milestones OGA`, & `Settings` (Email Invite + Magic Link):**
+  - Built `WorkspaceShell` (collapsible `260px`/`64px` Left Sidebar with tooltips, mobile `Sheet` drawer, Project Switcher, 8 nav items in 3 groups, sticky Top Header with Breadcrumb, `W0X/15` Week Indicator & Light/Dark `ThemeToggle`).
+  - Built `/projects/[projectId]/overview` (`OverviewMilestonesView` + `DeliverableUploadRow`: 4 `tabular-nums` OGA metric tiles, filterable 10-Milestone Accordion, drag-and-drop 50MB file uploader with progress bar & `FILE_413`/`FILE_001` validation, `SUPERVISOR` read-only lock).
+  - Built `/projects/[projectId]/settings` (`ProjectSettingsView`: `LEADER`-only Email Invitation sender with Zod, Active Members `DataTable` with inline role update & remove confirmation, Invitations `DataTable` with Copy/Resend/Revoke, and Supervisor Magic Link Copy & Rotate confirmation with `MEMBER` masking).
+  - Verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`).
 
 ---
 
 ## 3. Next Steps Queue (Phase A — UI-First)
-1. `[TASK-UI.3]` Build Student Workspace `AppShell` (Sidebar `260px`/`64px` + Top Header Light/Dark + Week Indicator + Project Switcher) + `Overview & 10 Milestones OGA` (Accordion, 50MB Dropzone UI) + `Settings` (Email Invite Sender, Pending Invitations & Magic Link manager).
-2. `[TASK-UI.4]` Build `Planning (Report 2)` — Features & WBS Table, `RaciMatrixTable`, Risk Register & 5 Quality Objectives.
+1. `[TASK-UI.4]` Build `Planning (Report 2)` — Features & WBS Table (`Work Category`, Allocated Effort Distribution, realtime `Complexity Auto-Calculator Widget`), interactive `RaciMatrixTable` (sticky column + Click-to-Cycle `D/R/S/I`), Risk Register & 5 Quality Objectives tabs.
+2. `[TASK-UI.5]` Build `SRS & Traceability Hub (Report 3)` — Actors, Use Cases, Screens & interactive `ScreenAuthMatrix` (8 FPTU permission levels click-to-toggle), Business Rules, Messages, Diagrams & Traceability Slide-over Drawer.
