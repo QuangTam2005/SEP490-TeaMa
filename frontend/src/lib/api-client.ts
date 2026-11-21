@@ -123,8 +123,10 @@ apiClient.interceptors.response.use(
     ) {
       const pathname = window.location.pathname;
       const isPublicOrSupervisor =
+        pathname === '/' ||
         pathname.startsWith('/login') ||
         pathname.startsWith('/register') ||
+        pathname.startsWith('/invite') ||
         pathname.startsWith('/supervisor/');
 
       if (!isPublicOrSupervisor) {

@@ -4,6 +4,7 @@ import { Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { AppToaster } from '@/components/providers/toaster';
+import { UiReviewToolbar } from '@/components/shared/ui-review-toolbar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import './globals.css';
 
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <ThemeProvider>
           <QueryProvider>
             <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+            <UiReviewToolbar />
             <AppToaster />
           </QueryProvider>
         </ThemeProvider>

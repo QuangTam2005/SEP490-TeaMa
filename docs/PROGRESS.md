@@ -100,11 +100,18 @@
 - **[DONE] Specification Sync (`PRD.md` v1.4, `DESIGN.md` v1.5, `TASKS.md` v1.4):**
   - Locked UI/UX Master Plan v2: `#E85D04` Burnt Orange accent, Light/Dark switcher in Top Bar (`next-themes`), and Landing `/` upgrade with interactive `app-frame` preview.
   - Updated `FR-02`, ERD (`project_invitations` table #22 for `V4`), API contracts (`/api/projects/{id}/invitations/**`, `/api/invitations/verify|accept`), and Sprint 1 tasks (`[TASK-1.5]`, `[TASK-1.12]`–`[TASK-1.14]`) for Owner Email Invitation + `MailSender` + Sign Up/Sign In join flow.
-- **[DONE] UI-First Roadmap Restructuring (`docs/TASKS.md` v1.5):**
+- **[DONE] UI-First Roadmap Restructuring (`docs/TASKS.md` v1.5 - `9966d8e`):**
   - Reorganized backlog into **Phase A (UI-First Prototype `[TASK-UI.0]`–`[TASK-UI.8]`) $\rightarrow$ Phase B (Backend `[TASK-1.4]`–`[TASK-3.8]`) $\rightarrow$ Phase C (API Wiring `[TASK-INT.1]`–`[TASK-INT.2]`)** while preserving completed `[TASK-1.1]`–`[TASK-1.3]`.
+- **[DONE] `[TASK-UI.0]` Contract-First Mock Architecture, Error State Boundaries & UI Review Simulator:**
+  - Added `INV_001`–`INV_004` to `src/types/api.ts` and fixed `api-client.ts` 401 redirect guard to exclude `/` and `/invite`.
+  - Created strict TypeScript DTO contracts (`src/types/{auth,project,planning,srs,testing,tracking,index}.ts`) matching `DESIGN.md` v1.5 with zero `any`.
+  - Built `src/mocks/mock-runtime.ts` (latency, role enforcement, real `ApiClientError` & `VAL_001` `fieldErrors` simulator) + `src/mocks/fixtures/seed-data.ts` (10 Milestones, 5 Quality Objectives, 4 invite token scenarios `valid-new`/`valid-existing`/`mismatch`/`expired`, Multi-Repo GitHub).
+  - Implemented `src/services/` Port Layer (`authService`, `projectService`) switching transparently between `mock/` and `http/` via `NEXT_PUBLIC_DATA_MODE`.
+  - Created standardized state/error primitives (`QueryStateBoundary`, `ErrorStateCard`, `EmptyState`, `form-error-utils.ts`, dev-only `UiReviewToolbar`, global `app/error.tsx` & `app/not-found.tsx`).
+  - Verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`).
 
 ---
 
 ## 3. Next Steps Queue (Phase A — UI-First)
-1. `[TASK-UI.0]` Build Contract-First Mock Architecture (`src/types/*`, `src/services/`, `MockRuntime`, `QueryStateBoundary`, `ErrorStateCard`, `EmptyState`, `UiReviewToolbar` & `/invite` public guard).
-2. `[TASK-UI.1]` Upgrade `#E85D04` tokens, Light/Dark Top Bar switcher, shared UI primitives & Landing Page `/` (`app-frame` preview).
+1. `[TASK-UI.1]` Upgrade `#E85D04` tokens, Light/Dark Top Bar switcher, shared UI primitives & Landing Page `/` (`app-frame` preview).
+2. `[TASK-UI.2]` Build Auth & Email Invitation Flow (`/login`, `/register`, `/invite?token=...`) + Project Directory & Create Project Wizard (`/projects`).
