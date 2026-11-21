@@ -5,13 +5,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertCircle, CheckCircle2, Loader2, Plus } from 'lucide-react';
+import { AlertCircle, Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -148,23 +147,10 @@ export function CreateProjectDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Khởi tạo dự án SEP490</DialogTitle>
-          <DialogDescription>
-            Bạn sẽ tự động trở thành Nhóm trưởng (Leader) và có thể mời thành
-            viên qua Email ngay sau khi tạo.
-          </DialogDescription>
+          <p className="font-mono text-xs text-muted-foreground">
+            Auto-seed 10 Milestones • 5 Quality Objectives
+          </p>
         </DialogHeader>
-
-        <div className="flex items-start gap-2 rounded-md border bg-brand-soft px-3.5 py-2.5 text-xs text-foreground">
-          <CheckCircle2
-            className="mt-0.5 h-4 w-4 shrink-0 text-brand"
-            strokeWidth={1.75}
-          />
-          <span>
-            Hệ thống tự động khởi tạo{' '}
-            <strong>10 cột mốc SEP490 (Report 1–7)</strong>, danh mục nộp bài
-            lũy tiến và <strong>5 Quality Objectives</strong>.
-          </span>
-        </div>
 
         {submitError ? (
           <div

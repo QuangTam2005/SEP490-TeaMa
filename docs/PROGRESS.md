@@ -131,6 +131,10 @@
   - Retained Supervisor Milestone Review (`Approve` / `Needs Revision` with feedback note, zero numerical grading) on `/supervisor/[token]`.
   - Reframed `%` milestone weights strictly as Syllabus Reference Weights (`Tỷ trọng Report tham chiếu`), aligned `Report3_Project Tracking.xlsx` to official **4 sheets** (`WBS`, `Issues`, `Defects`, `Q&A`) + separate `Test Report` (`Report 5`) with English export headers, and replaced RACI `R` Purple badge with Sky (`#E0F2FE` / `#0369A1`).
 
+- **[DONE] Minimal-Text Cleanup & Landing Removal:**
+  - Removed Landing Page `/` (`src/app/page.tsx` now redirects directly to `/login`; deleted `components/landing/*`).
+  - Stripped redundant explanatory subtitles across Auth (`/login`, `/register`, `/invite`), `/projects`, `CreateProjectDialog`, `OverviewMilestonesView`, `DeliverableUploadRow`, and `ProjectSettingsView` (enforced Minimal-Text rule in `DESIGN.md` v1.6).
+
 ---
 
 ## 3. Next Steps Queue (Phase A — UI-First)

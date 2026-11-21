@@ -132,24 +132,14 @@ export function RegisterForm() {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Tạo tài khoản
         </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Sử dụng bất kỳ địa chỉ email hợp lệ nào để bắt đầu làm việc cùng nhóm.
-        </p>
       </div>
 
       {inviteToken ? (
-        <div className="mb-5 flex items-start gap-2.5 rounded-md border bg-brand-soft px-3.5 py-3 text-xs text-foreground">
-          <Mail
-            className="mt-0.5 h-4 w-4 shrink-0 text-brand"
-            strokeWidth={1.75}
-          />
-          <div>
-            <p className="font-semibold">Đăng ký theo lời mời dự án</p>
-            <p className="mt-0.5 text-muted-foreground">
-              Hoàn tất đăng ký với email được mời để hệ thống tự động đưa bạn
-              vào nhóm.
-            </p>
-          </div>
+        <div className="mb-5 flex items-center gap-2 rounded-md border bg-brand-soft px-3.5 py-2.5 text-xs text-foreground">
+          <Mail className="h-4 w-4 shrink-0 text-brand" strokeWidth={1.75} />
+          <span className="font-mono">
+            {invitedEmail || 'Đăng ký theo lời mời'}
+          </span>
         </div>
       ) : null}
 

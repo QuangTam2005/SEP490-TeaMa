@@ -87,7 +87,7 @@ export function InviteAcceptView() {
       <header className="h-16 border-b bg-card">
         <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-10">
           <Link
-            href="/"
+            href="/login"
             className="inline-flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand text-white">
@@ -133,18 +133,8 @@ export function InviteAcceptView() {
                     {invite.projectCode} • {invite.groupName}
                   </p>
                   <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground">
-                    Lời mời tham gia {invite.projectName}
+                    {invite.projectName}
                   </h1>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">
-                      {invite.invitedByName}
-                    </span>{' '}
-                    đã mời địa chỉ{' '}
-                    <span className="font-mono text-xs font-medium text-foreground">
-                      {invite.invitedEmail}
-                    </span>{' '}
-                    gia nhập nhóm đồ án SEP490.
-                  </p>
 
                   <dl className="mt-5 space-y-2 rounded-md border bg-canvas p-4 text-xs">
                     <div className="flex items-center justify-between gap-2">

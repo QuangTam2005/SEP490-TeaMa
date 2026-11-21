@@ -421,10 +421,6 @@ export function ProjectSettingsView({ projectId }: ProjectSettingsViewProps) {
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
           Cài đặt nhóm &amp; Quyền truy cập
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Gửi lời mời tham gia dự án qua Email (MailSender) và quản lý Magic
-          Link chỉ đọc cho Giảng viên hướng dẫn.
-        </p>
       </div>
 
       {/* Tab Bar */}
@@ -495,17 +491,12 @@ export function ProjectSettingsView({ projectId }: ProjectSettingsViewProps) {
           {/* Owner Email Invitation Form */}
           {isLeader ? (
             <div className="rounded-lg border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
+              <div className="mb-3 flex items-center gap-2">
                 <Mail className="h-4 w-4 text-brand" strokeWidth={1.75} />
                 <h2 className="text-base font-semibold text-foreground">
                   Mời thành viên qua Email
                 </h2>
               </div>
-              <p className="mb-4 text-xs text-muted-foreground">
-                Hệ thống gửi liên kết mời qua MailSender tới email bên dưới.
-                Người nhận đăng ký hoặc đăng nhập bằng đúng email này để tự động
-                gia nhập nhóm.
-              </p>
 
               {inviteFormError ? (
                 <div
@@ -647,13 +638,8 @@ export function ProjectSettingsView({ projectId }: ProjectSettingsViewProps) {
             isLeader && magicLinkUrl ? (
               <div className="max-w-2xl rounded-lg border bg-card p-6">
                 <h2 className="text-base font-semibold text-foreground">
-                  Đường dẫn truy cập chỉ đọc cho Giảng viên (Magic Link)
+                  Magic Link Giảng viên
                 </h2>
-                <p className="mt-1.5 text-sm text-muted-foreground">
-                  Chia sẻ liên kết này cho Giảng viên hướng dẫn để xem tiến độ
-                  10 cột mốc, biểu đồ đóng góp và trả lời trực tiếp vào sổ
-                  Q&amp;A mà không cần tài khoản.
-                </p>
 
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                   <Input
@@ -712,12 +698,8 @@ export function ProjectSettingsView({ projectId }: ProjectSettingsViewProps) {
                   <Lock className="h-5 w-5" strokeWidth={1.75} />
                 </div>
                 <h2 className="text-base font-semibold text-foreground">
-                  Magic Link chỉ hiển thị cho Nhóm trưởng
+                  Magic Link chỉ hiển thị cho LEADER
                 </h2>
-                <p className="mt-1.5 text-sm text-muted-foreground">
-                  Để đảm bảo bảo mật đường dẫn đánh giá của Giảng viên, chỉ tài
-                  khoản có vai trò LEADER mới được xem hoặc thu hồi Magic Link.
-                </p>
               </div>
             )
           }

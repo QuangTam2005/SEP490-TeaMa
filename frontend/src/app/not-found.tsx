@@ -18,9 +18,9 @@ export default function NotFound() {
         </p>
         <div className="mt-6 flex items-center justify-center gap-2.5">
           <Button asChild>
-            <Link href="/">
+            <Link href="/projects">
               <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-              Quay về trang chủ
+              Về Workspace
             </Link>
           </Button>
         </div>

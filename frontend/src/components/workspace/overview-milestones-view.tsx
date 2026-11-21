@@ -123,10 +123,6 @@ export function OverviewMilestonesView({
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
             {project?.projectName ?? 'Tổng quan & 10 Cột mốc 15 tuần'}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Theo dõi tiến độ 15 tuần, tỷ trọng Report tham chiếu theo Syllabus và
-            nộp hồ sơ báo cáo cho GVHD kiểm tra (tối đa 50MB).
-          </p>
         </div>
 
         <Button variant="outline" asChild className="h-9 self-start sm:self-auto">
@@ -163,9 +159,6 @@ export function OverviewMilestonesView({
           <p className="mt-2 font-mono text-2xl font-bold text-foreground tabular-nums">
             {stats.approvedMilestones} / {stats.totalMilestones || 10}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Chuẩn 10 Milestones SEP490
-          </p>
         </div>
 
         <div className="rounded-lg border bg-card p-4">
@@ -178,9 +171,6 @@ export function OverviewMilestonesView({
           </div>
           <p className="mt-2 font-mono text-2xl font-bold text-foreground tabular-nums">
             {stats.submittedDeliverables} / {stats.totalDeliverables}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Checklist lũy tiến Report 1–7
           </p>
         </div>
 

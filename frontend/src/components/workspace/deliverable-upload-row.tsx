@@ -128,9 +128,8 @@ export function DeliverableUploadRow({
               : ''}
           </p>
         ) : (
-          <p className="mt-1 pl-6 text-xs text-muted-foreground">
-            Chưa có tệp nộp. Kéo thả hoặc bấm tải lên (.docx, .pdf, .xlsx, .zip
-            — tối đa 50MB).
+          <p className="mt-1 pl-6 font-mono text-[11px] text-muted-foreground">
+            .docx, .pdf, .xlsx, .zip • Max 50MB
           </p>
         )}
 

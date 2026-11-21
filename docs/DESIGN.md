@@ -17,7 +17,8 @@ Hệ thống mặc định sử dụng **Light Mode** độ tương phản cao (
 - **Backgrounds (Light Mode):**
   - App Canvas: `#F8F9FA` (Clean warm neutral)
   - Card / Surface: `#FFFFFF` (Pure White) với viền **1px hairline** `#E5E7EB` (loại bỏ bóng mờ nặng khi nghỉ; tối đa **2 cấp lồng box**).
-- **Landing Page (`/`):** Áp dụng chuẩn `design-taste-frontend` (`tasteskill 2.5.1`) với **live HTML `app-frame` preview** tương tác ngay trên Hero (10 Cột mốc 15 tuần, WBS 24h, Multi-Repo GitHub) và không dùng ảnh stock/số liệu giả.
+- **Entry Route (`/`):** Redirect trực tiếp sang `/login` (không dùng Landing Page marketing; tập trung 100% vào không gian làm việc & Minimal-Text chuẩn Linear/Notion).
+- **Minimal-Text Discipline:** Cấm viết các đoạn văn giải thích dài dòng dưới tiêu đề trang, thẻ thống kê hoặc header form (`Đăng nhập`, `Dự án SEP490`, `Cài đặt` chỉ giữ tiêu đề + nhãn dữ liệu cốt lõi).
 
 ### 1.2 Semantic & Domain Status Colors
 Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
