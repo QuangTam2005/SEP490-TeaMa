@@ -16,11 +16,11 @@ const config: Config = {
       },
       colors: {
         brand: {
-          DEFAULT: '#F27024',
-          hover: '#D95D16',
-          soft: '#FFF4ED',
+          DEFAULT: '#E85D04',
+          hover: '#C84E03',
+          soft: 'hsl(var(--brand-soft))',
         },
-        canvas: '#F8FAFC',
+        canvas: 'hsl(var(--canvas))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

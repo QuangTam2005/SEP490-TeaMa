@@ -109,9 +109,14 @@
   - Implemented `src/services/` Port Layer (`authService`, `projectService`) switching transparently between `mock/` and `http/` via `NEXT_PUBLIC_DATA_MODE`.
   - Created standardized state/error primitives (`QueryStateBoundary`, `ErrorStateCard`, `EmptyState`, `form-error-utils.ts`, dev-only `UiReviewToolbar`, global `app/error.tsx` & `app/not-found.tsx`).
   - Verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`).
+- **[DONE] `[TASK-UI.1]` Design Tokens (`#E85D04`), Shared Primitives & Landing Page `/` (`taste-skill`):**
+  - Upgraded `tailwind.config.ts` & `globals.css` to `#E85D04` Burnt Orange (`hover #C84E03`, adaptive `brand-soft`), Light (`#F8F9FA` / `#FFFFFF` / `#1A1D23`) & Dark (`#0B0F19` / `#111827`) hairline palettes, `.skip-link`, and `prefers-reduced-motion` guard; updated `Button` (micro-press `active:scale-[0.985]`) & `Card` (flat `1px hairline`).
+  - Built shared primitives: `ThemeToggle`, domain-typed `StatusBadge`, generic `DataTable<T>`, and `InspectorDrawer`.
+  - Built `taste-skill` Landing Page `/` (`LandingHeader` with Light/Dark switcher & mobile `Sheet`, live HTML interactive `HeroAppFrame` with 3 tabs: 10 Milestones OGA / WBS & Complexity / GitHub Multi-Repo, OGA weight strip, 3 live-UI feature cards, Email Invitation vs Supervisor Magic Link split, and closing footer).
+  - Verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`).
 
 ---
 
 ## 3. Next Steps Queue (Phase A — UI-First)
-1. `[TASK-UI.1]` Upgrade `#E85D04` tokens, Light/Dark Top Bar switcher, shared UI primitives & Landing Page `/` (`app-frame` preview).
-2. `[TASK-UI.2]` Build Auth & Email Invitation Flow (`/login`, `/register`, `/invite?token=...`) + Project Directory & Create Project Wizard (`/projects`).
+1. `[TASK-UI.2]` Build Auth & Email Invitation Flow (`/login`, `/register`, `/invite?token=...` covering 4 token states: `valid-new`, `valid-existing`, `mismatch`, `expired`) + Project Directory & Create Project Wizard (`/projects`).
+2. `[TASK-UI.3]` Build Student Workspace `AppShell` + `Overview & 10 Milestones OGA` + `Settings` (Email Invite Sender, Pending Invitations & Magic Link manager).
