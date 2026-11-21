@@ -114,9 +114,15 @@
   - Built shared primitives: `ThemeToggle`, domain-typed `StatusBadge`, generic `DataTable<T>`, and `InspectorDrawer`.
   - Built `taste-skill` Landing Page `/` (`LandingHeader` with Light/Dark switcher & mobile `Sheet`, live HTML interactive `HeroAppFrame` with 3 tabs: 10 Milestones OGA / WBS & Complexity / GitHub Multi-Repo, OGA weight strip, 3 live-UI feature cards, Email Invitation vs Supervisor Magic Link split, and closing footer).
   - Verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`).
+- **[DONE] `[TASK-UI.2]` Auth (`/login`, `/register`), Email Invitation Gate (`/invite`) & Project Directory (`/projects`):**
+  - Installed `react-hook-form`, `@hookform/resolvers`, `zod` (`^3.24.2`), and `zustand`; created `src/store/auth-store.ts`.
+  - Built 2-column `(auth)/layout.tsx`, `/login` & `/register` with React Hook Form + Zod (accepting any valid email domain, mapping `VAL_001` via `applyApiFieldErrors`, auto-accepting `?inviteToken=...` after login/signup).
+  - Built public `/invite?token=...` gate (`InviteAcceptView`) handling all 4 scenarios (`valid-new`, `valid-existing`, `mismatch` `INV_003`, `expired` `INV_001`) plus mock quick-test token switcher.
+  - Built `/projects` Directory (`ProjectsDirectoryView` with search, `QueryStateBoundary` 3-card skeleton/empty/error states, linked `1px hairline` project cards) and `CreateProjectDialog` wizard (auto-seeding 10 Milestones & 5 Quality Objectives).
+  - Verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`, `8/8` static pages).
 
 ---
 
 ## 3. Next Steps Queue (Phase A — UI-First)
-1. `[TASK-UI.2]` Build Auth & Email Invitation Flow (`/login`, `/register`, `/invite?token=...` covering 4 token states: `valid-new`, `valid-existing`, `mismatch`, `expired`) + Project Directory & Create Project Wizard (`/projects`).
-2. `[TASK-UI.3]` Build Student Workspace `AppShell` + `Overview & 10 Milestones OGA` + `Settings` (Email Invite Sender, Pending Invitations & Magic Link manager).
+1. `[TASK-UI.3]` Build Student Workspace `AppShell` (Sidebar `260px`/`64px` + Top Header Light/Dark + Week Indicator + Project Switcher) + `Overview & 10 Milestones OGA` (Accordion, 50MB Dropzone UI) + `Settings` (Email Invite Sender, Pending Invitations & Magic Link manager).
+2. `[TASK-UI.4]` Build `Planning (Report 2)` — Features & WBS Table, `RaciMatrixTable`, Risk Register & 5 Quality Objectives.
