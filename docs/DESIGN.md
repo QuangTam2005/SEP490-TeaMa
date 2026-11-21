@@ -2,24 +2,22 @@
 **Product Name:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Design Philosophy:** Academic Precision meets Modern SaaS (Linear / Notion / Jira hybrid) — **Icon-First, Minimal Text**  
 **Database Engine:** PostgreSQL 16 (Managed via Flyway Migrations)  
-**Document Version:** 1.4 (Full UI/UX + Multi-Repo & Test Evidence Database + API Specification)  
+**Document Version:** 1.5 (Taste-Skill UI/UX Harmonization + Email Invitation Schema & API Specification)  
 
 ---
 
 # PART I: UI/UX DESIGN SYSTEM
 
 ## 1. Visual Identity & Color Palette
-Hệ thống mặc định sử dụng **Light Mode** độ tương phản cao (tối ưu cho việc đọc tài liệu đặc tả dài, bảng biểu dày đặc và trình chiếu trước Giảng viên hướng dẫn), hỗ trợ chuyển đổi sang **Dark Mode** thông qua `next-themes`.
+Hệ thống mặc định sử dụng **Light Mode** độ tương phản cao (`90–95%` bề mặt trung tính, tối ưu đọc bảng biểu đặc tả dày đặc), hỗ trợ chuyển đổi **Light / Dark Mode** trực tiếp tại **Top Bar** thông qua `next-themes`.
 
 ### 1.1 Brand & Neutral Colors (Tailwind / CSS Variables)
-- **Primary Brand (FPT Academic Orange):** `#F27024` (Hover: `#D95D16`, Soft Tint: `#FFF4ED`) — Dùng cho nút hành động chính (Primary CTA), thanh tiến độ Milestone hiện tại và badge vai trò `LEADER`.
-- **Secondary Accent (Tech Slate Blue):** `#0F172A` (Slate-900) / `#334155` (Slate-700) — Dùng cho Sidebar, tiêu đề bảng và các thành phần điều hướng.
+- **Primary Brand (Burnt Orange):** `#E85D04` (Hover: `#C84E03`, Soft Tint: `#FFF4ED`) — Chiếm `< 5%` diện tích màn hình, dùng cho Primary CTA, Focus ring, tab đang chọn và badge vai trò `LEADER`. Cấm tuyệt đối gradient tím/lavender hoặc badge cầu vồng.
+- **Secondary Accent (Ink & Slate):** `#1A1D23` / `#0F172A` (Chữ chính đạt contrast `>= 7:1`), `#5A6270` / `#334155` (Meta/Secondary text `>= 4.5:1`).
 - **Backgrounds (Light Mode):**
-  - App Canvas: `#F8FAFC` (Slate-50)
-  - Card / Surface: `#FFFFFF` (Pure White) với viền mỏng `1px solid #E2E8F0` (Slate-200)
-- **Text Hierarchy:**
-  - Primary Text: `#0F172A` (Slate-900)
-  - Secondary / Muted Text: `#64748B` (Slate-500)
+  - App Canvas: `#F8F9FA` (Clean warm neutral)
+  - Card / Surface: `#FFFFFF` (Pure White) với viền **1px hairline** `#E5E7EB` (loại bỏ bóng mờ nặng khi nghỉ; tối đa **2 cấp lồng box**).
+- **Landing Page (`/`):** Áp dụng chuẩn `design-taste-frontend` (`tasteskill 2.5.1`) với **live HTML `app-frame` preview** tương tác ngay trên Hero (10 Milestones OGA, WBS 24h, Multi-Repo GitHub) và không dùng ảnh stock/số liệu giả.
 
 ### 1.2 Semantic & Domain Status Colors
 Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
@@ -127,7 +125,7 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
 
 ---
 
-## 6. Detailed PostgreSQL Schema (21 Core Tables / 18 ERD Groups)
+## 6. Detailed PostgreSQL Schema (22 Core Tables / 19 ERD Groups)
 
 ### 6.1 Identity, Project & Repositories Core
 1. **`users`**
@@ -169,6 +167,21 @@ Sử dụng nhất quán trên toàn bộ bảng biểu, badge và biểu đồ:
    - `role VARCHAR(20) NOT NULL` (`LEADER` | `MEMBER`)
    - `joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
    - `UNIQUE (project_id, user_id)`
+
+3.1. **`project_invitations`** *(V4 — Lời mời gia nhập dự án qua Email + `MailSender`)*
+   - `id BIGSERIAL PRIMARY KEY`
+   - `project_id BIGINT NOT NULL REFERENCES projects(id)`
+   - `invited_email VARCHAR(255) NOT NULL` *(Chấp nhận mọi domain email hợp lệ)*
+   - `role VARCHAR(20) NOT NULL DEFAULT 'MEMBER'` (`LEADER` | `MEMBER`)
+   - `token UUID UNIQUE NOT NULL`
+   - `status VARCHAR(20) NOT NULL DEFAULT 'PENDING'` (`PENDING` | `ACCEPTED` | `REVOKED` | `EXPIRED`)
+   - `invited_by BIGINT NOT NULL REFERENCES users(id)`
+   - `expires_at TIMESTAMPTZ NOT NULL`
+   - `accepted_by BIGINT REFERENCES users(id)`
+   - `accepted_at TIMESTAMPTZ`
+   - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+   - `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+   - Partial Unique Index: `CREATE UNIQUE INDEX uq_project_invitations_pending ON project_invitations (project_id, LOWER(invited_email)) WHERE status = 'PENDING';`
 
 ### 6.2 Milestones & Deliverables (SEP490 15-Week Track)
 4. **`milestones`**
@@ -380,7 +393,14 @@ Tất cả endpoint dưới `/api/projects/{projectId}/**` đều yêu cầu hea
 | `POST` | `/api/auth/login` | Đăng nhập, trả về JWT Token & User Info | Public |
 | `GET` | `/api/projects` | Lấy danh sách dự án của user hiện tại | Authenticated |
 | `POST` | `/api/projects` | Tạo dự án mới + Auto-seed 10 Milestones & QualityTargets | Authenticated |
-| `POST` | `/api/projects/{id}/members` | Thêm thành viên vào nhóm bằng Email | `LEADER` |
+| `GET` | `/api/projects/{id}/invitations` | Lấy danh sách lời mời (PENDING/ACCEPTED/REVOKED) | Member |
+| `POST` | `/api/projects/{id}/invitations` | Owner (`LEADER`) gửi lời mời qua Email kèm link token (`MailSender`) | `LEADER` |
+| `POST` | `/api/projects/{id}/invitations/{inviteId}/resend` | Gửi lại email lời mời cho lời mời đang `PENDING` | `LEADER` |
+| `DELETE` | `/api/projects/{id}/invitations/{inviteId}` | Thu hồi lời mời đang `PENDING` (`status = REVOKED`) | `LEADER` |
+| `GET` | `/api/invitations/verify?token={token}` | Kiểm tra tính hợp lệ của link mời trước khi Sign Up / Sign In | Public |
+| `POST` | `/api/invitations/accept` | Chấp nhận lời mời vào dự án (bắt buộc email user khớp `invited_email`) | Authenticated |
+| `PATCH` | `/api/projects/{id}/members/{memberId}/role` | Đổi vai trò thành viên (`LEADER` / `MEMBER`) | `LEADER` |
+| `DELETE` | `/api/projects/{id}/members/{memberId}` | Gỡ thành viên khỏi nhóm | `LEADER` |
 | `POST` | `/api/projects/{id}/magic-link/rotate` | Tạo mới / thu hồi Magic Link cho GVHD | `LEADER` |
 | `GET` | `/api/projects/{id}/repositories` | Lấy danh sách GitHub repositories của dự án | Member |
 | `POST` | `/api/projects/{id}/repositories` | Thêm repository mới (tự sinh `webhook_secret`, trả về Webhook URL `/api/webhooks/github/{repoId}`) | `LEADER` |

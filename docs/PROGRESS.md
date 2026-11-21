@@ -1,7 +1,7 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Current Phase:** Sprint 1 — Authentication, Project Setup, Milestones & Planning  
-**Last Updated:** 2026-11-16  
+**Last Updated:** 2026-11-21  
 
 ---
 
@@ -9,11 +9,11 @@
 
 | Document | Version | Status | Summary |
 | :--- | :---: | :---: | :--- |
-| [`docs/PRD.md`](./PRD.md) | `v1.3` | ✅ Finalized | 100% SEP490 Academic Compliance, 19 FRs (incl. Multi-Repo GitHub, WBS Work Category & Test Evidence), 10 Milestones Checklist, Vietnamese Typography. |
+| [`docs/PRD.md`](./PRD.md) | `v1.4` | ✅ Finalized | 100% SEP490 Academic Compliance, 19 FRs (incl. Owner Email Invitation + `MailSender`, Multi-Repo GitHub, WBS Work Category & Test Evidence), 10 Milestones Checklist. |
 | [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.1` | ✅ Finalized | Modular Monolith (Java 21 / Spring Boot 3.4+) + Next.js 14 App Router + PostgreSQL 16 + Multi-Repo Webhook Architecture. |
-| [`docs/DESIGN.md`](./DESIGN.md) | `v1.4` | ✅ Finalized | Part I: Icon-First UI/UX & Multi-PR Kanban chips; Part II: 21-table PostgreSQL ERD (`work_category`, `evidence_attachments JSONB`); Part III: REST APIs. |
+| [`docs/DESIGN.md`](./DESIGN.md) | `v1.5` | ✅ Finalized | Part I: `taste-skill` + `#E85D04` Burnt Orange + Light/Dark Top Bar + Landing `app-frame`; Part II: 22-table PostgreSQL ERD (`project_invitations`); Part III: REST APIs. |
 | [`docs/RULES.md`](./RULES.md) | `v1.3` | ✅ Finalized | AI Coding Rules, Mandatory `docs/*.md` Context-First (`AGENTS.md`), Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR, Upload Safety & Open Email Policy. |
-| [`docs/TASKS.md`](./TASKS.md) | `v1.3` | ✅ Finalized | 53 granular atomic tasks (`[TASK-0.1]` to `[TASK-3.12]` + `[TASK-1.17]`) synced with Multi-Repo, WBS Work Category & Test Evidence. |
+| [`docs/TASKS.md`](./TASKS.md) | `v1.4` | ✅ Finalized | 53 granular atomic tasks synced with Email Invitation (`V4` + `MailSender`), Multi-Repo, WBS Work Category, Test Evidence & `taste-skill` UI tokens. |
 
 ---
 
@@ -94,7 +94,15 @@
   - Implemented `ProjectAccessGuard` (`requireProjectExists` `PROJ_001`, `requireMember` `PROJ_002`, `requireLeader` `PROJ_003`, `requireProjectByMagicToken` `AUTH_006`).
   - Added `ProjectEntityTest` (4 tests) and `ProjectAccessGuardTest` (11 tests); verified `.\mvnw.cmd test` (`Tests run: 45, Failures: 0` — `BUILD SUCCESS`).
 
+### 2026-11-21 — UI/UX Master Plan & Email Invitation Spec Sync
+- **[DONE] Local `taste-skill` (`design-taste-frontend` 2.5.1) Setup & `.gitignore` (`f5f3821`):**
+  - Installed `Leonxlnx/taste-skill` locally into `.agents/skills/design-taste-frontend` and added `.agents/skills/design-taste-frontend/`, `.taste-skill/`, and `skills-lock.json` to `.gitignore`.
+- **[DONE] Specification Sync (`PRD.md` v1.4, `DESIGN.md` v1.5, `TASKS.md` v1.4):**
+  - Locked UI/UX Master Plan v2: `#E85D04` Burnt Orange accent, Light/Dark switcher in Top Bar (`next-themes`), and Landing `/` upgrade with interactive `app-frame` preview.
+  - Updated `FR-02`, ERD (`project_invitations` table #22 for `V4`), API contracts (`/api/projects/{id}/invitations/**`, `/api/invitations/verify|accept`), and Sprint 1 tasks (`[TASK-1.5]`, `[TASK-1.12]`–`[TASK-1.14]`) for Owner Email Invitation + `MailSender` + Sign Up/Sign In join flow.
+
 ---
 
 ## 3. Next Steps Queue (Sprint 1)
 1. `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*.
+2. `[TASK-1.5]` Implement Flyway `V4__add_project_invitations.sql`, Email Invitation + `MailSender` workflow (`/api/projects/{id}/invitations/**`, `/api/invitations/verify|accept`), Member Role/Removal & Supervisor Magic Link rotation APIs.

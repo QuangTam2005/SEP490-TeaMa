@@ -1,7 +1,7 @@
 # TASK BACKLOG & WORK BREAKDOWN (TASKS.md)
 **Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Rule:** Every single `[TASK-X.Y]` corresponds to **1 atomic commit** (`feat`/`fix`/`docs`/`chore`) and maps to GitHub PR tracking.  
-**Version:** 1.3  
+**Version:** 1.4  
 
 ---
 
@@ -29,7 +29,7 @@
 - [x] `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*
 - [x] `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper
 - [ ] `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*
-- [ ] `[TASK-1.5]` Implement Project Member management & Supervisor Magic Link rotation APIs (`POST /api/projects/{id}/members`, `POST /api/projects/{id}/magic-link/rotate`) — *FR-02, FR-18*
+- [ ] `[TASK-1.5]` Implement Flyway `V4__add_project_invitations.sql`, Email Invitation + `MailSender` workflow (`/api/projects/{id}/invitations/**`, `/api/invitations/verify|accept`), Member Role/Removal & Supervisor Magic Link rotation APIs — *FR-02, FR-18*
 - [ ] `[TASK-1.6]` Implement Milestone Deliverables upload & secure download APIs (`POST /deliverables/{delivId}/upload`, `GET /files/download/{fileId}` with `50MB` limit, extension whitelist & anti-Path Traversal) — *FR-04*
 - [ ] `[TASK-1.7]` Implement `DocumentChangeLog` entity & Spring AOP `@AuditLog` aspect for automatic `Record of Changes` (`A/M/D`) tracking — *FR-17*
 - [ ] `[TASK-1.8]` Implement `Feature` CRUD APIs (`GET/POST/PUT/DELETE /api/projects/{id}/features`) — *FR-05*
@@ -39,9 +39,9 @@
 - [ ] `[TASK-1.17]` Implement Multi-Repo GitHub Management APIs (`GET/POST/DELETE /api/projects/{id}/repositories` with auto-generated `webhook_secret`) — *FR-14*
 
 ### 1.2 Frontend (`frontend/`)
-- [ ] `[TASK-1.12]` Build Auth pages (`/login`, `/register`) & `authStore` (Zustand) with React Hook Form + Zod
-- [ ] `[TASK-1.13]` Build Student Workspace App Shell (`Left Sidebar` 240px/64px icon-only, `Top Header` with Week indicator, Project Switcher & Project Creation Modal)
-- [ ] `[TASK-1.14]` Build `Overview & Milestones` page (OGA weight cards, 10-Milestone Accordion, Cumulative Checklist Dropzone upload & Magic Link manager)
+- [ ] `[TASK-1.12]` Build Auth pages (`/login`, `/register`, `/invite?token=...` Email Invitation landing & Sign-up/Sign-in join flow) & `authStore` (Zustand) with React Hook Form + Zod
+- [ ] `[TASK-1.13]` Upgrade `#E85D04` Burnt Orange tokens & Light/Dark Top Bar switcher, build Landing Page `/` (`app-frame` interactive preview per `taste-skill`), and Student Workspace App Shell (`Left Sidebar` 260px/64px, `Top Header` with Week indicator, Project Switcher & Project Creation Modal)
+- [ ] `[TASK-1.14]` Build `Overview & Milestones` page + `Settings` Member Email Invitation manager (OGA weight cards, 10-Milestone Accordion, Cumulative Checklist 50MB Dropzone, Pending Invitations & Magic Link manager)
 - [ ] `[TASK-1.15]` Build `Planning (Report 2)` — Features & WBS Table with `Work Category` selector, Allocated Effort Distribution summary & realtime `Complexity Auto-Calculator Widget`
 - [ ] `[TASK-1.16]` Build `Planning (Report 2)` — Interactive `RaciMatrixTable` (sticky column + Click-to-Select/Cycle `D/R/S/I`), Risk Register & Quality Objectives tabs
 

@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 **Product Name:** SEP490 Capstone Copilot  
 **Target Domain:** FPT University Software Engineering Capstone Project (`SEP490`)  
-**Document Version:** 1.3 (MVP - Full Academic Compliance & Multi-Repo GitHub)  
+**Document Version:** 1.4 (MVP - Full Academic Compliance, Multi-Repo GitHub & Email Invitation)  
 
 ---
 
@@ -31,7 +31,7 @@ Xây dựng một nền tảng quản trị dự án tập trung, tuân thủ 10
 
 ### Module 1: Authentication, Project Setup & Cumulative Milestones
 - **FR-01 (Auth):** Đăng ký, đăng nhập và quản lý phiên làm việc bằng **Email & Password** truyền thống (JWT Authentication).
-- **FR-02 (Project Initialization):** Cho phép Leader tạo dự án với các trường chuẩn của Report 1 (`Project Name`, `Project Code`, `Group Name`, `Software Type`) và thêm thành viên theo vai trò (`Leader`, `Member`) kèm thông tin liên hệ (`Email`, `Mobile`).
+- **FR-02 (Project Initialization & Email Invitation):** Cho phép Leader (Owner) tạo dự án với các trường chuẩn của Report 1 (`Project Name`, `Project Code`, `Group Name`, `Software Type`) và mời thành viên qua **Email** (`Leader` hoặc `Member`). Hệ thống gửi email chứa đường link mời (`MailSender` + token bảo mật); người được mời truy cập link, đăng ký (`Sign Up`) hoặc đăng nhập (`Sign In`) bằng **đúng email đó** để gia nhập dự án tự động.
 - **FR-03 (15-Week Milestone & Cumulative Deliverables Checklist):** Khi tạo dự án, hệ thống tự động khởi tạo **10 cột mốc chuẩn của SEP490** (Tuần 1 đến Tuần 15) kèm trọng số điểm **On-Going Assessment (OGA - 50%)** (R1: 4%, R2: 8%, R3: 16%, R4: 18%, R5: 18%, R6: 4%, R7: 32%). Mỗi Milestone hiển thị sẵn **Checklist các đầu mục lũy tiến bắt buộc phải nộp** (Ví dụ: M3 nộp Report 3 + Updated Report 1, 2 + Tracking; M4 nộp Report 4 + khung Report 5 + Demo Code Package + Updated Report 1, 2, 3...).
 - **FR-04 (Deliverable File Upload):** Tại từng hạng mục trong Checklist của mỗi Milestone, thành viên có thể upload file báo cáo/source package tương ứng (`.docx`, `.pdf`, `.xlsx`, `.zip`) và cập nhật trạng thái (`Pending`, `Submitted`, `Approved`).
 
