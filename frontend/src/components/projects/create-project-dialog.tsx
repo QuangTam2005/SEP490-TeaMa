@@ -161,8 +161,8 @@ export function CreateProjectDialog({
           />
           <span>
             Hệ thống tự động khởi tạo{' '}
-            <strong>10 cột mốc SEP490 (OGA 50%)</strong>, danh mục nộp bài lũy
-            tiến và <strong>5 Quality Objectives</strong>.
+            <strong>10 cột mốc SEP490 (Report 1–7)</strong>, danh mục nộp bài
+            lũy tiến và <strong>5 Quality Objectives</strong>.
           </span>
         </div>
 

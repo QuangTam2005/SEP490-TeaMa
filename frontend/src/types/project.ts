@@ -1,6 +1,10 @@
 import type { ProjectRole, UserResponse } from './auth';
 
-export type MilestoneStatus = 'PENDING' | 'SUBMITTED' | 'APPROVED';
+export type MilestoneStatus =
+  | 'PENDING'
+  | 'SUBMITTED'
+  | 'NEEDS_REVISION'
+  | 'APPROVED';
 export type DeliverableStatus = 'PENDING' | 'SUBMITTED' | 'APPROVED';
 export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
 
@@ -54,6 +58,8 @@ export interface MilestoneResponse {
   dueDate: string | null;
   ogaWeightPercent: number;
   status: MilestoneStatus;
+  reviewNote?: string | null;
+  reviewedAt?: string | null;
   deliverables: MilestoneDeliverableResponse[];
 }
 

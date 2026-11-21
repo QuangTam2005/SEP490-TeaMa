@@ -30,9 +30,10 @@ type FilterStatus = 'ALL' | MilestoneStatus;
 
 const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'ALL', label: 'Tất cả (10)' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'SUBMITTED', label: 'Submitted' },
-  { value: 'APPROVED', label: 'Approved' },
+  { value: 'PENDING', label: 'Chờ nộp' },
+  { value: 'SUBMITTED', label: 'Đã nộp' },
+  { value: 'NEEDS_REVISION', label: 'Cần sửa' },
+  { value: 'APPROVED', label: 'Đã duyệt' },
 ];
 
 export function OverviewMilestonesView({
@@ -120,11 +121,11 @@ export function OverviewMilestonesView({
             {project?.groupName ?? '—'}
           </p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
-            {project?.projectName ?? 'Tổng quan & 10 Cột mốc OGA'}
+            {project?.projectName ?? 'Tổng quan & 10 Cột mốc 15 tuần'}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Theo dõi tiến độ 15 tuần, trọng số On-Going Assessment và nộp hồ sơ
-            lũy tiến tối đa 50MB.
+            Theo dõi tiến độ 15 tuần, tỷ trọng Report tham chiếu theo Syllabus và
+            nộp hồ sơ báo cáo cho GVHD kiểm tra (tối đa 50MB).
           </p>
         </div>
 
@@ -140,14 +141,14 @@ export function OverviewMilestonesView({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-lg border bg-card p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Trọng số OGA đã duyệt</span>
+            <span>Tỷ trọng hồ sơ đã duyệt</span>
             <CheckCircle2 className="h-4 w-4 text-brand" strokeWidth={1.75} />
           </div>
           <p className="mt-2 font-mono text-2xl font-bold text-foreground tabular-nums">
             {stats.approvedOga}%
           </p>
           <p className="mt-1 font-mono text-xs text-muted-foreground tabular-nums">
-            +{stats.submittedOga}% đang chờ duyệt
+            +{stats.submittedOga}% chờ GVHD xem xét
           </p>
         </div>
 
@@ -325,7 +326,7 @@ export function OverviewMilestonesView({
                     <div className="flex items-center gap-2.5 pl-7 sm:pl-0">
                       <span className="rounded border bg-canvas px-2 py-0.5 font-mono text-xs font-semibold text-foreground tabular-nums">
                         {milestone.ogaWeightPercent > 0
-                          ? `OGA ${milestone.ogaWeightPercent}%`
+                          ? `Ref ${milestone.ogaWeightPercent}%`
                           : 'Iteration'}
                       </span>
                       <StatusBadge status={milestone.status} />
@@ -334,6 +335,14 @@ export function OverviewMilestonesView({
 
                   {isOpen ? (
                     <div className="divide-y border-t bg-canvas/40">
+                      {milestone.reviewNote ? (
+                        <div className="bg-brand-soft/60 px-4 py-2.5 text-xs text-foreground">
+                          <span className="font-semibold text-brand">
+                            Nhận xét GVHD:{' '}
+                          </span>
+                          <span>{milestone.reviewNote}</span>
+                        </div>
+                      ) : null}
                       {milestone.deliverables.map((deliverable) => (
                         <DeliverableUploadRow
                           key={deliverable.id}

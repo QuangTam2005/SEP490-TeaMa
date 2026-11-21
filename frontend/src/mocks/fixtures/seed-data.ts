@@ -266,6 +266,9 @@ export const SEED_MILESTONES_101 = [
     dueDate: '2026-09-27',
     ogaWeightPercent: 16,
     status: 'APPROVED',
+    reviewNote:
+      'Bản đặc tả SRS (Part I & II.1–II.2) rõ ràng, chuẩn biểu mẫu Report 3.',
+    reviewedAt: '2026-09-28T09:00:00Z',
     deliverables: [
       {
         id: 2004,
@@ -301,7 +304,10 @@ export const SEED_MILESTONES_101 = [
     weekNumber: 5,
     dueDate: '2026-10-11',
     ogaWeightPercent: 18,
-    status: 'SUBMITTED',
+    status: 'NEEDS_REVISION',
+    reviewNote:
+      'Đã kiểm tra Report 4 SDD; nhóm bổ sung Demo Code Package (.zip) trước buổi review Tuần 5.',
+    reviewedAt: '2026-10-10T18:00:00Z',
     deliverables: [
       {
         id: 2006,

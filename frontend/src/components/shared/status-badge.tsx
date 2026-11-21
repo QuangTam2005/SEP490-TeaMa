@@ -42,9 +42,10 @@ interface StatusStyleConfig {
 }
 
 const STATUS_MAP: Record<DomainStatusValue, StatusStyleConfig> = {
-  APPROVED: { label: 'Approved', variant: 'success', icon: CheckCircle2 },
-  SUBMITTED: { label: 'Submitted', variant: 'info', icon: Send },
-  PENDING: { label: 'Pending', variant: 'warning', icon: Clock },
+  APPROVED: { label: 'Đã duyệt', variant: 'success', icon: CheckCircle2 },
+  SUBMITTED: { label: 'Đã nộp', variant: 'info', icon: Send },
+  NEEDS_REVISION: { label: 'Cần sửa', variant: 'warning', icon: AlertCircle },
+  PENDING: { label: 'Chờ nộp', variant: 'secondary', icon: Clock },
   ACCEPTED: { label: 'Accepted', variant: 'success', icon: CheckCircle2 },
   REVOKED: { label: 'Revoked', variant: 'danger', icon: Ban },
   EXPIRED: { label: 'Expired', variant: 'secondary', icon: AlertCircle },

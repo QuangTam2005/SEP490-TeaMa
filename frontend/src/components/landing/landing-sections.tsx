@@ -50,8 +50,8 @@ export function LandingSections() {
               Quản trị đồ án SEP490 trong 15 tuần.
             </h1>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Số hóa 10 cột mốc OGA, phân rã WBS kèm tự tính độ phức tạp, truy
-              vết SRS đến Test Evidence và đồng bộ GitHub đa repository.
+              Theo dõi 10 cột mốc báo cáo, phân rã WBS kèm tự tính độ phức tạp,
+              truy vết SRS đến Test Evidence và đồng bộ GitHub đa repository.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -70,9 +70,9 @@ export function LandingSections() {
             </div>
 
             <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-5 font-mono text-xs text-muted-foreground tabular-nums">
-              <span>10 Milestones (50% OGA)</span>
+              <span>10 Cột mốc (Report 1–7)</span>
               <span>Upload tối đa 50MB</span>
-              <span>Xuất Excel 5 sheets &amp; SRS .md</span>
+              <span>Xuất Excel chuẩn FPTU &amp; SRS .md</span>
             </div>
           </div>
 
@@ -82,28 +82,28 @@ export function LandingSections() {
         </div>
       </section>
 
-      {/* SECTION 2: 10 MILESTONES OGA */}
+      {/* SECTION 2: 10 MILESTONES */}
       <section id="milestones" className="border-b bg-card">
         <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
           <div className="max-w-2xl">
             <p className="font-mono text-xs font-medium text-brand">
-              FR-03 &amp; FR-04 • On-Going Assessment
+              FR-03 &amp; FR-04 • 15-Week Report Checklist
             </p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               10 cột mốc SEP490 và checklist nộp bài lũy tiến.
             </h2>
             <p className="mt-3 text-base text-muted-foreground">
               Khởi tạo dự án tự động sinh đủ 10 mốc từ Tuần 1 đến Tuần 15 kèm
-              trọng số điểm OGA và danh mục báo cáo bắt buộc cần nộp theo từng
-              đợt.
+              tỷ trọng Report tham chiếu theo Syllabus và danh mục hồ sơ cần
+              chuẩn bị để báo cáo GVHD.
             </p>
           </div>
 
-          {/* OGA Weight Bar */}
+          {/* Syllabus Reference Weight Bar */}
           <div className="mt-10 rounded-lg border bg-canvas p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs">
               <span className="font-medium text-foreground">
-                Phân bổ trọng số đánh giá liên tục (100% OGA)
+                Tỷ trọng Report tham chiếu theo Syllabus (hướng dẫn ưu tiên chuẩn bị)
               </span>
               <span className="font-mono text-muted-foreground tabular-nums">
                 R1 4% • R2 8% • R3 16% • R4 18% • R5 18% • R6 4% • R7 32%
@@ -313,12 +313,12 @@ export function LandingSections() {
                 <ShieldCheck className="h-5 w-5" strokeWidth={1.75} />
               </div>
               <h2 className="mt-4 text-xl font-bold tracking-tight text-foreground">
-                Cổng Giảng viên chỉ đọc qua Magic Link
+                Cổng Giảng viên xem báo cáo qua Magic Link
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 GVHD không cần tạo tài khoản. Truy cập link riêng của nhóm để
-                xem tiến độ 10 cột mốc, biểu đồ đóng góp từng sinh viên, kiểm
-                tra Peer-Review và trả lời trực tiếp vào sổ Q&amp;A.
+                xem tiến độ 10 cột mốc, phê duyệt hoặc yêu cầu chỉnh sửa bài
+                nộp, xem thống kê đóng góp và trả lời trực tiếp vào sổ Q&amp;A.
               </p>
               <ul className="mt-5 space-y-2.5 text-sm text-foreground">
                 <li className="flex items-center gap-2.5">
@@ -333,7 +333,7 @@ export function LandingSections() {
                     className="h-4 w-4 shrink-0 text-brand"
                     strokeWidth={1.75}
                   />
-                  <span>Tải ngay Excel Tracking 5 sheets &amp; Báo cáo tuần chuẩn FPTU</span>
+                  <span>Tải ngay Excel Tracking 4 sheets &amp; Báo cáo tuần chuẩn FPTU</span>
                 </li>
               </ul>
             </div>
@@ -350,8 +350,8 @@ export function LandingSections() {
                 Sẵn sàng khởi tạo không gian đồ án SEP490?
               </h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Tạo dự án mới để tự động khởi sinh 10 cột mốc OGA và 5 mục tiêu
-                chất lượng.
+                Tạo dự án mới để tự động khởi sinh 10 cột mốc 15 tuần và 5 mục
+                tiêu chất lượng.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">

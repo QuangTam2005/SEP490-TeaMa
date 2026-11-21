@@ -95,7 +95,7 @@ const PREVIEW_PR_TASKS: PreviewPrTask[] = [
   },
   {
     code: 'TASK-24',
-    title: 'Apache POI 5-Sheet Project Tracking Exporter',
+    title: 'Apache POI 4-Sheet Project Tracking Exporter',
     status: 'IN_REVIEW',
     prs: [{ repo: 'BE', number: 21, state: 'OPEN' }],
   },
@@ -106,7 +106,7 @@ const PREVIEW_TABS: {
   label: string;
   icon: typeof CalendarRange;
 }[] = [
-  { id: 'milestones', label: '10 Cột mốc OGA', icon: CalendarRange },
+  { id: 'milestones', label: '10 Cột mốc (15T)', icon: CalendarRange },
   { id: 'wbs', label: 'WBS & Complexity', icon: FileCode2 },
   { id: 'github', label: 'GitHub Multi-Repo', icon: GitPullRequest },
 ];
@@ -128,7 +128,7 @@ export function HeroAppFrame() {
           </span>
         </div>
         <span className="font-mono text-xs text-muted-foreground tabular-nums">
-          W05 / 15 • OGA 46% Submitted
+          W05 / 15 • 3/10 Cột mốc đạt
         </span>
       </div>
 
@@ -178,7 +178,7 @@ export function HeroAppFrame() {
             <div className="grid grid-cols-12 px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <span className="col-span-2">Mã</span>
               <span className="col-span-5">Cột mốc</span>
-              <span className="col-span-2 text-right">OGA</span>
+              <span className="col-span-2 text-right">Tỷ trọng</span>
               <span className="col-span-3 text-right">Trạng thái</span>
             </div>
             <div className="divide-y rounded-md border">
