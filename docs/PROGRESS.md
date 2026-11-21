@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
-**Current Phase:** Sprint 1 — Authentication, Project Setup, Milestones & Planning  
+**Current Phase:** Phase A — UI-First Prototype & Validation (`[TASK-UI.0]`–`[TASK-UI.8]`)  
 **Last Updated:** 2026-11-21  
 
 ---
@@ -13,7 +13,7 @@
 | [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.1` | ✅ Finalized | Modular Monolith (Java 21 / Spring Boot 3.4+) + Next.js 14 App Router + PostgreSQL 16 + Multi-Repo Webhook Architecture. |
 | [`docs/DESIGN.md`](./DESIGN.md) | `v1.5` | ✅ Finalized | Part I: `taste-skill` + `#E85D04` Burnt Orange + Light/Dark Top Bar + Landing `app-frame`; Part II: 22-table PostgreSQL ERD (`project_invitations`); Part III: REST APIs. |
 | [`docs/RULES.md`](./RULES.md) | `v1.3` | ✅ Finalized | AI Coding Rules, Mandatory `docs/*.md` Context-First (`AGENTS.md`), Atomic Commits, `ddl-auto=validate`, `@SQLRestriction`, IDOR, Upload Safety & Open Email Policy. |
-| [`docs/TASKS.md`](./TASKS.md) | `v1.4` | ✅ Finalized | 53 granular atomic tasks synced with Email Invitation (`V4` + `MailSender`), Multi-Repo, WBS Work Category, Test Evidence & `taste-skill` UI tokens. |
+| [`docs/TASKS.md`](./TASKS.md) | `v1.5` | ✅ Finalized | Restructured into UI-First execution: Phase A (`[TASK-UI.0]`–`[TASK-UI.8]`) $\rightarrow$ Phase B Backend (`[TASK-1.4]`–`[TASK-3.8]`) $\rightarrow$ Phase C Wiring (`[TASK-INT.1]`–`[TASK-INT.2]`). |
 
 ---
 
@@ -100,9 +100,11 @@
 - **[DONE] Specification Sync (`PRD.md` v1.4, `DESIGN.md` v1.5, `TASKS.md` v1.4):**
   - Locked UI/UX Master Plan v2: `#E85D04` Burnt Orange accent, Light/Dark switcher in Top Bar (`next-themes`), and Landing `/` upgrade with interactive `app-frame` preview.
   - Updated `FR-02`, ERD (`project_invitations` table #22 for `V4`), API contracts (`/api/projects/{id}/invitations/**`, `/api/invitations/verify|accept`), and Sprint 1 tasks (`[TASK-1.5]`, `[TASK-1.12]`–`[TASK-1.14]`) for Owner Email Invitation + `MailSender` + Sign Up/Sign In join flow.
+- **[DONE] UI-First Roadmap Restructuring (`docs/TASKS.md` v1.5):**
+  - Reorganized backlog into **Phase A (UI-First Prototype `[TASK-UI.0]`–`[TASK-UI.8]`) $\rightarrow$ Phase B (Backend `[TASK-1.4]`–`[TASK-3.8]`) $\rightarrow$ Phase C (API Wiring `[TASK-INT.1]`–`[TASK-INT.2]`)** while preserving completed `[TASK-1.1]`–`[TASK-1.3]`.
 
 ---
 
-## 3. Next Steps Queue (Sprint 1)
-1. `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*.
-2. `[TASK-1.5]` Implement Flyway `V4__add_project_invitations.sql`, Email Invitation + `MailSender` workflow (`/api/projects/{id}/invitations/**`, `/api/invitations/verify|accept`), Member Role/Removal & Supervisor Magic Link rotation APIs.
+## 3. Next Steps Queue (Phase A — UI-First)
+1. `[TASK-UI.0]` Build Contract-First Mock Architecture (`src/types/*`, `src/services/`, `MockRuntime`, `QueryStateBoundary`, `ErrorStateCard`, `EmptyState`, `UiReviewToolbar` & `/invite` public guard).
+2. `[TASK-UI.1]` Upgrade `#E85D04` tokens, Light/Dark Top Bar switcher, shared UI primitives & Landing Page `/` (`app-frame` preview).

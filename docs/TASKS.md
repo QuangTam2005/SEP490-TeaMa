@@ -1,7 +1,7 @@
 # TASK BACKLOG & WORK BREAKDOWN (TASKS.md)
 **Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
 **Rule:** Every single `[TASK-X.Y]` corresponds to **1 atomic commit** (`feat`/`fix`/`docs`/`chore`) and maps to GitHub PR tracking.  
-**Version:** 1.4  
+**Version:** 1.5 *(UI-First Restructuring: Phase A UI/UX Validation $\rightarrow$ Phase B Backend $\rightarrow$ Phase C API Wiring)*
 
 ---
 
@@ -22,9 +22,23 @@
 
 ---
 
-## Sprint 1: Authentication, Project Setup, Milestones & Planning (Module 1 & Module 2)
+## Phase A: Full UI/UX & Interactive Prototype (`frontend/` — Contract-First Mock Services)
 
-### 1.1 Backend (`backend/`)
+- [ ] `[TASK-UI.0]` Build Contract-First Mock Architecture (`src/types/*` strict DTOs, `src/services/` Port Layer, `MockRuntime` real `ApiClientError` & Role simulator, `QueryStateBoundary`, `ErrorStateCard`, `EmptyState`, `applyApiFieldErrors`, `UiReviewToolbar`, global `error.tsx`/`not-found.tsx` & fix `/invite` public guard in `api-client.ts`)
+- [ ] `[TASK-UI.1]` Upgrade Design Tokens (`#E85D04` Burnt Orange, Light/Dark Top Bar switcher, `1px hairline` Card/Button micro-motion), shared `DataTable` / `StatusBadge` / `InspectorDrawer`, and **Landing Page `/`** (`app-frame` interactive preview per `taste-skill`)
+- [ ] `[TASK-UI.2]` Build Auth & Email Invitation Flow (`/login`, `/register`, `/invite?token=...` covering 4 token states: `valid-new`, `valid-existing`, `mismatch`, `expired`) + Project Directory & Create Project Wizard (`/projects`)
+- [ ] `[TASK-UI.3]` Build Student Workspace `AppShell` (Sidebar `260px`/`64px` + Top Header Light/Dark + Week Indicator + Project Switcher) + `Overview & 10 Milestones OGA` (Accordion, 50MB Dropzone UI) + `Settings` (Email Invite Sender, Pending Invitations & Magic Link manager)
+- [ ] `[TASK-UI.4]` Build `Planning (Report 2)` — Features & WBS Table (`Work Category`, Allocated Effort Distribution, realtime `Complexity Auto-Calculator Widget`), interactive `RaciMatrixTable` (sticky column + Click-to-Cycle `D/R/S/I`), Risk Register & 5 Quality Objectives tabs
+- [ ] `[TASK-UI.5]` Build `SRS & Traceability Hub (Report 3)` — Actors, Use Cases, Screens & interactive `ScreenAuthMatrix` (8 FPTU permission levels click-to-toggle), Business Rules, Application Messages, Diagram Attachments gallery & Traceability Slide-over Drawer (`Sheet`)
+- [ ] `[TASK-UI.6]` Build `Execution Kanban`, `Multi-Repo GitHub` & `Testing QA (Report 5)` — Iteration 1–4 Kanban Board with `[TASK-XX]` & Multi-Repo PR chips, Repositories Webhook modal, Test Case table (`UT/IT/ST/AT`) with `Actual Result`, 2-image Evidence uploader/preview & Target vs. Actual Quality dashboard
+- [ ] `[TASK-UI.7]` Build `Tracking Registers`, `Analytics`, `Peer-Review` & `Export Center` — Issues / Defects / Supervisor Q&A / Weekly Matters + Top Header `+ Quick Log` modal, Contribution Matrix, Anonymous 3-Criteria `Peer-Review Matrix`, `Record of Changes` log & `.xlsx`/`.md` Export Center UI
+- [ ] `[TASK-UI.8]` Build `Supervisor Read-Only Portal` (`/supervisor/[token]` 4-tab layout: Milestones, Contribution, Tracking & Direct Q&A Reply, Traceability) + Full Responsive & `taste-skill` QA (`390px`, `768px`, `1024px`, `1440px`, Light/Dark)
+
+---
+
+## Phase B: Backend Implementation (`backend/` — Spring Boot 3.4 + Flyway + PostgreSQL 16)
+
+### B.1 Sprint 1 Backend (Auth, Project Setup, Milestones & Planning)
 - [x] `[TASK-1.1]` Implement `User` entity, repository & JWT security foundation (`JwtTokenProvider`, `JwtAuthFilter`, `SecurityConfig`)
 - [x] `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*
 - [x] `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper
@@ -38,18 +52,7 @@
 - [ ] `[TASK-1.11]` Implement `ProjectRisk` & `QualityObjective` CRUD APIs (`/api/projects/{id}/risks`, `/api/projects/{id}/quality-objectives`) — *FR-07*
 - [ ] `[TASK-1.17]` Implement Multi-Repo GitHub Management APIs (`GET/POST/DELETE /api/projects/{id}/repositories` with auto-generated `webhook_secret`) — *FR-14*
 
-### 1.2 Frontend (`frontend/`)
-- [ ] `[TASK-1.12]` Build Auth pages (`/login`, `/register`, `/invite?token=...` Email Invitation landing & Sign-up/Sign-in join flow) & `authStore` (Zustand) with React Hook Form + Zod
-- [ ] `[TASK-1.13]` Upgrade `#E85D04` Burnt Orange tokens & Light/Dark Top Bar switcher, build Landing Page `/` (`app-frame` interactive preview per `taste-skill`), and Student Workspace App Shell (`Left Sidebar` 260px/64px, `Top Header` with Week indicator, Project Switcher & Project Creation Modal)
-- [ ] `[TASK-1.14]` Build `Overview & Milestones` page + `Settings` Member Email Invitation manager (OGA weight cards, 10-Milestone Accordion, Cumulative Checklist 50MB Dropzone, Pending Invitations & Magic Link manager)
-- [ ] `[TASK-1.15]` Build `Planning (Report 2)` — Features & WBS Table with `Work Category` selector, Allocated Effort Distribution summary & realtime `Complexity Auto-Calculator Widget`
-- [ ] `[TASK-1.16]` Build `Planning (Report 2)` — Interactive `RaciMatrixTable` (sticky column + Click-to-Select/Cycle `D/R/S/I`), Risk Register & Quality Objectives tabs
-
----
-
-## Sprint 2: SRS Specification Hub, Traceability & Quality Assurance (Module 3 & Module 4)
-
-### 2.1 Backend (`backend/`)
+### B.2 Sprint 2 Backend (SRS Hub, Traceability & QA)
 - [ ] `[TASK-2.1]` Implement `SystemActor` & `UseCase` CRUD APIs (`/api/projects/{id}/actors`, `/api/projects/{id}/use-cases`) — *FR-08*
 - [ ] `[TASK-2.2]` Implement `ScreenFunction` CRUD & JSONB 8-level `ScreenAuthMatrix` toggle API (`PATCH /api/projects/{id}/screens/{screenId}/auth-matrix`) — *FR-08*
 - [ ] `[TASK-2.3]` Implement SRS Artifacts CRUD & Diagram upload APIs (`BusinessRule`, `AppMessage`, `DiagramAttachment` at `/api/projects/{id}/srs-artifacts/{type}`) — *FR-08, FR-09*
@@ -57,18 +60,7 @@
 - [ ] `[TASK-2.5]` Implement `TestCase` CRUD, `actual_result`, auto-populate `executed_by`/`executed_at` on `PASS`/`FAIL`, & Test Evidence image APIs (`POST`/`DELETE`/`GET download`, max 2 images, `5MB`/image, `.png`/`.jpg`/`.webp`) — *FR-11*
 - [ ] `[TASK-2.6]` Implement Quality Metrics calculation API (`GET /api/projects/{id}/quality-metrics` comparing Actual vs. Target Test Coverage & Defect Rate across 5 stages) — *FR-12*
 
-### 2.2 Frontend (`frontend/`)
-- [ ] `[TASK-2.7]` Build `SRS & Traceability (Report 3)` — Actors, Use Cases & Screens management with Complexity estimator
-- [ ] `[TASK-2.8]` Build Interactive `ScreenAuthMatrix` Grid (sticky column, Click-to-Toggle `✓` across 8 FPTU permission levels with Optimistic UI)
-- [ ] `[TASK-2.9]` Build SRS Business Rules, Application Messages (`INLINE`, `TOAST`, `FIELD_ERROR`) & Diagram Attachments gallery
-- [ ] `[TASK-2.10]` Build `Testing & QA (Report 5)` page (Test Case table by `UT/IT/ST/AT`, `Actual Result` + 2-image Evidence uploader/preview, Pass/Fail toggle & Target vs. Actual Quality Recharts dashboard)
-- [ ] `[TASK-2.11]` Build interactive `Traceability Matrix` view & global `Traceability Pill Links` Slide-over Drawer (`Sheet`)
-
----
-
-## Sprint 3: Kanban, GitHub Webhook, Tracking Registers, Analytics & Smart Exporters (Module 5 & Module 6)
-
-### 3.1 Backend (`backend/`)
+### B.3 Sprint 3 Backend (Kanban, Multi-Repo Webhook, Tracking, Analytics & Exporters)
 - [ ] `[TASK-3.1]` Implement Kanban status update API (`PATCH /api/projects/{id}/wbs-tasks/{taskId}/status`) & Iteration filtering (`ITER_1`..`ITER_4`) — *FR-13*
 - [ ] `[TASK-3.2]` Implement Multi-Repo GitHub Webhook receiver (`POST /api/webhooks/github/{repoId}` with `X-Hub-Signature-256` HMAC-SHA256 verification, `[TASK-XX]` PR parser, `github_prs JSONB` upsert & multi-PR state aggregation) — *FR-14*
 - [ ] `[TASK-3.3]` Implement unified `TrackingLog` CRUD APIs (`/api/projects/{id}/tracking/{logType}` for `ISSUE`, `DEFECT`, `QA`, `WEEKLY_MATTER`) — *FR-15*
@@ -78,8 +70,9 @@
 - [ ] `[TASK-3.7]` Implement Apache POI 5-Sheet Project Tracking `.xlsx` Exporter (`GET /api/projects/{id}/export/tracking-xlsx`: `WBS`, `Issues`, `Defects`, `Q&A`, `Test Cases` incl. `Actual Result` & `Executed At` with `Calibri` Unicode font) — *FR-19*
 - [ ] `[TASK-3.8]` Implement Apache POI Weekly Status Report `.xlsx` Exporter (`GET /api/projects/{id}/export/weekly-xlsx` matching 4 sections of `Project Weekly Report_GroupName.xlsx`) — *FR-19*
 
-### 3.2 Frontend (`frontend/`)
-- [ ] `[TASK-3.9]` Build `Execution & Kanban` Board (Iteration 1–4 filter, drag-and-drop columns, compact Task Cards with `[TASK-XX]`, Multi-Repo GitHub PR chips & Multi-Repo Webhook setup modal)
-- [ ] `[TASK-3.10]` Build `Tracking Registers` page (`Issues`, `Defects`, `Supervisor Q&A`, `Weekly Matters`) & Top Header `+ Quick Log` modal
-- [ ] `[TASK-3.11]` Build `Analytics & Export` page (Recharts Contribution Chart, Anonymous 3-Criteria `Peer-Review Matrix`, `Record of Changes` log & `Export Center` `.xlsx`/`.md` downloads)
-- [ ] `[TASK-3.12]` Build `Supervisor Portal` (`/supervisor/[token]` Read-only Top Nav layout with Milestones, Contribution, Tracking & Direct Q&A Reply)
+---
+
+## Phase C: API Integration & End-to-End Verification
+
+- [ ] `[TASK-INT.1]` Implement real HTTP Services (`frontend/src/services/http/*`) wired to Spring Boot REST APIs & switch `NEXT_PUBLIC_DATA_MODE=api`
+- [ ] `[TASK-INT.2]` Full End-to-End Verification (Auth, Email Invite + `MailSender`, 50MB Upload/Download, Multi-Repo Webhook, Excel/Markdown Export & Supervisor Magic Link)
