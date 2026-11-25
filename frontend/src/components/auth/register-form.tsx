@@ -15,7 +15,8 @@ import {
   applyApiFieldErrors,
   extractApiErrorMessage,
 } from '@/components/shared/form-error-utils';
-import { authService } from '@/services';
+import { authService, IS_MOCK_MODE } from '@/services';
+import { setSimulatedRole } from '@/mocks/mock-runtime';
 import { useAuthStore } from '@/store/auth-store';
 import { cn } from '@/lib/utils';
 
@@ -79,11 +80,18 @@ export function RegisterForm() {
         role: values.role,
         password: values.password,
       });
+      if (IS_MOCK_MODE) {
+        setSimulatedRole(auth.user.role);
+      }
       setSession(auth);
       toast.success('Tạo tài khoản thành công');
-      router.push(
-        auth.user.role === 'GUARDIAN' ? '/guardian/dashboard' : '/student/today'
-      );
+      if (auth.user.role === 'GUARDIAN') {
+        router.push(
+          auth.user.linkedStudentName ? '/guardian/dashboard' : '/link-student'
+        );
+      } else {
+        router.push('/student/today');
+      }
     } catch (err) {
       const mapped = applyApiFieldErrors(
         err,
@@ -131,9 +139,9 @@ export function RegisterForm() {
                 type="button"
                 onClick={() => setValue('role', option.value)}
                 className={cn(
-                  'h-9 rounded-md border text-xs font-medium transition-colors',
+                  'h-11 rounded-md border text-xs font-semibold transition-colors',
                   selectedRole === option.value
-                    ? 'border-brand bg-brand-soft text-brand'
+                    ? 'border-brand-strong bg-brand-soft text-brand-strong dark:text-sky-300'
                     : 'bg-background text-muted-foreground hover:text-foreground'
                 )}
               >
@@ -211,7 +219,7 @@ export function RegisterForm() {
 
         <Button
           type="submit"
-          className="mt-1 h-10 w-full"
+          className="mt-1 h-11 w-full text-sm font-semibold"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -232,7 +240,7 @@ export function RegisterForm() {
         Đã có tài khoản?{' '}
         <Link
           href="/login"
-          className="font-medium text-brand hover:underline"
+          className="font-semibold text-brand-strong hover:underline dark:text-sky-400"
         >
           Đăng nhập
         </Link>

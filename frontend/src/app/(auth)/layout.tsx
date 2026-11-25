@@ -16,7 +16,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             href="/login"
             className="inline-flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-strong text-white">
               <BookOpen className="h-4 w-4" strokeWidth={1.75} />
             </span>
             <span className="text-base font-semibold tracking-tight text-foreground">

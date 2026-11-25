@@ -6,7 +6,13 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  GraduationCap,
+  Loader2,
+  ShieldCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +21,7 @@ import {
   applyApiFieldErrors,
   extractApiErrorMessage,
 } from '@/components/shared/form-error-utils';
+import { setSimulatedRole } from '@/mocks/mock-runtime';
 import { authService, IS_MOCK_MODE } from '@/services';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -54,6 +61,9 @@ export function LoginForm() {
         email: values.email.trim(),
         password: values.password,
       });
+      if (IS_MOCK_MODE) {
+        setSimulatedRole(auth.user.role);
+      }
       setSession(auth);
       toast.success(`Chào mừng ${auth.user.fullName}`);
       router.push(
@@ -99,6 +109,7 @@ export function LoginForm() {
             type="email"
             autoComplete="email"
             placeholder="name@example.com"
+            className="h-11"
             aria-invalid={Boolean(errors.email)}
             {...register('email')}
           />
@@ -116,6 +127,7 @@ export function LoginForm() {
             type="password"
             autoComplete="current-password"
             placeholder="Nhập mật khẩu"
+            className="h-11"
             aria-invalid={Boolean(errors.password)}
             {...register('password')}
           />
@@ -128,7 +140,7 @@ export function LoginForm() {
 
         <Button
           type="submit"
-          className="h-10 w-full"
+          className="h-11 w-full text-sm font-semibold"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -146,18 +158,50 @@ export function LoginForm() {
       </form>
 
       {IS_MOCK_MODE ? (
-        <p className="mt-4 rounded-md border bg-muted/40 px-3 py-2 font-mono text-[11px] text-muted-foreground">
-          Mock hint: dùng bất kỳ email hợp lệ; nhập{' '}
-          <span className="font-semibold text-foreground">wrongpass</span> để
-          test lỗi 401.
-        </p>
+        <div className="mt-5 space-y-2 border-t pt-4">
+          <p className="text-xs font-medium text-muted-foreground">
+            Vào nhanh (Dữ liệu mẫu):
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 gap-1.5 border-brand/30 bg-brand-soft/40 text-xs font-semibold text-brand-strong hover:bg-brand-soft dark:text-sky-300"
+              disabled={isSubmitting}
+              onClick={() =>
+                void onSubmit({
+                  email: 'hocsinh.lop6@gmail.com',
+                  password: 'password123',
+                })
+              }
+            >
+              <GraduationCap className="h-4 w-4" strokeWidth={1.75} />
+              Học sinh lớp 6
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 gap-1.5 text-xs font-semibold"
+              disabled={isSubmitting}
+              onClick={() =>
+                void onSubmit({
+                  email: 'phuhuynh@gmail.com',
+                  password: 'password123',
+                })
+              }
+            >
+              <ShieldCheck className="h-4 w-4" strokeWidth={1.75} />
+              Phụ huynh
+            </Button>
+          </div>
+        </div>
       ) : null}
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Chưa có tài khoản?{' '}
         <Link
           href="/register"
-          className="font-medium text-brand hover:underline"
+          className="font-semibold text-brand-strong hover:underline dark:text-sky-400"
         >
           Đăng ký ngay
         </Link>
