@@ -1,14 +1,12 @@
-export type ProjectRole = 'LEADER' | 'MEMBER';
-
-export type SimulatedUserRole = ProjectRole | 'SUPERVISOR';
+export type UserRole = 'STUDENT' | 'GUARDIAN';
 
 export interface UserResponse {
   id: number;
   email: string;
   fullName: string;
-  studentCode: string | null;
-  phone: string | null;
-  avatarUrl: string | null;
+  role: UserRole;
+  grade: number | null;
+  linkedStudentName: string | null;
   createdAt: string;
 }
 
@@ -28,6 +26,5 @@ export interface RegisterRequest {
   email: string;
   password: string;
   fullName: string;
-  studentCode?: string | null;
-  phone?: string | null;
+  role: UserRole;
 }

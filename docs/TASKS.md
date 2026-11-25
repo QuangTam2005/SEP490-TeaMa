@@ -14,7 +14,7 @@
 ## Phase 1: Legacy Domain Pruning & Package Rename (`com.asc.studycompanion`)
 - [x] `[TASK-CLEAN.1]` Update `docker-compose.yml`, `.env.example`, and `application.yml` for `AI Study Companion` (`Asia/Ho_Chi_Minh`, Brave Search & CKEY/MiMo config; remove SEP490 storage/SMTP config)
 - [x] `[TASK-CLEAN.2]` Rename Java package `com.fptu.sep490` $\rightarrow$ `com.asc.studycompanion` (`StudyCompanionApplication.java`, `pom.xml`), remove `module/project/**` & legacy SEP490 `.gitkeep` folders, update `ErrorCode.java` (`SCH_*`, `STUDY_*`, `AI_*`, `GRD_*`), and verify `./mvnw.cmd test` passes
-- [ ] `[TASK-CLEAN.3]` Remove legacy SEP490 frontend routes/components (`app/invite`, `app/(dashboard)/projects/**`, `components/projects/**`, `components/workspace/**`, SEP490 types & mocks), adapt `api-client.ts` (`/guardian/`), and verify `npm run typecheck && npm run lint && npm run build` passes
+- [x] `[TASK-CLEAN.3]` Remove legacy SEP490 frontend routes/components (`app/invite`, `app/(dashboard)/projects/**`, `components/projects/**`, `components/workspace/**`, SEP490 types & mocks), adapt `api-client.ts` (`/guardian/`), and verify `npm run typecheck && npm run lint && npm run build` passes
 
 ---
 

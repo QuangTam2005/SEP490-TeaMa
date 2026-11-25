@@ -1,5 +1,4 @@
-const ACCESS_TOKEN_KEY = 'sep490_access_token';
-const SUPERVISOR_PATH_REGEX = /^\/supervisor\/([^/?#]+)/;
+const ACCESS_TOKEN_KEY = 'asc_access_token';
 
 export function getAccessToken(): string | null {
   if (typeof window === 'undefined') {
@@ -32,11 +31,4 @@ export function clearAccessToken(): void {
   } catch {
     // Ignore storage access errors safely
   }
-}
-
-export function resolveSupervisorTokenFromPath(pathname?: string): string | null {
-  const targetPath =
-    pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '');
-  const match = SUPERVISOR_PATH_REGEX.exec(targetPath);
-  return match && match[1] ? decodeURIComponent(match[1]) : null;
 }

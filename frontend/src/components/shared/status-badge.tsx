@@ -1,39 +1,27 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   AlertCircle,
-  Ban,
   CheckCircle2,
   Circle,
   Clock,
-  Crown,
-  GitPullRequest,
-  PlayCircle,
+  Lock,
   Send,
   ShieldCheck,
   User,
   XCircle,
 } from 'lucide-react';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
-import type {
-  ComplexityLevel,
-  DeliverableStatus,
-  InvitationStatus,
-  MilestoneStatus,
-  ProjectRole,
-  TaskStatus,
-  TestStatus,
-  TrackingStatus,
-} from '@/types';
+import type { UserRole } from '@/types';
 
-export type DomainStatusValue =
-  | MilestoneStatus
-  | DeliverableStatus
-  | InvitationStatus
-  | TaskStatus
-  | TestStatus
-  | TrackingStatus
-  | ComplexityLevel
-  | ProjectRole;
+export type StudyBadgeStatus =
+  | UserRole
+  | 'NOT_STARTED'
+  | 'IN_PROGRESS'
+  | 'SUBMITTED'
+  | 'EVALUATING'
+  | 'EVALUATED'
+  | 'EVALUATION_FAILED'
+  | 'BLOCKED';
 
 interface StatusStyleConfig {
   label: string;
@@ -41,33 +29,24 @@ interface StatusStyleConfig {
   icon: LucideIcon;
 }
 
-const STATUS_MAP: Record<DomainStatusValue, StatusStyleConfig> = {
-  APPROVED: { label: 'Đã duyệt', variant: 'success', icon: CheckCircle2 },
-  SUBMITTED: { label: 'Đã nộp', variant: 'info', icon: Send },
-  NEEDS_REVISION: { label: 'Cần sửa', variant: 'warning', icon: AlertCircle },
-  PENDING: { label: 'Chờ nộp', variant: 'secondary', icon: Clock },
-  ACCEPTED: { label: 'Accepted', variant: 'success', icon: CheckCircle2 },
-  REVOKED: { label: 'Revoked', variant: 'danger', icon: Ban },
-  EXPIRED: { label: 'Expired', variant: 'secondary', icon: AlertCircle },
-  TODO: { label: 'To Do', variant: 'secondary', icon: Circle },
-  IN_PROGRESS: { label: 'In Progress', variant: 'info', icon: PlayCircle },
-  IN_REVIEW: { label: 'In Review', variant: 'warning', icon: GitPullRequest },
-  DONE: { label: 'Done', variant: 'success', icon: CheckCircle2 },
-  UNTESTED: { label: 'Untested', variant: 'secondary', icon: Circle },
-  PASS: { label: 'Pass', variant: 'success', icon: CheckCircle2 },
-  FAIL: { label: 'Fail', variant: 'danger', icon: XCircle },
-  OPEN: { label: 'Open', variant: 'danger', icon: AlertCircle },
-  RESOLVED: { label: 'Resolved', variant: 'success', icon: ShieldCheck },
-  CLOSED: { label: 'Closed', variant: 'secondary', icon: CheckCircle2 },
-  SIMPLE: { label: 'Simple', variant: 'success', icon: Circle },
-  MEDIUM: { label: 'Medium', variant: 'warning', icon: AlertCircle },
-  COMPLEX: { label: 'Complex', variant: 'danger', icon: AlertCircle },
-  LEADER: { label: 'Leader', variant: 'brand', icon: Crown },
-  MEMBER: { label: 'Member', variant: 'secondary', icon: User },
+const STATUS_MAP: Record<StudyBadgeStatus, StatusStyleConfig> = {
+  STUDENT: { label: 'Học sinh', variant: 'brand', icon: User },
+  GUARDIAN: { label: 'Phụ huynh', variant: 'info', icon: ShieldCheck },
+  NOT_STARTED: { label: 'Chưa bắt đầu', variant: 'secondary', icon: Circle },
+  IN_PROGRESS: { label: 'Đang nhập', variant: 'info', icon: Clock },
+  SUBMITTED: { label: 'Đã gửi', variant: 'info', icon: Send },
+  EVALUATING: { label: 'Đang AI đánh giá', variant: 'warning', icon: Clock },
+  EVALUATED: { label: 'Đã có kết quả', variant: 'success', icon: CheckCircle2 },
+  EVALUATION_FAILED: {
+    label: 'Chưa thể đánh giá',
+    variant: 'danger',
+    icon: XCircle,
+  },
+  BLOCKED: { label: 'Cần hoàn thành bài cũ', variant: 'secondary', icon: Lock },
 };
 
 export interface StatusBadgeProps {
-  status: DomainStatusValue;
+  status: StudyBadgeStatus;
   labelOverride?: string;
   className?: string;
 }
@@ -77,7 +56,11 @@ export function StatusBadge({
   labelOverride,
   className,
 }: StatusBadgeProps) {
-  const config = STATUS_MAP[status];
+  const config = STATUS_MAP[status] ?? {
+    label: status,
+    variant: 'secondary' as const,
+    icon: AlertCircle,
+  };
   const Icon = config.icon;
   return (
     <Badge variant={config.variant} className={className}>

@@ -1,11 +1,6 @@
 import { ApiClientError } from '@/lib/api-client';
 import { setAccessToken } from '@/lib/auth-token';
 import {
-  SEED_INVITATIONS,
-  SEED_PROJECTS,
-  SEED_USERS,
-} from '@/mocks/fixtures/seed-data';
-import {
   getMockRuntimeState,
   registerMockResetHook,
   runMockOperation,
@@ -13,19 +8,39 @@ import {
 import type { AuthService } from '@/services/auth.service';
 import type {
   AuthResponse,
-  InvitationVerifyResponse,
   LoginRequest,
   RegisterRequest,
   UserResponse,
 } from '@/types';
 
-let usersDb: UserResponse[] = structuredClone(SEED_USERS);
-let activeUserEmail = SEED_USERS[0].email;
+const INITIAL_USERS: UserResponse[] = [
+  {
+    id: 1,
+    email: 'hocsinh.lop6@gmail.com',
+    fullName: 'Nguyễn Minh Khôi',
+    role: 'STUDENT',
+    grade: 6,
+    linkedStudentName: null,
+    createdAt: '2026-11-25T01:00:00Z',
+  },
+  {
+    id: 2,
+    email: 'phuhuynh@gmail.com',
+    fullName: 'Nguyễn Thu Hằng',
+    role: 'GUARDIAN',
+    grade: null,
+    linkedStudentName: 'Nguyễn Minh Khôi',
+    createdAt: '2026-11-25T01:05:00Z',
+  },
+];
+
+let usersDb: UserResponse[] = structuredClone(INITIAL_USERS);
+let activeUserEmail = INITIAL_USERS[0].email;
 let nextUserId = 100;
 
 registerMockResetHook(() => {
-  usersDb = structuredClone(SEED_USERS);
-  activeUserEmail = SEED_USERS[0].email;
+  usersDb = structuredClone(INITIAL_USERS);
+  activeUserEmail = INITIAL_USERS[0].email;
   nextUserId = 100;
 });
 
@@ -72,14 +87,14 @@ export const authMockService: AuthService = {
         return buildMockAuthResponse(existing);
       }
 
-      // In mock mode, allow logging in with any valid non-blocked email for quick UI testing
+      const { simulatedRole } = getMockRuntimeState();
       const created: UserResponse = {
         id: nextUserId++,
         email: normalized,
         fullName: normalized.split('@')[0],
-        studentCode: null,
-        phone: null,
-        avatarUrl: null,
+        role: simulatedRole,
+        grade: simulatedRole === 'STUDENT' ? 6 : null,
+        linkedStudentName: simulatedRole === 'GUARDIAN' ? 'Nguyễn Minh Khôi' : null,
         createdAt: new Date().toISOString(),
       };
       usersDb.push(created);
@@ -105,9 +120,9 @@ export const authMockService: AuthService = {
         id: nextUserId++,
         email: normalized,
         fullName: request.fullName.trim(),
-        studentCode: request.studentCode?.trim() || null,
-        phone: request.phone?.trim() || null,
-        avatarUrl: null,
+        role: request.role,
+        grade: request.role === 'STUDENT' ? 6 : null,
+        linkedStudentName: null,
         createdAt: new Date().toISOString(),
       };
       usersDb.push(newUser);
@@ -118,72 +133,13 @@ export const authMockService: AuthService = {
   async getCurrentUser(): Promise<UserResponse> {
     return runMockOperation(() => {
       const { simulatedRole } = getMockRuntimeState();
-      if (simulatedRole === 'MEMBER') {
-        return usersDb[1] ?? usersDb[0];
-      }
-      return (
-        usersDb.find(
-          (u) => u.email.toLowerCase() === activeUserEmail.toLowerCase()
-        ) ?? usersDb[0]
+      const byEmail = usersDb.find(
+        (u) => u.email.toLowerCase() === activeUserEmail.toLowerCase()
       );
-    });
-  },
-
-  async verifyInvitation(token: string): Promise<InvitationVerifyResponse> {
-    return runMockOperation(() => {
-      const invite = SEED_INVITATIONS.find((item) => item.token === token);
-      if (!invite || invite.status !== 'PENDING') {
-        throw new ApiClientError({
-          status: 410,
-          errorCode: 'INV_001',
-          message: 'Liên kết lời mời không hợp lệ, đã hết hạn hoặc đã bị thu hồi.',
-        });
+      if (byEmail && byEmail.role === simulatedRole) {
+        return byEmail;
       }
-
-      const project =
-        SEED_PROJECTS.find((p) => p.id === invite.projectId) ?? SEED_PROJECTS[0];
-      const accountExists = usersDb.some(
-        (u) => u.email.toLowerCase() === invite.invitedEmail.toLowerCase()
-      );
-
-      return {
-        token: invite.token,
-        projectId: project.id,
-        projectCode: project.projectCode,
-        projectName: project.projectName,
-        groupName: project.groupName,
-        invitedEmail: invite.invitedEmail,
-        role: invite.role,
-        invitedByName: invite.invitedByName,
-        expiresAt: invite.expiresAt,
-        accountExists,
-      };
-    });
-  },
-
-  async acceptInvitation(token: string): Promise<{ projectId: number }> {
-    return runMockOperation(() => {
-      const invite = SEED_INVITATIONS.find((item) => item.token === token);
-      if (!invite || invite.status !== 'PENDING') {
-        throw new ApiClientError({
-          status: 410,
-          errorCode: 'INV_001',
-          message: 'Liên kết lời mời không hợp lệ, đã hết hạn hoặc đã bị thu hồi.',
-        });
-      }
-
-      if (
-        token === 'mismatch' ||
-        invite.invitedEmail.toLowerCase() !== activeUserEmail.toLowerCase()
-      ) {
-        throw new ApiClientError({
-          status: 403,
-          errorCode: 'INV_003',
-          message: `Email tài khoản hiện tại (${activeUserEmail}) không khớp với email được mời (${invite.invitedEmail}).`,
-        });
-      }
-
-      return { projectId: invite.projectId };
+      return usersDb.find((u) => u.role === simulatedRole) ?? usersDb[0];
     });
   },
 };

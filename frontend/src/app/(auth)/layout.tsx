@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Layers } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 
 interface AuthLayoutProps {
@@ -17,13 +17,13 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             className="inline-flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand text-white">
-              <Layers className="h-4 w-4" strokeWidth={1.75} />
+              <BookOpen className="h-4 w-4" strokeWidth={1.75} />
             </span>
             <span className="text-base font-semibold tracking-tight text-foreground">
-              TeaMa
+              Study Companion
             </span>
             <span className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px] font-medium text-muted-foreground">
-              SEP490
+              Lớp 6
             </span>
           </Link>
 

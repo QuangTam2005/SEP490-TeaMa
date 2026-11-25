@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertCircle, ArrowRight, Loader2, Mail } from 'lucide-react';
+import { AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,10 +31,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const inviteToken = searchParams.get('inviteToken');
-  const invitedEmail = searchParams.get('email') ?? '';
-
   const setSession = useAuthStore((state) => state.setSession);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -46,7 +42,7 @@ export function LoginForm() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: invitedEmail,
+      email: '',
       password: '',
     },
   });
@@ -59,23 +55,10 @@ export function LoginForm() {
         password: values.password,
       });
       setSession(auth);
-
-      if (inviteToken) {
-        try {
-          const accepted = await authService.acceptInvitation(inviteToken);
-          toast.success('Đăng nhập và tham gia dự án thành công');
-          router.push(`/projects/${accepted.projectId}/overview`);
-          return;
-        } catch (inviteErr) {
-          const inviteMessage = extractApiErrorMessage(inviteErr);
-          setFormError(inviteMessage);
-          toast.error(inviteMessage);
-          return;
-        }
-      }
-
       toast.success(`Chào mừng ${auth.user.fullName}`);
-      router.push('/projects');
+      router.push(
+        auth.user.role === 'GUARDIAN' ? '/guardian/dashboard' : '/student/today'
+      );
     } catch (err) {
       const mapped = applyApiFieldErrors(
         err,
@@ -90,10 +73,6 @@ export function LoginForm() {
     }
   };
 
-  const registerHref = inviteToken
-    ? `/register?inviteToken=${encodeURIComponent(inviteToken)}&email=${encodeURIComponent(invitedEmail)}`
-    : '/register';
-
   return (
     <div className="w-full max-w-[420px] rounded-lg border bg-card p-7">
       <div className="mb-6">
@@ -101,15 +80,6 @@ export function LoginForm() {
           Đăng nhập
         </h1>
       </div>
-
-      {inviteToken ? (
-        <div className="mb-5 flex items-center gap-2 rounded-md border bg-brand-soft px-3.5 py-2.5 text-xs text-foreground">
-          <Mail className="h-4 w-4 shrink-0 text-brand" strokeWidth={1.75} />
-          <span className="font-mono">
-            {invitedEmail || 'Xác thực lời mời dự án'}
-          </span>
-        </div>
-      ) : null}
 
       {formError ? (
         <div
@@ -177,16 +147,16 @@ export function LoginForm() {
 
       {IS_MOCK_MODE ? (
         <p className="mt-4 rounded-md border bg-muted/40 px-3 py-2 font-mono text-[11px] text-muted-foreground">
-          Mock hint: dùng bất kỳ email hợp lệ nào; nhập mật khẩu{' '}
+          Mock hint: dùng bất kỳ email hợp lệ; nhập{' '}
           <span className="font-semibold text-foreground">wrongpass</span> để
-          xem lỗi 401 AUTH_002.
+          test lỗi 401.
         </p>
       ) : null}
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Chưa có tài khoản?{' '}
         <Link
-          href={registerHref}
+          href="/register"
           className="font-medium text-brand hover:underline"
         >
           Đăng ký ngay

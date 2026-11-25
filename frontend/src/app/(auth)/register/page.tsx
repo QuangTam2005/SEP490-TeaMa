@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { RegisterForm } from '@/components/auth/register-form';
 
 export const metadata: Metadata = {
-  title: 'Đăng ký | TeaMa SEP490',
-  description: 'Tạo tài khoản mới trên nền tảng SEP490 Capstone Copilot.',
+  title: 'Đăng ký | AI Study Companion — Lớp 6',
+  description: 'Tạo tài khoản Học sinh lớp 6 hoặc Phụ huynh trên AI Study Companion.',
 };
 
 function RegisterFormFallback() {

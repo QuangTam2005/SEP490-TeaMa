@@ -18,24 +18,23 @@ import {
   useMockRuntime,
   type MockScenario,
 } from '@/mocks/mock-runtime';
-import type { SimulatedUserRole } from '@/types';
+import type { UserRole } from '@/types';
 import { cn } from '@/lib/utils';
 
 const SCENARIO_OPTIONS: { value: MockScenario; label: string }[] = [
   { value: 'normal', label: 'Normal (Có dữ liệu)' },
-  { value: 'empty', label: 'Empty State (0 dòng)' },
+  { value: 'empty', label: 'Empty State (Không có lịch)' },
   { value: 'slow', label: 'Slow Network (1.2s)' },
   { value: 'error_400', label: '400 VAL_001' },
-  { value: 'error_403', label: '403 Forbidden' },
-  { value: 'error_404', label: '404 Not Found' },
+  { value: 'error_403', label: '403 GRD_001' },
+  { value: 'error_404', label: '404 STUDY_001' },
   { value: 'error_500', label: '500 Server Error' },
   { value: 'offline', label: 'Offline (Status 0)' },
 ];
 
-const ROLE_OPTIONS: { value: SimulatedUserRole; label: string }[] = [
-  { value: 'LEADER', label: 'Leader' },
-  { value: 'MEMBER', label: 'Member' },
-  { value: 'SUPERVISOR', label: 'Supervisor' },
+const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+  { value: 'STUDENT', label: 'Student' },
+  { value: 'GUARDIAN', label: 'Guardian' },
 ];
 
 /**
@@ -61,7 +60,7 @@ export function UiReviewToolbar() {
     toast.info(`Mock Scenario: ${scenario}`);
   };
 
-  const handleRoleChange = (role: SimulatedUserRole) => {
+  const handleRoleChange = (role: UserRole) => {
     setSimulatedRole(role);
     refreshQueries();
     toast.info(`Đã chuyển vai trò xem trước: ${role}`);
@@ -141,7 +140,7 @@ export function UiReviewToolbar() {
                 <Shield className="h-3.5 w-3.5" strokeWidth={1.75} />
                 Vai trò đang xem
               </span>
-              <div className="grid grid-cols-3 gap-1">
+              <div className="grid grid-cols-2 gap-1.5">
                 {ROLE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}

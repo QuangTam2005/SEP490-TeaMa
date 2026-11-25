@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { ApiClientError } from '@/lib/api-client';
-import type { SimulatedUserRole, ValidationErrorMap } from '@/types';
+import type { UserRole, ValidationErrorMap } from '@/types';
 
 export type MockScenario =
   | 'normal'
@@ -14,15 +14,15 @@ export type MockScenario =
 
 export interface MockRuntimeState {
   scenario: MockScenario;
-  simulatedRole: SimulatedUserRole;
+  simulatedRole: UserRole;
   resetCounter: number;
 }
 
-const STORAGE_KEY = 'sep490_teama_mock_runtime_v1';
+const STORAGE_KEY = 'asc_mock_runtime_v1';
 
 const DEFAULT_STATE: MockRuntimeState = {
   scenario: 'normal',
-  simulatedRole: 'LEADER',
+  simulatedRole: 'STUDENT',
   resetCounter: 0,
 };
 
@@ -40,9 +40,11 @@ function loadInitialState(): MockRuntimeState {
       return { ...DEFAULT_STATE };
     }
     const parsed = JSON.parse(raw) as Partial<MockRuntimeState>;
+    const validRole: UserRole =
+      parsed.simulatedRole === 'GUARDIAN' ? 'GUARDIAN' : 'STUDENT';
     return {
       scenario: parsed.scenario ?? DEFAULT_STATE.scenario,
-      simulatedRole: parsed.simulatedRole ?? DEFAULT_STATE.simulatedRole,
+      simulatedRole: validRole,
       resetCounter: 0,
     };
   } catch {
@@ -61,7 +63,7 @@ function persistAndNotify(): void {
         })
       );
     } catch {
-      // Ignore storage quota / privacy mode errors in dev preview
+      // Ignore storage quota / privacy mode errors safely
     }
   }
   listeners.forEach((listener) => listener());
@@ -76,7 +78,7 @@ export function setMockScenario(scenario: MockScenario): void {
   persistAndNotify();
 }
 
-export function setSimulatedRole(simulatedRole: SimulatedUserRole): void {
+export function setSimulatedRole(simulatedRole: UserRole): void {
   currentState = { ...currentState, simulatedRole };
   persistAndNotify();
 }
@@ -113,8 +115,7 @@ export function useMockRuntime(): MockRuntimeState {
 }
 
 export interface MockOperationOptions<T> {
-  requireLeader?: boolean;
-  disallowSupervisor?: boolean;
+  requireRole?: UserRole;
   emptyFallback?: T;
   validationErrors?: ValidationErrorMap;
   ignoreGlobalScenario?: boolean;
@@ -126,31 +127,19 @@ function sleep(ms: number): Promise<void> {
   });
 }
 
-/**
- * Executes a mock service operation with realistic latency, role enforcement,
- * and real ApiClientError simulation so UI error boundaries are exercised identically to production.
- */
 export async function runMockOperation<T>(
   executor: () => T | Promise<T>,
   options: MockOperationOptions<T> = {}
 ): Promise<T> {
   const { scenario, simulatedRole } = getMockRuntimeState();
-  const delayMs = !options.ignoreGlobalScenario && scenario === 'slow' ? 1200 : 220;
+  const delayMs = !options.ignoreGlobalScenario && scenario === 'slow' ? 1200 : 200;
   await sleep(delayMs);
 
-  if (options.disallowSupervisor && simulatedRole === 'SUPERVISOR') {
+  if (options.requireRole && simulatedRole !== options.requireRole) {
     throw new ApiClientError({
       status: 403,
       errorCode: 'AUTH_004',
-      message: 'Chế độ Giảng viên (Chỉ đọc) không được phép thực hiện thao tác thay đổi dữ liệu.',
-    });
-  }
-
-  if (options.requireLeader && simulatedRole !== 'LEADER') {
-    throw new ApiClientError({
-      status: 403,
-      errorCode: 'PROJ_003',
-      message: 'Chỉ Nhóm trưởng (Leader) mới có quyền thực hiện thao tác này.',
+      message: 'Vai trò hiện tại không có quyền thực hiện thao tác này.',
     });
   }
 
@@ -165,29 +154,28 @@ export async function runMockOperation<T>(
         throw new ApiClientError({
           status: 400,
           errorCode: 'VAL_001',
-          message: 'Dữ liệu đầu vào không hợp lệ. Vui lòng kiểm tra các trường được đánh dấu.',
+          message: 'Dữ liệu đầu vào không hợp lệ.',
           fieldErrors: options.validationErrors ?? {
             email: 'Định dạng email không hợp lệ',
-            projectCode: 'Mã dự án không được để trống',
           },
         });
       case 'error_403':
         throw new ApiClientError({
           status: 403,
-          errorCode: 'PROJ_003',
-          message: 'Chỉ Nhóm trưởng (Leader) mới có quyền thực hiện thao tác này.',
+          errorCode: 'GRD_001',
+          message: 'Tài khoản Guardian chưa được liên kết với hồ sơ học sinh này.',
         });
       case 'error_404':
         throw new ApiClientError({
           status: 404,
-          errorCode: 'PROJ_001',
-          message: 'Không tìm thấy dự án hoặc dữ liệu đã bị xóa.',
+          errorCode: 'STUDY_001',
+          message: 'Không tìm thấy nhiệm vụ học tập.',
         });
       case 'error_500':
         throw new ApiClientError({
           status: 500,
           errorCode: 'SYS_500',
-          message: 'Hệ thống đang gặp sự cố nội bộ (Simulated 500). Vui lòng thử lại sau.',
+          message: 'Hệ thống đang gặp sự cố nội bộ. Vui lòng thử lại sau.',
         });
       case 'offline':
         throw new ApiClientError({

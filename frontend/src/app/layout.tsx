@@ -23,9 +23,9 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SEP490 Capstone Copilot | SEP490-TeaMa',
+  title: 'AI Study Companion — Lớp 6',
   description:
-    'Nền tảng quản trị dự án chuyên biệt cho đồ án tốt nghiệp Kỹ thuật Phần mềm SEP490 - Đại học FPT.',
+    'Nền tảng web AI hỗ trợ học sinh lớp 6 ôn bài cũ, soạn bài mới và theo dõi tiến độ học tập.',
 };
 
 interface RootLayoutProps {

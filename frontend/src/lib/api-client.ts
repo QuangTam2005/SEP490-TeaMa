@@ -4,11 +4,7 @@ import axios, {
   type AxiosRequestConfig,
   type InternalAxiosRequestConfig,
 } from 'axios';
-import {
-  clearAccessToken,
-  getAccessToken,
-  resolveSupervisorTokenFromPath,
-} from '@/lib/auth-token';
+import { clearAccessToken, getAccessToken } from '@/lib/auth-token';
 import type { ApiResponse, ValidationErrorMap } from '@/types/api';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
@@ -41,29 +37,15 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  // Multipart FormData: delete Content-Type so the browser generates the boundary
   if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
     config.headers.delete('Content-Type');
   } else if (config.data !== undefined && !config.headers.has('Content-Type')) {
     config.headers.set('Content-Type', 'application/json');
   }
 
-  // Dual Auth: prioritize Supervisor Magic Link context over Student JWT
-  const explicitSupervisorToken = config.headers.get('X-Supervisor-Token');
-  const routeSupervisorToken = resolveSupervisorTokenFromPath();
-  const supervisorToken =
-    typeof explicitSupervisorToken === 'string' && explicitSupervisorToken.length > 0
-      ? explicitSupervisorToken
-      : routeSupervisorToken;
-
-  if (supervisorToken) {
-    config.headers.set('X-Supervisor-Token', supervisorToken);
-    config.headers.delete('Authorization');
-  } else {
-    const jwt = getAccessToken();
-    if (jwt && !config.headers.has('Authorization')) {
-      config.headers.set('Authorization', `Bearer ${jwt}`);
-    }
+  const jwt = getAccessToken();
+  if (jwt && !config.headers.has('Authorization')) {
+    config.headers.set('Authorization', `Bearer ${jwt}`);
   }
 
   return config;
@@ -122,14 +104,12 @@ apiClient.interceptors.response.use(
       (errorCode === 'AUTH_001' || errorCode === 'AUTH_003' || errorCode === null)
     ) {
       const pathname = window.location.pathname;
-      const isPublicOrSupervisor =
+      const isPublic =
         pathname === '/' ||
         pathname.startsWith('/login') ||
-        pathname.startsWith('/register') ||
-        pathname.startsWith('/invite') ||
-        pathname.startsWith('/supervisor/');
+        pathname.startsWith('/register');
 
-      if (!isPublicOrSupervisor) {
+      if (!isPublic) {
         clearAccessToken();
         window.location.assign('/login');
       }
@@ -163,30 +143,30 @@ export async function apiGet<T>(url: string, config?: AxiosRequestConfig): Promi
   return unwrapResponse(response.data);
 }
 
-export async function apiPost<T, B = unknown>(
+export async function apiPost<T>(
   url: string,
-  body?: B,
+  data?: unknown,
   config?: AxiosRequestConfig
 ): Promise<T> {
-  const response = await apiClient.post<ApiResponse<T>>(url, body, config);
+  const response = await apiClient.post<ApiResponse<T>>(url, data, config);
   return unwrapResponse(response.data);
 }
 
-export async function apiPut<T, B = unknown>(
+export async function apiPut<T>(
   url: string,
-  body?: B,
+  data?: unknown,
   config?: AxiosRequestConfig
 ): Promise<T> {
-  const response = await apiClient.put<ApiResponse<T>>(url, body, config);
+  const response = await apiClient.put<ApiResponse<T>>(url, data, config);
   return unwrapResponse(response.data);
 }
 
-export async function apiPatch<T, B = unknown>(
+export async function apiPatch<T>(
   url: string,
-  body?: B,
+  data?: unknown,
   config?: AxiosRequestConfig
 ): Promise<T> {
-  const response = await apiClient.patch<ApiResponse<T>>(url, body, config);
+  const response = await apiClient.patch<ApiResponse<T>>(url, data, config);
   return unwrapResponse(response.data);
 }
 
@@ -201,29 +181,16 @@ export async function apiDelete<T = void>(
 export async function apiUpload<T>(
   url: string,
   formData: FormData,
-  onUploadProgress?: (percent: number) => void,
-  config?: AxiosRequestConfig
+  onUploadProgress?: (percent: number) => void
 ): Promise<T> {
   const response = await apiClient.post<ApiResponse<T>>(url, formData, {
-    ...config,
-    onUploadProgress: (event: AxiosProgressEvent) => {
-      if (!onUploadProgress || !event.total) {
+    onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+      if (!onUploadProgress || !progressEvent.total) {
         return;
       }
-      const percent = Math.round((event.loaded * 100) / event.total);
+      const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
       onUploadProgress(percent);
     },
   });
   return unwrapResponse(response.data);
-}
-
-export async function apiDownload(
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<Blob> {
-  const response = await apiClient.get<Blob>(url, {
-    ...config,
-    responseType: 'blob',
-  });
-  return response.data;
 }

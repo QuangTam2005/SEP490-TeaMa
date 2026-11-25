@@ -13,14 +13,11 @@ export default function NotFound() {
         <h1 className="mt-1 text-lg font-semibold text-foreground">
           Không tìm thấy trang yêu cầu
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Đường dẫn không tồn tại hoặc tài nguyên đã bị thay đổi.
-        </p>
-        <div className="mt-6 flex items-center justify-center gap-2.5">
+        <div className="mt-6 flex items-center justify-center">
           <Button asChild>
-            <Link href="/projects">
+            <Link href="/login">
               <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-              Về Workspace
+              Về trang đăng nhập
             </Link>
           </Button>
         </div>
