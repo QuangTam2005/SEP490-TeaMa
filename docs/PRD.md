@@ -45,7 +45,7 @@ Xây dựng nền tảng web responsive **AI Study Companion** với định hư
 - **FR-PLAN-01..05 (Next-Day Preparation Plan & Streak/History):** Ngày chuẩn bị là **hôm nay**, lập kế hoạch cho **ngày lịch kế tiếp** (ngày mai theo `Asia/Ho_Chi_Minh`). Ví dụ thứ Hai có môn Toán theo thời khóa biểu $\rightarrow$ Chủ nhật hệ thống hiển thị môn Toán để bé ôn/soạn. Mỗi môn trong ngày tạo đúng **1 cặp (`REVIEW` + `PREVIEW`)**. Hỗ trợ xem lại lịch sử bài đã làm theo ngày/môn và chuỗi ngày học (`Streak`).
 
 ### Module 3: Review & Preview Submissions (`FR-REV`, `FR-PRE`, `O-04`)
-- **FR-REV-01..07 & FR-PRE-01..07:** Tựa bài (bắt buộc) + Nội dung **`850–3.000` ký tự** (chuẩn hóa `\r\n` $\rightarrow$ `\n`, `.trim()`), hỗ trợ lưu nháp tự động tại trình duyệt. Cổng tuần tự: `REVIEW` nộp xong mới mở `PREVIEW` cùng môn/ngày (`BR-08`).
+- **FR-REV-01..07 & FR-PRE-01..07:** Tựa bài (bắt buộc) + Nội dung **`850–3.000` ký tự** (chuẩn hóa `\r\n` $\rightarrow$ `\n`, `.trim()`), hỗ trợ lưu nháp tự động tại trình duyệt, và **khóa dán/kéo-thả văn bản bên ngoài (`Anti-Paste`)** vào ô nội dung để đảm bảo học sinh tự gõ bài. Cổng tuần tự: `REVIEW` nộp xong mới mở `PREVIEW` cùng môn/ngày (`BR-08`).
 - **Revision Policy (`v1..v3`):** Tối đa **3 phiên bản tổng cộng (`v1` gốc + tối đa 2 lần sửa `v2`, `v3`)** cho mỗi nhiệm vụ. Khóa nộp mới trong lúc đang `EVALUATING`; mọi phiên bản bất biến.
 
 ### Module 4: AI Verification Pipeline & Cost Control (`FR-AI`, `FR-OPS`)

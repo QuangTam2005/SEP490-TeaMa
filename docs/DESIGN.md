@@ -35,7 +35,7 @@
    - `/student/today`: Ngày mục tiêu là ngày mai (`Asia/Ho_Chi_Minh`) để chuẩn bị trước cho lịch học ngày mai (VD: thứ Hai học Toán $\rightarrow$ Chủ nhật làm bài Toán), mỗi môn gồm 2 nhiệm vụ tuần tự **`Ôn bài cũ (Review)`** và **`Soạn bài mới (Preview)`**.
    - `/student/timetable`: Cho phép chọn/cập nhật khối lớp của bé + Lưới **7 ngày (`T2`–`CN`) × 5 môn cố định**, lưu phiên bản lịch hiện hành.
    - `/student/tasks/[taskId]`:
-     - Nhập **Tựa bài** + **Nội dung** kèm bộ đếm ký tự realtime `850–3,000` (chuẩn hóa newline + trim), tự động lưu nháp trình duyệt (`localStorage`), chặn Submit ngoài biên, không gọi AI khi đang gõ.
+     - Nhập **Tựa bài** + **Nội dung** kèm bộ đếm ký tự realtime `850–3,000` (chuẩn hóa newline + trim), tự động lưu nháp trình duyệt (`localStorage`), **chống dán/kéo-thả văn bản ngoài (`Anti-Paste` trên ô nội dung)**, chặn Submit ngoài biên, không gọi AI khi đang gõ.
      - Trạng thái bất đồng bộ: `Đang AI đánh giá`, `Đã có kết quả` (bao gồm fallback nếu AI lỗi sau 3 lần thử tự động để phụ huynh tự xem bài).
      - Hiển thị kết quả AI (`Accuracy`, `Completeness`, `overall_status`, nhận xét ngắn `<= 600` ký tự, nguồn URL) và nút **`Viết bản mới (Revision)`** (hiển thị bộ đếm `Phiên bản X/3` — tối đa `v1..v3`).
 3. **Guardian Portal (`/guardian/*`):**

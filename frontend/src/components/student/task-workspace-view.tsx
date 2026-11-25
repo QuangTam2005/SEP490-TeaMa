@@ -16,6 +16,7 @@ import {
   PencilLine,
   RefreshCw,
   Send,
+  ShieldAlert,
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,6 +37,11 @@ import {
   formatViDate,
   isValidStudyLength,
 } from '@/lib/study-utils';
+import {
+  ANTI_PASTE_NOTICE,
+  isBlockedBeforeInputType,
+  isSuddenBulkInsert,
+} from '@/lib/anti-paste';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
 import { studyService } from '@/services';
@@ -247,9 +253,12 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
   const userId = useAuthStore((state) => state.user?.id);
   const draftKey = `asc_draft_${userId ?? 'guest'}_${taskId}`;
   const restoredDraftRef = useRef(false);
+  const lastPasteToastRef = useRef(0);
+  const pasteBannerTimerRef = useRef<number | null>(null);
 
   const [lessonTitle, setLessonTitle] = useState('');
   const [content, setContent] = useState('');
+  const [pasteBlockedNotice, setPasteBlockedNotice] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [isComposing, setIsComposing] = useState(true);
   const [selectedVersionId, setSelectedVersionId] = useState<number | null>(null);
@@ -337,6 +346,31 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
       window.localStorage.removeItem(draftKey);
     }
     setDraftSavedAt(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pasteBannerTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(pasteBannerTimerRef.current);
+      }
+    };
+  }, []);
+
+  const notifyPasteBlocked = () => {
+    setPasteBlockedNotice(true);
+    if (typeof window !== 'undefined') {
+      if (pasteBannerTimerRef.current !== null) {
+        window.clearTimeout(pasteBannerTimerRef.current);
+      }
+      pasteBannerTimerRef.current = window.setTimeout(() => {
+        setPasteBlockedNotice(false);
+      }, 4500);
+    }
+    const now = Date.now();
+    if (now - lastPasteToastRef.current >= 2500) {
+      lastPasteToastRef.current = now;
+      toast.warning(ANTI_PASTE_NOTICE);
+    }
   };
 
   const submitMutation = useMutation({
@@ -583,14 +617,72 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                             </span>
                           </div>
 
+                          {pasteBlockedNotice ? (
+                            <div
+                              role="status"
+                              className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+                            >
+                              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                              <span>{ANTI_PASTE_NOTICE}</span>
+                            </div>
+                          ) : null}
+
                           <textarea
                             id="study-content-editor"
                             value={content}
-                            onChange={(e) => setContent(e.target.value)}
+                            onPaste={(e) => {
+                              e.preventDefault();
+                              notifyPasteBlocked();
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              notifyPasteBlocked();
+                            }}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              notifyPasteBlocked();
+                            }}
+                            onKeyDown={(e) => {
+                              const key = e.key.toLowerCase();
+                              if (
+                                ((e.ctrlKey || e.metaKey) && key === 'v') ||
+                                (e.shiftKey && e.key === 'Insert')
+                              ) {
+                                e.preventDefault();
+                                notifyPasteBlocked();
+                              }
+                            }}
+                            onBeforeInput={(e) => {
+                              const native = e.nativeEvent;
+                              const inputType =
+                                'inputType' in native &&
+                                typeof native.inputType === 'string'
+                                  ? native.inputType
+                                  : '';
+                              if (isBlockedBeforeInputType(inputType)) {
+                                e.preventDefault();
+                                notifyPasteBlocked();
+                              }
+                            }}
+                            onChange={(e) => {
+                              const nextValue = e.target.value;
+                              if (isSuddenBulkInsert(content, nextValue)) {
+                                notifyPasteBlocked();
+                                return;
+                              }
+                              setContent(nextValue);
+                            }}
                             rows={12}
-                            placeholder="Con viết các ý chính đã học hoặc tóm tắt bài mới bằng lời hiểu của mình (850–3.000 ký tự)..."
+                            placeholder="Con tự gõ các ý chính đã học hoặc tóm tắt bài mới bằng lời hiểu của mình (850–3.000 ký tự, không hỗ trợ dán văn bản)..."
                             className="w-full rounded-lg border bg-background p-3.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           />
+
+                          <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                            <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-brand-strong dark:text-sky-400" />
+                            <span>
+                              Chế độ tự học trung thực: vui lòng tự gõ nội dung, hệ thống chặn dán văn bản từ bên ngoài.
+                            </span>
+                          </p>
 
                           <div className="space-y-1.5 rounded-lg border bg-muted/35 p-3">
                             <div className="h-2 w-full overflow-hidden rounded-full bg-muted">

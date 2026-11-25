@@ -106,3 +106,6 @@
 ### Task 14 — Rate Limiting, Ops Telemetry & Full Verification *(2 subtasks)*
 - [x] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
 - [x] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`
+
+### Task 15 — Editor Integrity & Anti-Paste Protection *(1 subtask)*
+- [x] `[TASK-FEAT.5a]` *(2 SP)* Xây dựng hệ thống chống copy/dán vào ô nội dung bài làm (`anti-paste.ts`, `TaskWorkspaceView`: chặn `paste`/`drop`/`contextmenu`/`Ctrl+V`/`beforeinput` & bulk-insert `delta > 30` giữ nguyên bộ gõ Telex/VNI) & đồng bộ `docs/`
