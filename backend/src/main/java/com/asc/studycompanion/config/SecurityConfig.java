@@ -60,6 +60,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
+                                "/api/healthcheck",
                                 "/error"
                         ).permitAll()
                         .anyRequest().authenticated()

@@ -12,24 +12,28 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL=http://localhost:8080
+# Empty NEXT_PUBLIC_API_URL routes browser calls through same-origin /api/* -> Next.js rewrite -> INTERNAL_API_URL
+ARG NEXT_PUBLIC_API_URL=
 ARG INTERNAL_API_URL=http://backend:8080
 ARG NEXT_PUBLIC_DATA_MODE=api
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV INTERNAL_API_URL=${INTERNAL_API_URL}
 ENV NEXT_PUBLIC_DATA_MODE=${NEXT_PUBLIC_DATA_MODE}
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 
-# Stage 3: Minimal production runtime
+# Stage 3: Minimal non-root production runtime
 FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+    adduser --system --uid 1001 --ingroup nodejs nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./

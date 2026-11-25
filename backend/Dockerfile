@@ -9,12 +9,20 @@ RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
 COPY src ./src
 RUN ./mvnw package -DskipTests -B
 
-# Stage 2: Minimal Runtime Image
+# Stage 2: Minimal Non-Root Runtime Image
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-RUN mkdir -p /app/uploads
-COPY --from=builder /app/target/*.jar app.jar
+RUN addgroup --system --gid 1001 spring && \
+    adduser --system --uid 1001 --ingroup spring spring && \
+    mkdir -p /app/uploads && \
+    chown -R spring:spring /app
+
+COPY --from=builder --chown=spring:spring /app/target/*.jar app.jar
+
+ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=25.0 -XX:MaxRAMPercentage=70.0 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
+
+USER spring:spring
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

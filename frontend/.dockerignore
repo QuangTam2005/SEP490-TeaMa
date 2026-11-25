@@ -3,5 +3,7 @@ node_modules
 out
 .git
 .env
-.env*.local
+.env*
+Dockerfile*
 npm-debug.log*
+yarn-error.log*
