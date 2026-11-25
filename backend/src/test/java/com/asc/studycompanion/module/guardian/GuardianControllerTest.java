@@ -76,7 +76,7 @@ class GuardianControllerTest {
                 new UsernamePasswordAuthenticationToken(guardian, null, guardian.getAuthorities())
         );
 
-        when(guardianService.getDashboard(2L, LocalDate.of(2026, 11, 30), "MATH")).thenReturn(
+        when(guardianService.getDashboard(2L, LocalDate.of(2026, 11, 30), "MATH", null)).thenReturn(
                 new GuardianDashboardResponse("Khoi", 7, LocalDate.of(2026, 11, 30), "MATH", 0, 0, 0, List.of())
         );
 

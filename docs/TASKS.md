@@ -91,7 +91,7 @@
 ### Task 11 — Specs, `850–3,000` Chars, Flyway `V3` & Account/Multi-Child APIs *(3 subtasks)*
 - [x] `[TASK-FEAT.1a]` *(2 SP)* Đồng bộ đặc tả `docs/` và nâng chuẩn độ dài bài làm `[850, 3000]` ký tự (`StudyTextUtils`, `ErrorCode`, `EvaluationPromptBuilder`, `study-utils.ts`) & unit tests
 - [x] `[TASK-FEAT.1b]` *(3 SP)* Tạo Flyway `V3__expand_features_and_subjects.sql` (`char_count BETWEEN 850 AND 3000`, mở rộng môn học theo Khối `1–12`, `study_tasks` parent note/ack), cập nhật entity/`SubjectController`/`TimetableView` & tests
-- [ ] `[TASK-FEAT.1c]` *(3 SP)* Xây dựng API tài khoản (`PUT /api/auth/profile`, `PUT /api/auth/password`), hủy liên kết (`POST /api/links/unlink`) & chuyển đổi nhiều con (`GET /api/links/children`, `?studentId=`) + tests
+- [x] `[TASK-FEAT.1c]` *(3 SP)* Xây dựng API tài khoản (`PUT /api/auth/profile`, `PUT /api/auth/password`), hủy liên kết (`POST /api/links/unlink`) & chuyển đổi nhiều con (`GET /api/links/children`, `?studentId=`) + tests
 
 ### Task 12 — Student History, Streak, Auto-Save Draft & Profile UI *(3 subtasks)*
 - [ ] `[TASK-FEAT.2a]` *(3 SP)* Xây dựng Backend `GET /api/student/plans/history` & `GET /api/student/streak` trong `StudyPlanService`/`StudyPlanController` & unit tests

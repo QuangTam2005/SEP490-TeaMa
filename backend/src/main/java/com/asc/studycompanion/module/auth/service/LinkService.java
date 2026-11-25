@@ -3,6 +3,7 @@ package com.asc.studycompanion.module.auth.service;
 import com.asc.studycompanion.common.exception.AppException;
 import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.module.auth.dto.LinkCodeResponse;
+import com.asc.studycompanion.module.auth.dto.LinkedChildResponse;
 import com.asc.studycompanion.module.auth.entity.GuardianLink;
 import com.asc.studycompanion.module.auth.entity.GuardianLinkStatus;
 import com.asc.studycompanion.module.auth.entity.StudentProfile;
@@ -128,6 +129,65 @@ public class LinkService {
                 saved.getStatus(),
                 student.getDisplayName()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<LinkedChildResponse> getLinkedChildren(Long guardianUserId) {
+        User guardian = loadUser(guardianUserId);
+        if (guardian.getRole() != UserRole.GUARDIAN) {
+            throw new AppException(ErrorCode.ACCESS_DENIED);
+        }
+        return guardianLinkRepository
+                .findAllByGuardianUserIdAndStatusOrderByLinkedAtDesc(guardian.getId(), GuardianLinkStatus.ACTIVE)
+                .stream()
+                .map(link -> new LinkedChildResponse(
+                        link.getStudent().getId(),
+                        link.getStudent().getUser().getId(),
+                        link.getStudent().getDisplayName(),
+                        link.getStudent().getGrade(),
+                        link.getLinkedAt()
+                ))
+                .toList();
+    }
+
+    @Transactional
+    public void unlink(Long userId, Long requestedStudentId) {
+        User user = loadUser(userId);
+        if (user.getRole() == UserRole.STUDENT) {
+            StudentProfile student = loadStudentProfile(user.getId());
+            List<GuardianLink> activeLinks = guardianLinkRepository
+                    .findAllByStudentIdAndStatus(student.getId(), GuardianLinkStatus.ACTIVE);
+            if (activeLinks.isEmpty()) {
+                throw new AppException(ErrorCode.GUARDIAN_NOT_LINKED, "Tài khoản chưa có liên kết phụ huynh đang hoạt động");
+            }
+            for (GuardianLink active : activeLinks) {
+                active.setStatus(GuardianLinkStatus.REVOKED);
+            }
+            guardianLinkRepository.saveAll(activeLinks);
+            return;
+        }
+
+        if (user.getRole() == UserRole.GUARDIAN) {
+            if (requestedStudentId != null) {
+                GuardianLink target = guardianLinkRepository
+                        .findFirstByGuardianUserIdAndStudentIdAndStatus(user.getId(), requestedStudentId, GuardianLinkStatus.ACTIVE)
+                        .orElseThrow(() -> new AppException(ErrorCode.GUARDIAN_NOT_LINKED));
+                target.setStatus(GuardianLinkStatus.REVOKED);
+                guardianLinkRepository.save(target);
+                return;
+            }
+            List<GuardianLink> activeLinks = guardianLinkRepository
+                    .findAllByGuardianUserIdAndStatusOrderByLinkedAtDesc(user.getId(), GuardianLinkStatus.ACTIVE);
+            if (activeLinks.isEmpty()) {
+                throw new AppException(ErrorCode.GUARDIAN_NOT_LINKED);
+            }
+            GuardianLink first = activeLinks.get(0);
+            first.setStatus(GuardianLinkStatus.REVOKED);
+            guardianLinkRepository.save(first);
+            return;
+        }
+
+        throw new AppException(ErrorCode.ACCESS_DENIED);
     }
 
     private User loadUser(Long userId) {

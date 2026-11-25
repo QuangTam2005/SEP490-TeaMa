@@ -30,13 +30,14 @@ public class GuardianController {
     public ResponseEntity<ApiResponse<GuardianDashboardResponse>> getDashboard(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) String subjectCode
+            @RequestParam(required = false) String subjectCode,
+            @RequestParam(required = false) Long studentId
     ) {
         if (principal == null) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         return ResponseEntity.ok(ApiResponse.ok(
-                guardianService.getDashboard(principal.getId(), date, subjectCode)
+                guardianService.getDashboard(principal.getId(), date, subjectCode, studentId)
         ));
     }
 

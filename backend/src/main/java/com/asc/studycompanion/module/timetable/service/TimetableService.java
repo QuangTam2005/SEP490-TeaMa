@@ -43,7 +43,14 @@ public class TimetableService {
 
     @Transactional(readOnly = true)
     public TimetableResponse getTimetable(Long currentUserId) {
-        StudentProfile student = studyAccessGuard.resolveStudentProfileForTimetable(currentUserId);
+        return getTimetable(currentUserId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public TimetableResponse getTimetable(Long currentUserId, Long studentId) {
+        StudentProfile student = studentId == null
+                ? studyAccessGuard.resolveStudentProfileForTimetable(currentUserId)
+                : studyAccessGuard.resolveStudentProfileForTimetable(currentUserId, studentId);
         return timetableRepository
                 .findFirstByStudentIdAndStatusOrderByVersionDesc(student.getId(), TimetableStatus.ACTIVE)
                 .map(this::toResponse)
@@ -59,7 +66,14 @@ public class TimetableService {
 
     @Transactional
     public TimetableResponse updateTimetable(Long currentUserId, UpdateTimetableRequest request) {
-        StudentProfile student = studyAccessGuard.resolveStudentProfileForTimetable(currentUserId);
+        return updateTimetable(currentUserId, null, request);
+    }
+
+    @Transactional
+    public TimetableResponse updateTimetable(Long currentUserId, Long studentId, UpdateTimetableRequest request) {
+        StudentProfile student = studentId == null
+                ? studyAccessGuard.resolveStudentProfileForTimetable(currentUserId)
+                : studyAccessGuard.resolveStudentProfileForTimetable(currentUserId, studentId);
         User actor = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 

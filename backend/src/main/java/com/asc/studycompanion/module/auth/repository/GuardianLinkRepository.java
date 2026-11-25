@@ -16,6 +16,17 @@ public interface GuardianLinkRepository extends JpaRepository<GuardianLink, Long
             GuardianLinkStatus status
     );
 
+    List<GuardianLink> findAllByGuardianUserIdAndStatusOrderByLinkedAtDesc(
+            Long guardianUserId,
+            GuardianLinkStatus status
+    );
+
+    Optional<GuardianLink> findFirstByGuardianUserIdAndStudentIdAndStatus(
+            Long guardianUserId,
+            Long studentId,
+            GuardianLinkStatus status
+    );
+
     Optional<GuardianLink> findFirstByStudentIdOrderByCreatedAtDesc(Long studentId);
 
     List<GuardianLink> findAllByStudentIdAndStatus(Long studentId, GuardianLinkStatus status);

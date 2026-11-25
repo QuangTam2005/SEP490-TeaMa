@@ -5,6 +5,8 @@ import com.asc.studycompanion.common.exception.AppException;
 import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.module.auth.dto.AcceptLinkCodeRequest;
 import com.asc.studycompanion.module.auth.dto.LinkCodeResponse;
+import com.asc.studycompanion.module.auth.dto.LinkedChildResponse;
+import com.asc.studycompanion.module.auth.dto.UnlinkRequest;
 import com.asc.studycompanion.module.auth.service.LinkService;
 import com.asc.studycompanion.security.UserPrincipal;
 import jakarta.validation.Valid;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/links")
@@ -57,5 +61,27 @@ public class LinkController {
         }
         LinkCodeResponse linked = linkService.acceptLinkCode(principal.getId(), request.linkCode());
         return ResponseEntity.ok(ApiResponse.ok("Liên kết tài khoản thành công", linked));
+    }
+
+    @GetMapping("/children")
+    public ResponseEntity<ApiResponse<List<LinkedChildResponse>>> getLinkedChildren(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        if (principal == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        return ResponseEntity.ok(ApiResponse.ok(linkService.getLinkedChildren(principal.getId())));
+    }
+
+    @PostMapping("/unlink")
+    public ResponseEntity<ApiResponse<Void>> unlink(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody(required = false) UnlinkRequest request
+    ) {
+        if (principal == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        linkService.unlink(principal.getId(), request != null ? request.studentId() : null);
+        return ResponseEntity.ok(ApiResponse.okMessage("Đã hủy liên kết tài khoản"));
     }
 }

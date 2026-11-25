@@ -25,7 +25,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
+import java.util.List;
 
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -99,5 +101,20 @@ class LinkControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.data.linkedUserName").value("Khoi"));
+
+        when(linkService.getLinkedChildren(2L)).thenReturn(List.of(
+                new com.asc.studycompanion.module.auth.dto.LinkedChildResponse(10L, 1L, "Khoi", 6, Instant.now())
+        ));
+        mockMvc.perform(get("/api/links/children"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].studentId").value(10));
+
+        doNothing().when(linkService).unlink(2L, 10L);
+        mockMvc.perform(post("/api/links/unlink")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"studentId\":10}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 }

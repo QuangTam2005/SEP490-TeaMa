@@ -464,6 +464,126 @@ class AcceptanceCoreFlowsTest {
         assertTrue(h.plans.size() == 1);
     }
 
+    @Test
+    void accountProfilePasswordMultiChildAndUnlinkFlowsWorkEndToEnd() throws Exception {
+        InMemoryStudyHarness h = new InMemoryStudyHarness(Clock.systemUTC());
+
+        String child1Jwt = registerStudentAndGetJwt(h, "child1@gmail.com", "Bé Một", 6);
+        String child2Jwt = registerStudentAndGetJwt(h, "child2@gmail.com", "Bé Hai", 10);
+
+        // Update profile + change password on child1
+        h.mockMvc.perform(put("/api/auth/profile")
+                        .header("Authorization", "Bearer " + child1Jwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of(
+                                "fullName", "Bé Một Đổi Tên",
+                                "grade", 7
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.fullName").value("Bé Một Đổi Tên"))
+                .andExpect(jsonPath("$.data.grade").value(7));
+
+        h.mockMvc.perform(put("/api/auth/password")
+                        .header("Authorization", "Bearer " + child1Jwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of(
+                                "currentPassword", "wrongpass",
+                                "newPassword", "newsecret123"
+                        ))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_002"));
+
+        h.mockMvc.perform(put("/api/auth/password")
+                        .header("Authorization", "Bearer " + child1Jwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of(
+                                "currentPassword", "secret123",
+                                "newPassword", "newsecret123"
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        // Login with new password succeeds
+        h.mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of(
+                                "email", "child1@gmail.com",
+                                "password", "newsecret123"
+                        ))))
+                .andExpect(status().isOk());
+
+        // Guardian links to both child1 and child2
+        MvcResult gReg = h.mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of(
+                                "email", "mom@gmail.com",
+                                "password", "secret123",
+                                "fullName", "Mẹ An",
+                                "role", "GUARDIAN"
+                        ))))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String guardianJwt = readData(h, gReg).get("accessToken").asText();
+
+        String code1 = readData(h, h.mockMvc.perform(post("/api/links/code")
+                        .header("Authorization", "Bearer " + child1Jwt))
+                .andReturn()).get("linkCode").asText();
+        String code2 = readData(h, h.mockMvc.perform(post("/api/links/code")
+                        .header("Authorization", "Bearer " + child2Jwt))
+                .andReturn()).get("linkCode").asText();
+
+        h.mockMvc.perform(post("/api/links/accept")
+                        .header("Authorization", "Bearer " + guardianJwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of("linkCode", code1))))
+                .andExpect(status().isOk());
+        h.mockMvc.perform(post("/api/links/accept")
+                        .header("Authorization", "Bearer " + guardianJwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of("linkCode", code2))))
+                .andExpect(status().isOk());
+
+        MvcResult childrenRes = h.mockMvc.perform(get("/api/links/children")
+                        .header("Authorization", "Bearer " + guardianJwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andReturn();
+        Long child1StudentId = readData(h, childrenRes).get(0).get("displayName").asText().contains("Một")
+                ? readData(h, childrenRes).get(0).get("studentId").asLong()
+                : readData(h, childrenRes).get(1).get("studentId").asLong();
+
+        // Guardian updates child1 timetable with ?studentId=
+        h.mockMvc.perform(put("/api/student/timetable")
+                        .param("studentId", String.valueOf(child1StudentId))
+                        .header("Authorization", "Bearer " + guardianJwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of(
+                                "entries", List.of(Map.of("weekday", 1, "subjectCode", "MATH"))
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.entries.length()").value(1));
+
+        // Guardian views dashboard scoped to ?studentId=child1
+        h.mockMvc.perform(get("/api/guardian/dashboard")
+                        .param("studentId", String.valueOf(child1StudentId))
+                        .header("Authorization", "Bearer " + guardianJwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.linkedStudentName").value("Bé Một Đổi Tên"))
+                .andExpect(jsonPath("$.data.grade").value(7));
+
+        // Guardian unlinks child1, remaining linked children becomes 1
+        h.mockMvc.perform(post("/api/links/unlink")
+                        .header("Authorization", "Bearer " + guardianJwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of("studentId", child1StudentId))))
+                .andExpect(status().isOk());
+
+        h.mockMvc.perform(get("/api/links/children")
+                        .header("Authorization", "Bearer " + guardianJwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1));
+    }
+
     private static String registerStudentAndGetJwt(
             InMemoryStudyHarness harness,
             String email,

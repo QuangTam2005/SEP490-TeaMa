@@ -286,6 +286,10 @@ final class InMemoryStudyHarness {
         lenient().when(userRepository.save(any(User.class))).thenAnswer(inv -> persistUser(inv.getArgument(0)));
 
         // Student Profiles
+        lenient().when(studentProfileRepository.findById(anyLong())).thenAnswer(inv -> {
+            Long id = inv.getArgument(0);
+            return profiles.stream().filter(p -> Objects.equals(p.getId(), id)).findFirst();
+        });
         lenient().when(studentProfileRepository.findByUserId(anyLong())).thenAnswer(inv -> {
             Long userId = inv.getArgument(0);
             return profiles.stream()
@@ -309,6 +313,29 @@ final class InMemoryStudyHarness {
                                     && Objects.equals(l.getGuardianUser().getId(), gId)
                                     && l.getStatus() == status)
                             .max(Comparator.comparing(GuardianLink::getLinkedAt, Comparator.nullsFirst(Comparator.naturalOrder())));
+                });
+        lenient().when(guardianLinkRepository.findAllByGuardianUserIdAndStatusOrderByLinkedAtDesc(anyLong(), any()))
+                .thenAnswer(inv -> {
+                    Long gId = inv.getArgument(0);
+                    GuardianLinkStatus status = inv.getArgument(1);
+                    return links.stream()
+                            .filter(l -> l.getGuardianUser() != null
+                                    && Objects.equals(l.getGuardianUser().getId(), gId)
+                                    && l.getStatus() == status)
+                            .sorted(Comparator.comparing(GuardianLink::getLinkedAt, Comparator.nullsFirst(Comparator.naturalOrder())).reversed())
+                            .toList();
+                });
+        lenient().when(guardianLinkRepository.findFirstByGuardianUserIdAndStudentIdAndStatus(anyLong(), anyLong(), any()))
+                .thenAnswer(inv -> {
+                    Long gId = inv.getArgument(0);
+                    Long sId = inv.getArgument(1);
+                    GuardianLinkStatus status = inv.getArgument(2);
+                    return links.stream()
+                            .filter(l -> l.getGuardianUser() != null
+                                    && Objects.equals(l.getGuardianUser().getId(), gId)
+                                    && Objects.equals(l.getStudent().getId(), sId)
+                                    && l.getStatus() == status)
+                            .findFirst();
                 });
         lenient().when(guardianLinkRepository.findFirstByStudentIdOrderByCreatedAtDesc(anyLong())).thenAnswer(inv -> {
             Long studentId = inv.getArgument(0);

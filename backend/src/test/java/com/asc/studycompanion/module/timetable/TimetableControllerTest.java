@@ -75,7 +75,7 @@ class TimetableControllerTest {
                 new UsernamePasswordAuthenticationToken(student, null, student.getAuthorities())
         );
 
-        when(timetableService.updateTimetable(eq(1L), any(UpdateTimetableRequest.class)))
+        when(timetableService.updateTimetable(eq(1L), eq(null), any(UpdateTimetableRequest.class)))
                 .thenReturn(new TimetableResponse(
                         10L,
                         2,

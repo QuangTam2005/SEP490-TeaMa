@@ -56,7 +56,19 @@ public class GuardianService {
             LocalDate requestedDate,
             String requestedSubject
     ) {
-        StudentProfile student = studyAccessGuard.requireLinkedStudentForGuardian(guardianUserId);
+        return getDashboard(guardianUserId, requestedDate, requestedSubject, null);
+    }
+
+    @Transactional(readOnly = true)
+    public GuardianDashboardResponse getDashboard(
+            Long guardianUserId,
+            LocalDate requestedDate,
+            String requestedSubject,
+            Long studentId
+    ) {
+        StudentProfile student = studentId == null
+                ? studyAccessGuard.requireLinkedStudentForGuardian(guardianUserId)
+                : studyAccessGuard.requireLinkedStudentForGuardian(guardianUserId, studentId);
         ZoneId zone = ZoneId.of(resolveTimezone(student));
         LocalDate selectedDate = requestedDate != null
                 ? requestedDate

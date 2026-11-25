@@ -34,9 +34,13 @@ public class StudyAccessGuard {
 
     /**
      * Resolves StudentProfile for timetable operations, permitting both the owning STUDENT
-     * and an actively linked GUARDIAN.
+     * and an actively linked GUARDIAN (optionally scoped to requestedStudentId for multi-child).
      */
     public StudentProfile resolveStudentProfileForTimetable(Long currentUserId) {
+        return resolveStudentProfileForTimetable(currentUserId, null);
+    }
+
+    public StudentProfile resolveStudentProfileForTimetable(Long currentUserId, Long requestedStudentId) {
         if (currentUserId == null) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
@@ -44,14 +48,15 @@ public class StudyAccessGuard {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (user.getRole() == UserRole.STUDENT) {
-            return studentProfileRepository.findByUserId(user.getId())
+            StudentProfile owned = studentProfileRepository.findByUserId(user.getId())
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+            if (requestedStudentId != null && !owned.getId().equals(requestedStudentId)) {
+                throw new AppException(ErrorCode.ACCESS_DENIED);
+            }
+            return owned;
         }
         if (user.getRole() == UserRole.GUARDIAN) {
-            return guardianLinkRepository
-                    .findFirstByGuardianUserIdAndStatusOrderByLinkedAtDesc(user.getId(), GuardianLinkStatus.ACTIVE)
-                    .map(GuardianLink::getStudent)
-                    .orElseThrow(() -> new AppException(ErrorCode.GUARDIAN_NOT_LINKED));
+            return resolveGuardianStudent(user.getId(), requestedStudentId);
         }
         throw new AppException(ErrorCode.ACCESS_DENIED);
     }
@@ -64,9 +69,29 @@ public class StudyAccessGuard {
     }
 
     public StudentProfile requireLinkedStudentForGuardian(Long guardianUserId) {
+        return requireLinkedStudentForGuardian(guardianUserId, null);
+    }
+
+    public StudentProfile requireLinkedStudentForGuardian(Long guardianUserId, Long requestedStudentId) {
         User guardian = loadUserWithRole(guardianUserId, UserRole.GUARDIAN);
+        return resolveGuardianStudent(guardian.getId(), requestedStudentId);
+    }
+
+    private StudentProfile resolveGuardianStudent(Long guardianUserId, Long requestedStudentId) {
+        if (requestedStudentId != null) {
+            boolean linked = guardianLinkRepository.existsByGuardianUserIdAndStudentIdAndStatus(
+                    guardianUserId,
+                    requestedStudentId,
+                    GuardianLinkStatus.ACTIVE
+            );
+            if (!linked) {
+                throw new AppException(ErrorCode.GUARDIAN_NOT_LINKED);
+            }
+            return studentProfileRepository.findById(requestedStudentId)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        }
         return guardianLinkRepository
-                .findFirstByGuardianUserIdAndStatusOrderByLinkedAtDesc(guardian.getId(), GuardianLinkStatus.ACTIVE)
+                .findFirstByGuardianUserIdAndStatusOrderByLinkedAtDesc(guardianUserId, GuardianLinkStatus.ACTIVE)
                 .map(GuardianLink::getStudent)
                 .orElseThrow(() -> new AppException(ErrorCode.GUARDIAN_NOT_LINKED));
     }

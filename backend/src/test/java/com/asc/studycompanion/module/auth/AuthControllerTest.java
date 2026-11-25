@@ -31,9 +31,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -194,5 +196,45 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.data.id").value(12))
                 .andExpect(jsonPath("$.data.email").value("hocsinh@gmail.com"))
                 .andExpect(jsonPath("$.data.grade").value(6));
+    }
+
+    @Test
+    void updateProfileAndChangePasswordRequireAuthAndValidateInputs() throws Exception {
+        UserPrincipal principal = new UserPrincipal(
+                12L,
+                "hocsinh@gmail.com",
+                "hash",
+                "Nguyen Minh Khoi",
+                UserRole.STUDENT
+        );
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())
+        );
+
+        UserResponse updated = new UserResponse(
+                12L,
+                "hocsinh@gmail.com",
+                "Nguyen Minh Khoi Moi",
+                UserRole.STUDENT,
+                7,
+                null,
+                Instant.now()
+        );
+        when(authService.updateProfile(org.mockito.ArgumentMatchers.eq(12L), any())).thenReturn(updated);
+
+        mockMvc.perform(put("/api/auth/profile")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"Nguyen Minh Khoi Moi\",\"grade\":7}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.fullName").value("Nguyen Minh Khoi Moi"))
+                .andExpect(jsonPath("$.data.grade").value(7));
+
+        doNothing().when(authService).changePassword(org.mockito.ArgumentMatchers.eq(12L), any());
+
+        mockMvc.perform(put("/api/auth/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"oldpass\",\"newPassword\":\"newpass123\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 }

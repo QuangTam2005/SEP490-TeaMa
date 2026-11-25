@@ -3,8 +3,10 @@ package com.asc.studycompanion.module.auth.service;
 import com.asc.studycompanion.common.exception.AppException;
 import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.module.auth.dto.AuthResponse;
+import com.asc.studycompanion.module.auth.dto.ChangePasswordRequest;
 import com.asc.studycompanion.module.auth.dto.LoginRequest;
 import com.asc.studycompanion.module.auth.dto.RegisterRequest;
+import com.asc.studycompanion.module.auth.dto.UpdateProfileRequest;
 import com.asc.studycompanion.module.auth.dto.UpdateStudentProfileRequest;
 import com.asc.studycompanion.module.auth.dto.UserResponse;
 import com.asc.studycompanion.module.auth.entity.GuardianLink;
@@ -105,6 +107,40 @@ public class AuthService {
         studentProfileRepository.save(profile);
 
         return userMapper.toResponse(user, profile.getGrade(), null);
+    }
+
+    @Transactional
+    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        user.setFullName(request.fullName());
+        userRepository.save(user);
+
+        if (user.getRole() == UserRole.STUDENT) {
+            StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+            profile.setDisplayName(request.fullName());
+            if (request.grade() != null) {
+                profile.setGrade(request.grade());
+            }
+            studentProfileRepository.save(profile);
+        }
+
+        return mapUserWithProfileAndLink(user);
+    }
+
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS, "Mật khẩu hiện tại không chính xác");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 
     @Transactional(readOnly = true)
