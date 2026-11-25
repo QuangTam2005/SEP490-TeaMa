@@ -276,4 +276,121 @@ class StudyPlanServiceTest {
         assertEquals(2, history.get(0).totalTasks());
         assertEquals(1, history.get(0).completedTasks());
     }
+
+    @Test
+    void preservesAndContinuesStreakAcrossUnscheduledWeekendDays() {
+        StudentProfile student = StudentProfile.builder()
+                .id(10L)
+                .displayName("Khoi")
+                .grade(7)
+                .timezone("Asia/Ho_Chi_Minh")
+                .build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+
+        // Active timetable: Mon (1) .. Fri (5) only; Sat (6) & Sun (7) have no subjects.
+        Timetable monToFriTimetable = Timetable.builder()
+                .id(50L)
+                .student(student)
+                .status(TimetableStatus.ACTIVE)
+                .entries(List.of(
+                        TimetableEntry.builder().weekday(1).subject(math).build(),
+                        TimetableEntry.builder().weekday(2).subject(math).build(),
+                        TimetableEntry.builder().weekday(3).subject(math).build(),
+                        TimetableEntry.builder().weekday(4).subject(math).build(),
+                        TimetableEntry.builder().weekday(5).subject(math).build()
+                ))
+                .build();
+
+        StudyTask evalTask = StudyTask.builder()
+                .id(1L)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.EVALUATED)
+                .build();
+
+        // Completed Thu 2026-11-26 and Fri 2026-11-27
+        List<StudyPlan> weekdayPlans = List.of(
+                StudyPlan.builder().id(2L).student(student).targetDate(LocalDate.of(2026, 11, 27)).tasks(List.of(evalTask)).build(),
+                StudyPlan.builder().id(1L).student(student).targetDate(LocalDate.of(2026, 11, 26)).tasks(List.of(evalTask)).build()
+        );
+
+        when(studyAccessGuard.requireOwnedStudentProfile(1L)).thenReturn(student);
+        when(timetableRepository.findFirstByStudentIdAndStatusOrderByVersionDesc(10L, TimetableStatus.ACTIVE))
+                .thenReturn(Optional.of(monToFriTimetable));
+        when(studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(10L)).thenReturn(weekdayPlans);
+
+        // Saturday 2026-11-28 morning: no tasks for Sat or Sun -> streak must remain 2
+        studyPlanService.setClock(Clock.fixed(Instant.parse("2026-11-28T03:00:00Z"), ZoneOffset.UTC));
+        var saturdayStreak = studyPlanService.getStreak(1L);
+        assertEquals(2, saturdayStreak.currentStreak());
+        assertEquals(2, saturdayStreak.longestStreak());
+
+        // Sunday 2026-11-29 morning before Monday prep: streak must still remain 2
+        studyPlanService.setClock(Clock.fixed(Instant.parse("2026-11-29T03:00:00Z"), ZoneOffset.UTC));
+        var sundayMorningStreak = studyPlanService.getStreak(1L);
+        assertEquals(2, sundayMorningStreak.currentStreak());
+
+        // Sunday 2026-11-29 evening after completing Monday 2026-11-30 prep -> streak extends to 3
+        List<StudyPlan> withMonday = List.of(
+                StudyPlan.builder().id(3L).student(student).targetDate(LocalDate.of(2026, 11, 30)).tasks(List.of(evalTask)).build(),
+                weekdayPlans.get(0),
+                weekdayPlans.get(1)
+        );
+        when(studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(10L)).thenReturn(withMonday);
+        studyPlanService.setClock(Clock.fixed(Instant.parse("2026-11-29T15:00:00Z"), ZoneOffset.UTC));
+
+        var sundayEveningStreak = studyPlanService.getStreak(1L);
+        assertEquals(3, sundayEveningStreak.currentStreak());
+        assertEquals(3, sundayEveningStreak.longestStreak());
+        assertEquals(3, sundayEveningStreak.totalCompletedDays());
+        assertEquals(LocalDate.of(2026, 11, 30), sundayEveningStreak.lastActiveDate());
+    }
+
+    @Test
+    void breaksStreakWhenScheduledWeekdayIsMissed() {
+        StudentProfile student = StudentProfile.builder()
+                .id(10L)
+                .displayName("Khoi")
+                .grade(7)
+                .timezone("Asia/Ho_Chi_Minh")
+                .build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+
+        Timetable monToFriTimetable = Timetable.builder()
+                .id(50L)
+                .student(student)
+                .status(TimetableStatus.ACTIVE)
+                .entries(List.of(
+                        TimetableEntry.builder().weekday(1).subject(math).build(),
+                        TimetableEntry.builder().weekday(2).subject(math).build(),
+                        TimetableEntry.builder().weekday(3).subject(math).build(),
+                        TimetableEntry.builder().weekday(4).subject(math).build(),
+                        TimetableEntry.builder().weekday(5).subject(math).build()
+                ))
+                .build();
+
+        StudyTask evalTask = StudyTask.builder()
+                .id(1L)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.EVALUATED)
+                .build();
+
+        // Completed Thu 2026-11-26 and Fri 2026-11-27, but MISSED Monday 2026-11-30
+        List<StudyPlan> plans = List.of(
+                StudyPlan.builder().id(2L).student(student).targetDate(LocalDate.of(2026, 11, 27)).tasks(List.of(evalTask)).build(),
+                StudyPlan.builder().id(1L).student(student).targetDate(LocalDate.of(2026, 11, 26)).tasks(List.of(evalTask)).build()
+        );
+
+        when(studyAccessGuard.requireOwnedStudentProfile(1L)).thenReturn(student);
+        when(timetableRepository.findFirstByStudentIdAndStatusOrderByVersionDesc(10L, TimetableStatus.ACTIVE))
+                .thenReturn(Optional.of(monToFriTimetable));
+        when(studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(10L)).thenReturn(plans);
+
+        // Monday 2026-11-30 22:00 ICT: Monday was a scheduled day and was missed -> currentStreak = 0
+        studyPlanService.setClock(Clock.fixed(Instant.parse("2026-11-30T15:00:00Z"), ZoneOffset.UTC));
+        var streak = studyPlanService.getStreak(1L);
+        assertEquals(0, streak.currentStreak());
+        assertEquals(2, streak.longestStreak());
+    }
 }

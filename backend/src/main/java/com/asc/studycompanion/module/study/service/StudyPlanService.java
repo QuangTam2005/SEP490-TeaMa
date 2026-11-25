@@ -33,10 +33,13 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -218,8 +221,8 @@ public class StudyPlanService {
         LocalDate today = LocalDate.now(clock.withZone(zoneId));
         LocalDate tomorrow = today.plusDays(1);
 
-        List<LocalDate> completedDates = studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(student.getId())
-                .stream()
+        List<StudyPlan> allPlans = studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(student.getId());
+        List<LocalDate> completedDates = allPlans.stream()
                 .filter(plan -> plan.getTasks().stream()
                         .anyMatch(task -> task.getStatus() == StudyTaskStatus.EVALUATED))
                 .map(StudyPlan::getTargetDate)
@@ -231,10 +234,21 @@ public class StudyPlanService {
             return new StudentStreakResponse(0, 0, 0, null);
         }
 
+        Set<Integer> scheduledWeekdays = resolveScheduledWeekdays(student.getId());
+        Set<LocalDate> incompletePlannedDates = allPlans.stream()
+                .filter(plan -> !plan.getTasks().isEmpty()
+                        && plan.getTasks().stream().noneMatch(task -> task.getStatus() == StudyTaskStatus.EVALUATED))
+                .map(StudyPlan::getTargetDate)
+                .collect(Collectors.toSet());
+
         int longestStreak = 1;
         int running = 1;
         for (int i = 1; i < completedDates.size(); i++) {
-            if (completedDates.get(i).equals(completedDates.get(i - 1).plusDays(1))) {
+            if (areConsecutiveStudyDates(
+                    completedDates.get(i - 1),
+                    completedDates.get(i),
+                    scheduledWeekdays,
+                    incompletePlannedDates)) {
                 running++;
                 if (running > longestStreak) {
                     longestStreak = running;
@@ -244,16 +258,26 @@ public class StudyPlanService {
             }
         }
 
-        java.util.Set<LocalDate> dateSet = new java.util.HashSet<>(completedDates);
-        LocalDate anchor = dateSet.contains(tomorrow)
-                ? tomorrow
-                : (dateSet.contains(today) ? today : null);
+        Set<LocalDate> completedDateSet = new HashSet<>(completedDates);
+        LocalDate earliestCompleted = completedDates.get(0);
+        LocalDate anchor = findCurrentStreakAnchor(
+                today,
+                tomorrow,
+                earliestCompleted,
+                completedDateSet,
+                scheduledWeekdays,
+                incompletePlannedDates
+        );
 
         int currentStreak = 0;
         if (anchor != null) {
             LocalDate cursor = anchor;
-            while (dateSet.contains(cursor)) {
-                currentStreak++;
+            while (!cursor.isBefore(earliestCompleted)) {
+                if (completedDateSet.contains(cursor)) {
+                    currentStreak++;
+                } else if (!isRestDay(cursor, scheduledWeekdays, incompletePlannedDates)) {
+                    break;
+                }
                 cursor = cursor.minusDays(1);
             }
         }
@@ -264,6 +288,71 @@ public class StudyPlanService {
                 completedDates.size(),
                 completedDates.get(completedDates.size() - 1)
         );
+    }
+
+    private Set<Integer> resolveScheduledWeekdays(Long studentId) {
+        return timetableRepository
+                .findFirstByStudentIdAndStatusOrderByVersionDesc(studentId, TimetableStatus.ACTIVE)
+                .map(timetable -> timetable.getEntries().stream()
+                        .map(TimetableEntry::getWeekday)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet()))
+                .orElse(Set.of());
+    }
+
+    private boolean areConsecutiveStudyDates(
+            LocalDate previous,
+            LocalDate next,
+            Set<Integer> scheduledWeekdays,
+            Set<LocalDate> incompletePlannedDates
+    ) {
+        LocalDate cursor = previous.plusDays(1);
+        while (cursor.isBefore(next)) {
+            if (!isRestDay(cursor, scheduledWeekdays, incompletePlannedDates)) {
+                return false;
+            }
+            cursor = cursor.plusDays(1);
+        }
+        return true;
+    }
+
+    private LocalDate findCurrentStreakAnchor(
+            LocalDate today,
+            LocalDate tomorrow,
+            LocalDate earliestCompleted,
+            Set<LocalDate> completedDateSet,
+            Set<Integer> scheduledWeekdays,
+            Set<LocalDate> incompletePlannedDates
+    ) {
+        if (completedDateSet.contains(tomorrow)) {
+            return tomorrow;
+        }
+        LocalDate cursor = today;
+        while (!cursor.isBefore(earliestCompleted)) {
+            if (completedDateSet.contains(cursor)) {
+                return cursor;
+            }
+            if (!isRestDay(cursor, scheduledWeekdays, incompletePlannedDates)) {
+                return null;
+            }
+            cursor = cursor.minusDays(1);
+        }
+        return null;
+    }
+
+    /**
+     * Off-schedule weekdays (e.g., Saturday/Sunday with no classes on the active timetable)
+     * do not break the student's study streak unless a plan with tasks existed and was missed.
+     */
+    private boolean isRestDay(
+            LocalDate date,
+            Set<Integer> scheduledWeekdays,
+            Set<LocalDate> incompletePlannedDates
+    ) {
+        if (scheduledWeekdays.isEmpty() || incompletePlannedDates.contains(date)) {
+            return false;
+        }
+        return !scheduledWeekdays.contains(date.getDayOfWeek().getValue());
     }
 
     private NextDayStudyPlanResponse toPlanResponse(
