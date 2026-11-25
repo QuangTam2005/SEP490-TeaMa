@@ -47,7 +47,7 @@
 ### Task 5 — Nâng cấp Auth, Mã liên kết 8 ký tự & Anti-IDOR Guard *(3 subtasks)*
 - [x] `[TASK-BE.2a]` *(3 SP)* Nâng cấp module `auth` (`STUDENT`/`GUARDIAN`, tự tạo `StudentProfile` khi đăng ký Học sinh, kiểm tra email mở, `GET /api/auth/me` + trạng thái `GuardianLink`) & unit tests
 - [x] `[TASK-BE.2b]` *(3 SP)* Xây dựng API mã liên kết 8 ký tự dùng 1 lần (`POST /api/links/code`, `POST /api/links/accept`, `GET /api/links/current`, hạn 24h, `AUTH_007`/`AUTH_008`) & unit tests
-- [ ] `[TASK-BE.2c]` *(2 SP)* Xây dựng `StudyAccessGuard` (chống IDOR cho Student owner & `GuardianLink` active) + `GET /api/subjects` & security tests
+- [x] `[TASK-BE.2c]` *(2 SP)* Xây dựng `StudyAccessGuard` (chống IDOR cho Student owner & `GuardianLink` active) + `GET /api/subjects` & security tests
 
 ---
 

@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 3 In Progress (`[TASK-BE.2b]` Completed — 1-Time 8-Char Link Code APIs)  
+**Current Phase:** Phase 3 Completed (`[TASK-BE.1a]`–`[TASK-BE.2c]`) $\rightarrow$ Ready for Phase 4 (`Timetable, Study Plan & Submission Backend`)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -35,11 +35,11 @@
 - **[DONE] `[TASK-UI.5]`:** Built `guardian.service.ts` (+ `guardianMockService` & `guardianHttpService`), `GuardianShell` (`/guardian/layout.tsx`), `/guardian/dashboard` (`GuardianDashboardView` with date & subject filters, completion summary, desktop `DataTable` + mobile cards), and `/guardian/submissions/[submissionId]` (`SubmissionDetailView` read-only immutable student version inspector with Accuracy/Completeness, incorrect/missing points, clickable `sources` + `retrievedAt`, and zero `AIUsageLog`/cost leaks). Verified `typecheck`, `lint`, `build` (`10` App Router routes compiled with `0` errors/warnings).
 - **[DONE] `[TASK-BE.1a]` (`cd59bfc`) & `[TASK-BE.1b]` (`687854e`):** Created Flyway `V1__init_auth_and_curriculum_schema.sql` & `V2__init_study_and_ai_schema.sql` covering all 14 PostgreSQL tables (`users`, `student_profiles`, `guardian_links`, 5 seeded `subjects`, `timetables`, `timetable_entries`, `study_plans`, `study_tasks`, `study_submissions`, `ai_evaluations`, `source_references`, `evaluation_jobs`, `ai_usage_logs`, `knowledge_cache`).
 - **[DONE] `[TASK-BE.2a]` (`786409a`):** Upgraded `auth` module with `UserRole` (`STUDENT`/`GUARDIAN`), `UserStatus`, `StudentProfile`, `GuardianLink`, `ROLE_*` `UserPrincipal`, auto-provisioning `StudentProfile` on Student registration, open email validation, active `GuardianLink` lookup in `GET /api/auth/me` & `login`, and CORS `"Idempotency-Key"` header. Verified `.\mvnw.cmd clean test` (`Tests run: 31, Failures: 0`).
-- **[DONE] `[TASK-BE.2b]`:** Implemented `LinkService` & `LinkController` (`GET /api/links/current`, `POST /api/links/code`, `POST /api/links/accept`) with 8-character unambiguous one-time code generation (`24h` expiry, auto-revoke stale pending codes, `AUTH_007`/`AUTH_008` guards) and `LinkServiceTest` + `LinkControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 36, Failures: 0`).
+- **[DONE] `[TASK-BE.2b]` (`35b6f45`):** Implemented `LinkService` & `LinkController` (`GET /api/links/current`, `POST /api/links/code`, `POST /api/links/accept`) with 8-character unambiguous one-time code generation (`24h` expiry, auto-revoke stale pending codes, `AUTH_007`/`AUTH_008` guards) and `LinkServiceTest` + `LinkControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 36, Failures: 0`).
+- **[DONE] `[TASK-BE.2c]`:** Implemented `StudyAccessGuard` (anti-IDOR enforcement for Student ownership and active Guardian links, returning `AUTH_004` / `GRD_001`) and `Subject` + `SubjectRepository` + `SubjectController` (`GET /api/subjects` for the 5 fixed Grade 6 subjects), backed by `StudyAccessGuardTest` & `SubjectControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 40, Failures: 0`).
 
 ---
 
-## 3. Next Steps Queue (Phase 3 — Backend Database & Auth/Link)
-1. `[TASK-BE.1]` Create Flyway `V1__init_study_companion_schema.sql` (14 PostgreSQL tables per `DESIGN.md` + 5 seeded Grade 6 `subjects`) and verify JPA `ddl-auto=validate` alignment.
-2. `[TASK-BE.2]` Upgrade `auth` module (`STUDENT`/`GUARDIAN` roles, `StudentProfile`, `GuardianLink`, 8-char 1-time Link Code APIs, and `StudyAccessGuard` anti-IDOR protection).
-3. Proceed sequentially through `[TASK-BE.3]`–`[TASK-BE.6]`.
+## 3. Next Steps Queue (Phase 4 — Timetable, Study Plan & Submission Backend)
+1. **Task 6:** `[TASK-BE.3]` *(3 SP)* Versioned Timetable CRUD + `[TASK-BE.4a]` *(3 SP)* Next-Day `StudyPlan`/`StudyTask` Generator (`Asia/Ho_Chi_Minh`).
+2. **Task 7:** `[TASK-BE.4b]` *(2 SP)* Task detail & `BR-12` text utils + `[TASK-BE.4c]` *(5 SP)* `POST /api/student/tasks/{taskId}/submissions` (`REVIEW`-before-`PREVIEW`, max 3 revisions, `Idempotency-Key`, atomic `EvaluationJob`) + `[TASK-BE.4d]` *(2 SP)* Retry evaluation endpoint.
