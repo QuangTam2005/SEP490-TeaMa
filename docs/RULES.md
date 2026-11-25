@@ -1,59 +1,42 @@
 # AI CODING RULES & CONSTRAINTS (RULES.md)
-**Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
-**Purpose:** Quy tắc bắt buộc tuân thủ cho mọi AI Agent và thành viên khi sinh code hoặc chỉnh sửa repository.
+**Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
+**Purpose:** Quy tắc bắt buộc cho mọi AI Agent và thành viên khi thiết kế, viết code hoặc chỉnh sửa repository.
 
 ---
 
 ## 1. General & Workflow Rules
-1. **Context-First Execution:** Trước khi bắt đầu bất kỳ tác vụ nào (lập kế hoạch, viết code, sửa cấu hình), AI bắt buộc phải đọc lại toàn bộ các file `.md` trong `docs/*.md` (`PRD.md`, `ARCHITECTURE.md`, `DESIGN.md`, `RULES.md`, `TASKS.md`, `PROGRESS.md` và mọi file tài liệu bổ sung nếu có) để nắm chính xác ngữ cảnh, ràng buộc kỹ thuật và trạng thái hiện tại.
-2. **Minimal Diff Principle:** Chỉ sửa đổi hoặc thêm mới các file liên quan trực tiếp đến task đang thực hiện. Tuyệt đối không tự ý format lại toàn bộ file cũ, không đổi tên biến/hàm đang chạy ổn định ở các module khác.
-3. **Auto-Update Progress:** Ngay sau khi hoàn thành và kiểm thử xong một task trong `TASKS.md`, AI phải đánh dấu `[x]` vào `TASKS.md` và cập nhật trạng thái vào `docs/PROGRESS.md`.
+1. **Context-First Execution:** Trước khi bắt đầu bất kỳ tác vụ nào, AI bắt buộc đọc lại `docs/*.md` (`PRD.md`, `ARCHITECTURE.md`, `DESIGN.md`, `RULES.md`, `TASKS.md`, `PROGRESS.md`).
+2. **Minimal Diff & Phased Anti-Hallucination:** Chỉ sửa đúng các file thuộc task hiện tại. Không gộp nhiều phase hoặc đoán tên bảng/API chưa định nghĩa.
+3. **Auto-Update Progress & Atomic Commits:** Sau khi kiểm thử pass 100%, đánh dấu `[x]` vào `docs/TASKS.md`, cập nhật `docs/PROGRESS.md` và commit riêng 1 task = 1 atomic commit.
 4. **Language Convention:**
-   - Code, tên biến, tên hàm, tên bảng DB, comment kỹ thuật, Git commit message: **100% Tiếng Anh**.
-   - Nhãn giao diện (UI Labels), thông báo lỗi hiển thị cho người dùng, tài liệu hướng dẫn: **Tiếng Việt** (kết hợp đúng thuật ngữ chuyên ngành SEP490 như *Use Case, WBS, RACI, Sprint, Iteration, Milestone*).
-5. **Email Validation Policy (Lằn ranh đỏ):**
-   - Hệ thống chấp nhận **mọi địa chỉ Email hợp lệ bất kỳ** (chuẩn `@Email` / Zod `.email()`).
-   - Cấm tuyệt đối ràng buộc, kiểm tra hay nhắc tới domain `@fpt.edu.vn` trong logic validation, thông báo lỗi hoặc placeholder/hint trên giao diện UI (VD: dùng `name@example.com` hoặc `ten.sv@gmail.com` nếu cần placeholder).
+   - Code, biến, tên hàm, tên bảng DB, comment kỹ thuật, commit message: **100% Tiếng Anh**.
+   - Nhãn giao diện (UI Labels), thông báo lỗi, phản hồi học sinh: **Tiếng Việt** rõ ràng, tích cực, không mang tính trách phạt (`NFR-ACC-01`), tuân thủ nguyên tắc **Minimal-Text**.
+5. **Open Email Validation Policy:** Chấp nhận mọi địa chỉ email hợp lệ bất kỳ (`@Email` / Zod `.email()`), không giới hạn bất kỳ domain trường học cụ thể nào.
 
 ---
 
-## 2. Backend Rules (`backend/` - Java 21 / Spring Boot 3.3+)
-1. **Database Schema & Migration (Lằn ranh đỏ):**
-   - Cấm tuyệt đối cấu hình `spring.jpa.hibernate.ddl-auto=create` hoặc `update`. Bắt buộc dùng `validate`.
-   - Mọi thay đổi về bảng, cột, index đều phải viết thông qua file SQL migration mới trong `src/main/resources/db/migration/` theo chuẩn đặt tên Flyway (`V{version}__{description}.sql`).
-   - Mọi cột `code` trong các bảng có Soft-Delete (`features`, `use_cases`, `wbs_tasks`, `screens_functions`, `business_rules`, `app_messages`, `test_cases`, `tracking_logs`) bắt buộc dùng **Partial Unique Index**: `CREATE UNIQUE INDEX ... ON <table> (project_id, code) WHERE is_deleted = FALSE`.
-2. **Architecture, Layering & Project-Scope Isolation (Chống IDOR):**
-   - Tuân thủ nghiêm ngặt luồng: `Controller` $\rightarrow$ `Service` $\rightarrow$ `Repository`. Không viết business logic trong Controller; không trả trực tiếp JPA `@Entity` ra ngoài API (bắt buộc map sang `Request/Response DTO`).
-   - **Project-Scope Isolation:** Mọi thao tác đọc/sửa/xóa thực thể con (`taskId`, `useCaseId`, `screenId`, `testCaseId`...) bắt buộc phải truy vấn kèm `projectId` (`findByIdAndProjectId(id, projectId)`) sau khi đã xác thực user thuộc `project_members` (hoặc có `X-Supervisor-Token` hợp lệ của chính project đó).
-   - Mọi REST API trả về JSON đều phải bọc trong class chuẩn `ApiResponse<T>`.
-   - Mọi Exception nghiệp vụ phải ném ra `AppException` (kèm `ErrorCode` enum) và được bắt tập trung tại `GlobalExceptionHandler`.
-   - **Transaction & Query Optimization:** Mọi phương thức Service ghi dữ liệu (Create/Update/Soft-Delete) bắt buộc gắn `@Transactional`; các phương thức chỉ đọc gắn `@Transactional(readOnly = true)`. Tránh lỗi N+1 query bằng `@EntityGraph` hoặc `JOIN FETCH` khi tải danh sách có quan hệ cha-con (như Traceability Matrix).
-3. **Audit & Soft-Delete (Chuẩn Hibernate 6.4+):**
-   - Không dùng `repository.delete()` (Hard Delete) cho các thực thể nghiệp vụ. Bắt buộc cập nhật `is_deleted = true`.
-   - Sử dụng **`@SQLRestriction("is_deleted = false")`** (chuẩn Hibernate 6.3+, không dùng `@Where` đã bị deprecated) trên các Entity có Soft-Delete, và bắt buộc thêm điều kiện `is_deleted = FALSE` trong mọi câu native query thống kê (`Test Coverage`, `Total Man-days`, `Contribution`).
-   - Mọi thao tác Thêm (`A`), Sửa (`M`), Xóa (`D`) trên dữ liệu báo cáo phải kích hoạt event/AOP ghi vào bảng `document_change_logs`.
-4. **Dependency Lock:** Không tự ý thêm dependency mới vào `pom.xml` nếu không được sự đồng ý của chủ dự án.
+## 2. Domain & AI Pipeline Red Lines (`SRS BR-01..BR-24`)
+1. **Identical Character Counter (`BR-12`):** Cả Frontend và Backend phải dùng cùng quy tắc chuẩn hóa `\r\n` $\rightarrow$ `\n`, `.trim()` hai đầu, sau đó đếm toàn bộ ký tự (gồm khoảng trắng và dấu câu bên trong) và khóa chặt trong `[850, 2000]` cho cả `REVIEW` và `PREVIEW`.
+2. **Strict Task Sequencing & Revision Cap (`BR-08`, `O-04`):**
+   - `PREVIEW` chỉ được mở khóa sau khi `REVIEW` cùng môn/ngày đã được Submit và lưu thành công.
+   - Sau khi `EVALUATED`, Student được phép nộp bản cập nhật mới (**Revision**), **tối đa 3 lần cập nhật** cho mỗi nhiệm vụ (`version <= 4`); cấm sửa trong lúc đang `EVALUATING`; mọi phiên bản đã Submit đều bất biến (`BR-21`).
+3. **Save Before AI & No AI While Typing (`BR-13`, `BR-14`):** Tuyệt đối không gọi Brave Search hoặc MiMo khi đang nhập liệu. Backend bắt buộc lưu `StudySubmission` và `EvaluationJob` vào PostgreSQL trước khi gọi API ngoài; sử dụng `Idempotency-Key` chống trùng job.
+4. **AI Privacy & Grounding (`BR-17`, `BR-18`, `BR-23`):**
+   - Tuyệt đối không gửi tên thật, email, ID học sinh hoặc lịch sử chat sang Brave/MiMo; chỉ gửi `grade=6`, `subject`, `taskType`, `lessonTitle`, `studentText`.
+   - Khi nguồn thiếu hoặc mâu thuẫn, trả `UNVERIFIABLE` / `UNDETERMINED` / `INSUFFICIENT_EVIDENCE` — cấm bịa URL hoặc kết luận sai.
+   - Phần nhận xét hiển thị cho Student (kèm ý sai/thiếu nếu hiển thị chung) **không vượt quá 600 ký tự** — không cắt ngang câu chữ ngẫu nhiên (`SRS §11`).
+5. **Secret & Cost Protection (`NFR-SEC-02`, `§3.2`):** `CKEY_API_KEY`, `BRAVE_API_KEY`, `JWT_SECRET` chỉ nằm ở Backend; không bao giờ log secret hoặc trả `AIUsageLog` ra Guardian Dashboard thông thường.
 
 ---
 
-## 3. Frontend Rules (`frontend/` - Next.js 14 / TypeScript)
-1. **TypeScript Strictness (Lằn ranh đỏ):**
-   - Cấm tuyệt đối sử dụng kiểu `any` hoặc `@ts-ignore`. Mọi API payload và response đều phải định nghĩa `interface` hoặc `type` rõ ràng trong thư mục `src/types/`.
-2. **UI, Icon-First & Typography Compliance:**
-   - Sử dụng font `Be Vietnam Pro` (subset `vietnamese`) làm font chính và `JetBrains Mono` cho các mã định danh (`FE-01`, `UC-01`, `TASK-01`, `BR-01`).
-   - Tuân thủ nguyên tắc **Icon-First**: sử dụng duy nhất thư viện `lucide-react` (`strokeWidth={1.75}`, size `16px`/`20px`), kết hợp `Shadcn Tooltip` cho các nút thao tác bảng; không dùng emoji thô.
-   - Ưu tiên tái sử dụng component từ `src/components/ui/` (Shadcn/UI) và tuân thủ bảng màu trong `docs/DESIGN.md` (v1.2). Không viết inline CSS style bừa bãi.
-3. **App Router Boundary, Data Fetching & Forms:**
-   - Giữ `layout.tsx` và `page.tsx` làm Server Component mỏng (để cấu hình `metadata` và `next/font`); đặt `'use client'` ở các Interactive Feature Components.
-   - Mọi lời gọi API phía client đều phải đi qua Axios instance chuẩn (`src/lib/api-client.ts`) có interceptor tự động đính kèm `Authorization: Bearer <jwt>` (cho Student Workspace) hoặc `X-Supervisor-Token: <token>` (cho Supervisor Portal) và quản lý cache bằng **TanStack Query**.
-   - Mọi Form nhập liệu đều phải validate bằng **React Hook Form + Zod**.
+## 3. Backend Rules (`backend/` - Java 21 / Spring Boot 3.4)
+1. **Database Schema & Migration:** Bắt buộc `spring.jpa.hibernate.ddl-auto=validate`. Mọi thay đổi schema đi qua Flyway `V{version}__{description}.sql`.
+2. **Layering & Anti-IDOR:** `Controller` $\rightarrow$ `Service` $\rightarrow$ `Repository` $\rightarrow$ `DTO`. Mọi thao tác đọc/ghi của `STUDENT` hoặc `GUARDIAN` phải xác thực quyền sở hữu (`StudentProfile`) hoặc liên kết hợp lệ (`GuardianLink`) tại server (`AC-17`).
+3. **Transactions & Retry Safety:** Phương thức Service ghi dùng `@Transactional`; đọc dùng `@Transactional(readOnly = true)`. Worker AI retry có giới hạn (`timeout`/`429`/`5xx`) bằng exponential backoff + jitter; lỗi validation không retry AI.
 
 ---
 
-## 4. Git & Security Constraints
-- **Secrets Protection:** Tuyệt đối không hardcode mật khẩu DB, JWT Secret, hoặc Webhook Secret vào source code. Luôn đọc từ biến môi trường (`application.yml` / `.env`).
-- **File Upload Safety:** Mọi endpoint nhận file upload bắt buộc kiểm tra đồng thời kích thước tối đa (`50MB` cho Deliverables; `5MB`/ảnh và tối đa `2` ảnh cho Test Case Evidence), whitelist phần mở rộng (`.docx`, `.pdf`, `.xlsx`, `.zip`, `.png`, `.jpg`, `.webp` — riêng Test Evidence chỉ cho phép ảnh `.png`, `.jpg`, `.webp`) và chống lỗ hổng Path Traversal khi lưu file xuống ổ đĩa.
-- **Commit Convention:** Tuân thủ Conventional Commits gắn mã Task (VD: `feat(wbs): [TASK-3.1] implement complexity auto-calculator`).
-- **Atomic Commits (Lằn ranh đỏ):**
-  - Mỗi tính năng mới (`feat`), mỗi bản sửa lỗi (`fix`), hoặc mỗi file migration/cấu hình độc lập bắt buộc phải được tách thành **1 commit riêng biệt**.
-  - Tuyệt đối cấm gộp nhiều tính năng hoặc dồn hàng ngàn dòng code vào một commit duy nhất (tránh "mega-commit"), đảm bảo lịch sử Git minh bạch, dễ review và dễ `git revert` khi cần.
+## 4. Frontend Rules (`frontend/` - Next.js 14 / TypeScript)
+1. **Strict TypeScript:** Cấm `any` hoặc `@ts-ignore`. Toàn bộ DTO khai báo trong `src/types/`.
+2. **UI System:** Giữ `Be Vietnam Pro` + `JetBrains Mono`, duy nhất `lucide-react` (`strokeWidth={1.75}`), `#E85D04` Burnt Orange, `1px hairline` Light/Dark, Minimal-Text (không viết văn dài giải thích dưới heading).
+3. **App Router & Data Fetching:** Giữ `page.tsx`/`layout.tsx` Server Component mỏng khi không cần client state; mọi request đi qua `src/services/` $\rightarrow$ `src/lib/api-client.ts` + TanStack Query v5; mọi form validate bằng **React Hook Form + Zod**.

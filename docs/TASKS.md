@@ -1,78 +1,50 @@
 # TASK BACKLOG & WORK BREAKDOWN (TASKS.md)
-**Project:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
-**Rule:** Every single `[TASK-X.Y]` corresponds to **1 atomic commit** (`feat`/`fix`/`docs`/`chore`) and maps to GitHub PR tracking.  
-**Version:** 1.6 *(UI-First Restructuring + No School-Grading Scope, Supervisor Review, 4-Sheet Tracking Alignment)*
+**Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
+**Rule:** Every `[TASK-*]` corresponds to **1 atomic commit** and passes `typecheck`/`lint`/`build` (FE) or `./mvnw.cmd test` (BE) before committing.  
+**Version:** 2.0 *(Phased Migration to AI Study Companion — Anti-Hallucination Schedule)*
 
 ---
 
-## Sprint 0: Foundation, Specifications & Monorepo Boilerplate
-- [x] `[TASK-0.1]` Analyze SEP490 curriculum materials & student guides (`SEP490-Materials/`)
-- [x] `[TASK-0.2]` Finalize `docs/PRD.md` v1.1 (100% Academic Compliance & 10 Milestones Checklist)
-- [x] `[TASK-0.3]` Initialize Git repository, `.gitignore` & documentation tree
-- [x] `[TASK-0.4]` Finalize `docs/ARCHITECTURE.md` v1.0 (Spring Boot 3.3 + Next.js 14 + Postgres 16 + VPS spec)
-- [x] `[TASK-0.5]` Finalize `docs/DESIGN.md` v1.2 (Icon-First UI/UX, `Be Vietnam Pro`, 17-table ERD & REST APIs)
-- [x] `[TASK-0.6]` Finalize `docs/RULES.md` v1.1 (AI Coding Rules, Atomic Commits, Anti-IDOR, Hibernate 6.4+ rules)
-- [x] `[TASK-0.7]` Break down granular backlog in `docs/TASKS.md` with atomic `[TASK-X.Y]` codes
-- [x] `[TASK-0.8]` Setup `docker-compose.yml` & `.env.example` (PostgreSQL 16, named volumes `postgres_data` & `uploads_data`)
-- [x] `[TASK-0.9]` Initialize `backend/` Spring Boot 3.3 project skeleton (`pom.xml`, `application.yml` with `ddl-auto=validate`)
-- [x] `[TASK-0.10]` Implement backend core foundation (`ApiResponse<T>`, `AppException`, `ErrorCode`, `GlobalExceptionHandler`, `BaseEntity` with `@SQLRestriction("is_deleted = false")`)
-- [x] `[TASK-0.11]` Create Flyway migration `V1__init_schema.sql` (17 core PostgreSQL tables & Partial Unique Indexes `WHERE is_deleted = FALSE`)
-- [x] `[TASK-0.12]` Initialize `frontend/` Next.js 14 App Router skeleton (TypeScript strict, TailwindCSS, `Be Vietnam Pro` & `JetBrains Mono` fonts, `lucide-react`)
-- [x] `[TASK-0.13]` Setup frontend core utilities (`src/lib/api-client.ts` with Dual Auth Interceptor, TanStack Query Provider, `Sonner` toast, base Shadcn/UI primitives)
+## Phase 0: Specification & Documentation Reset (`docs/`)
+- [x] `[TASK-DOC.1]` Rewrite `docs/PRD.md` & `docs/ARCHITECTURE.md` aligned 100% with `SRS-ASC-G6-001` v1.0 (`5` subjects, `REVIEW` $\rightarrow$ `PREVIEW`, max `3` post-evaluation revisions, Brave + MiMo/CKEY, 1-time 8-char Guardian link code)
+- [x] `[TASK-DOC.2]` Rewrite `docs/DESIGN.md` (14-table ERD + REST APIs + Student/Guardian UI), `docs/RULES.md` (`BR-01..BR-24`), `docs/TASKS.md`, `docs/PROGRESS.md`, and `README.md`
 
 ---
 
-## Phase A: Full UI/UX & Interactive Prototype (`frontend/` — Contract-First Mock Services)
-
-- [x] `[TASK-UI.0]` Build Contract-First Mock Architecture (`src/types/*` strict DTOs, `src/services/` Port Layer, `MockRuntime` real `ApiClientError` & Role simulator, `QueryStateBoundary`, `ErrorStateCard`, `EmptyState`, `applyApiFieldErrors`, `UiReviewToolbar`, global `error.tsx`/`not-found.tsx` & fix `/invite` public guard in `api-client.ts`)
-- [x] `[TASK-UI.1]` Upgrade Design Tokens (`#E85D04` Burnt Orange, Light/Dark Top Bar switcher, `1px hairline` Card/Button micro-motion), shared `DataTable` / `StatusBadge` / `InspectorDrawer`, and direct `/login` entry (no Landing Page, strict Minimal-Text)
-- [x] `[TASK-UI.2]` Build Auth & Email Invitation Flow (`/login`, `/register`, `/invite?token=...` covering 4 token states: `valid-new`, `valid-existing`, `mismatch`, `expired`) + Project Directory & Create Project Wizard (`/projects`)
-- [x] `[TASK-UI.3]` Build Student Workspace `AppShell` (Sidebar `260px`/`64px` + Top Header Light/Dark + Week Indicator + Project Switcher) + `Overview & 10 Milestones OGA` (Accordion, 50MB Dropzone UI) + `Settings` (Email Invite Sender, Pending Invitations & Magic Link manager)
-- [ ] `[TASK-UI.4]` Build `Planning (Report 2)` — Features & WBS Table (`Work Category`, Allocated Effort Distribution, realtime `Complexity Auto-Calculator Widget`), interactive `RaciMatrixTable` (sticky column + Click-to-Cycle `D/R/S/I`), Risk Register & 5 Quality Objectives tabs
-- [ ] `[TASK-UI.5]` Build `SRS & Traceability Hub (Report 3)` — Actors, Use Cases, Screens & interactive `ScreenAuthMatrix` (8 FPTU permission levels click-to-toggle), Business Rules, Application Messages, Diagram Attachments gallery & Traceability Slide-over Drawer (`Sheet`)
-- [ ] `[TASK-UI.6]` Build `Execution Kanban`, `Multi-Repo GitHub` & `Testing QA (Report 5)` — Iteration 1–4 Kanban Board with `[TASK-XX]` & Multi-Repo PR chips, Repositories Webhook modal, Test Case table (`UT/IT/ST/AT`) with `Actual Result`, 2-image Evidence uploader/preview & Target vs. Actual Quality dashboard
-- [ ] `[TASK-UI.7]` Build `Tracking Registers`, `Objective Contribution Analytics` & `Export Center` — Issues / Defects / Supervisor Q&A / Weekly Matters + Top Header `+ Quick Log` modal, Objective Contribution Matrix (Tasks, Man-days, PRs, Test Cases — no 1–10 scoring), `Record of Changes` log & `.xlsx` (4-sheet Tracking + Test Report)/`.md` Export Center UI
-- [ ] `[TASK-UI.8]` Build `Supervisor Portal` (`/supervisor/[token]` 4-tab layout: Milestones Approve/Needs-Revision Review, Contribution, Tracking & Direct Q&A Reply, Traceability) + Full Responsive & `taste-skill` QA (`390px`, `768px`, `1024px`, `1440px`, Light/Dark)
+## Phase 1: Legacy Domain Pruning & Package Rename (`com.asc.studycompanion`)
+- [ ] `[TASK-CLEAN.1]` Update `docker-compose.yml`, `.env.example`, and `application.yml` for `AI Study Companion` (`Asia/Ho_Chi_Minh`, Brave Search & CKEY/MiMo config; remove SEP490 storage/SMTP config)
+- [ ] `[TASK-CLEAN.2]` Rename Java package `com.fptu.sep490` $\rightarrow$ `com.asc.studycompanion` (`StudyCompanionApplication.java`, `pom.xml`), remove `module/project/**` & legacy SEP490 `.gitkeep` folders, update `ErrorCode.java` (`SCH_*`, `STUDY_*`, `AI_*`, `GRD_*`), and verify `./mvnw.cmd test` passes
+- [ ] `[TASK-CLEAN.3]` Remove legacy SEP490 frontend routes/components (`app/invite`, `app/(dashboard)/projects/**`, `components/projects/**`, `components/workspace/**`, SEP490 types & mocks), adapt `api-client.ts` (`/guardian/`), and verify `npm run typecheck && npm run lint && npm run build` passes
 
 ---
 
-## Phase B: Backend Implementation (`backend/` — Spring Boot 3.4 + Flyway + PostgreSQL 16)
-
-### B.1 Sprint 1 Backend (Auth, Project Setup, Milestones & Planning)
-- [x] `[TASK-1.1]` Implement `User` entity, repository & JWT security foundation (`JwtTokenProvider`, `JwtAuthFilter`, `SecurityConfig`)
-- [x] `[TASK-1.2]` Implement Auth REST APIs (`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`) — *FR-01*
-- [x] `[TASK-1.3]` Implement `Project`, `ProjectRepository`, `ProjectMember`, `Milestone`, `MilestoneDeliverable` entities & repositories with Project-Scope isolation helper
-- [ ] `[TASK-1.4]` Implement Project creation & auto-seeding service (auto-seed 10 SEP490 Milestones with OGA weights, Cumulative Checklists & 5 Quality Objectives) — *FR-02, FR-03*
-- [ ] `[TASK-1.5]` Implement Flyway `V4__add_project_invitations_and_milestone_review.sql` (invitations + milestone `NEEDS_REVISION`/`review_note`), Email Invitation + `MailSender` workflow (`/api/projects/{id}/invitations/**`, `/api/invitations/verify|accept`), Member Role/Removal & Supervisor Magic Link rotation APIs — *FR-02, FR-18*
-- [ ] `[TASK-1.6]` Implement Milestone Deliverables upload & secure download APIs (`POST /deliverables/{delivId}/upload`, `GET /files/download/{fileId}` with `50MB` limit, extension whitelist & anti-Path Traversal) — *FR-04*
-- [ ] `[TASK-1.7]` Implement `DocumentChangeLog` entity & Spring AOP `@AuditLog` aspect for automatic `Record of Changes` (`A/M/D`) tracking — *FR-17*
-- [ ] `[TASK-1.8]` Implement `Feature` CRUD APIs (`GET/POST/PUT/DELETE /api/projects/{id}/features`) — *FR-05*
-- [ ] `[TASK-1.9]` Implement `WbsTask` CRUD APIs with `work_category` (`REQUIREMENT`/`DESIGN`/`CODING`/`TESTING`/`PM`), `effort-distribution` aggregation API, `github_prs JSONB`, Auto-Complexity Estimator ($\le 7 / \le 15 / > 15$ fields & $\le 3 / \le 7 / > 7$ transactions) & total `man-days` aggregation — *FR-05*
-- [ ] `[TASK-1.10]` Implement `RaciAssignment` matrix APIs (`GET/PUT /api/projects/{id}/raci`) — *FR-06*
-- [ ] `[TASK-1.11]` Implement `ProjectRisk` & `QualityObjective` CRUD APIs (`/api/projects/{id}/risks`, `/api/projects/{id}/quality-objectives`) — *FR-07*
-- [ ] `[TASK-1.17]` Implement Multi-Repo GitHub Management APIs (`GET/POST/DELETE /api/projects/{id}/repositories` with auto-generated `webhook_secret`) — *FR-14*
-
-### B.2 Sprint 2 Backend (SRS Hub, Traceability & QA)
-- [ ] `[TASK-2.1]` Implement `SystemActor` & `UseCase` CRUD APIs (`/api/projects/{id}/actors`, `/api/projects/{id}/use-cases`) — *FR-08*
-- [ ] `[TASK-2.2]` Implement `ScreenFunction` CRUD & JSONB 8-level `ScreenAuthMatrix` toggle API (`PATCH /api/projects/{id}/screens/{screenId}/auth-matrix`) — *FR-08*
-- [ ] `[TASK-2.3]` Implement SRS Artifacts CRUD & Diagram upload APIs (`BusinessRule`, `AppMessage`, `DiagramAttachment` at `/api/projects/{id}/srs-artifacts/{type}`) — *FR-08, FR-09*
-- [ ] `[TASK-2.4]` Implement End-to-End Traceability Matrix query API (`GET /api/projects/{id}/traceability` with `JOIN FETCH` optimization: `FE <-> UC <-> Screen <-> Task <-> TC <-> Defect`) — *FR-10*
-- [ ] `[TASK-2.5]` Implement `TestCase` CRUD, `actual_result`, auto-populate `executed_by`/`executed_at` on `PASS`/`FAIL`, & Test Evidence image APIs (`POST`/`DELETE`/`GET download`, max 2 images, `5MB`/image, `.png`/`.jpg`/`.webp`) — *FR-11*
-- [ ] `[TASK-2.6]` Implement Quality Metrics calculation API (`GET /api/projects/{id}/quality-metrics` comparing Actual vs. Target Test Coverage & Defect Rate across 5 stages) — *FR-12*
-
-### B.3 Sprint 3 Backend (Kanban, Multi-Repo Webhook, Tracking, Analytics & Exporters)
-- [ ] `[TASK-3.1]` Implement Kanban status update API (`PATCH /api/projects/{id}/wbs-tasks/{taskId}/status`) & Iteration filtering (`ITER_1`..`ITER_4`) — *FR-13*
-- [ ] `[TASK-3.2]` Implement Multi-Repo GitHub Webhook receiver (`POST /api/webhooks/github/{repoId}` with `X-Hub-Signature-256` HMAC-SHA256 verification, `[TASK-XX]` PR parser, `github_prs JSONB` upsert & multi-PR state aggregation) — *FR-14*
-- [ ] `[TASK-3.3]` Implement unified `TrackingLog` CRUD APIs (`/api/projects/{id}/tracking/{logType}` for `ISSUE`, `DEFECT`, `QA`, `WEEKLY_MATTER`) — *FR-15*
-- [ ] `[TASK-3.4]` Implement Objective Contribution Analytics API (`/api/projects/{id}/analytics/contribution` aggregating WBS tasks, actual man-days, merged PRs across `github_prs` & executed Test Cases) — *FR-16*
-- [ ] `[TASK-3.5]` Implement `MagicLinkFilter` (`X-Supervisor-Token`) & Supervisor Portal APIs (`GET /api/supervisor/{magicToken}/overview`, `POST /api/supervisor/{magicToken}/milestones/{milestoneId}/review`, `POST /api/supervisor/{magicToken}/qa/{qaId}/answer`) — *FR-04, FR-18*
-- [ ] `[TASK-3.6]` Implement Markdown SRS & `Record of Changes` Exporter (`GET /api/projects/{id}/export/srs-md` with English Report 3 headings) — *FR-17, FR-19*
-- [ ] `[TASK-3.7]` Implement Apache POI 4-Sheet `Project Tracking` `.xlsx` (`WBS`, `Issues`, `Defects`, `Q&A` matching `Report3_Project Tracking.xlsx`) & `Test Report` `.xlsx` (`Report 5` Test Cases) Exporters with `Calibri` Unicode font — *FR-19*
-- [ ] `[TASK-3.8]` Implement Apache POI Weekly Status Report `.xlsx` Exporter (`GET /api/projects/{id}/export/weekly-xlsx` matching 4 sections of `Project Weekly Report_GroupName.xlsx`) — *FR-19*
+## Phase 2: Frontend UI-First Prototype (`frontend/` — Contract-First Mock Services)
+- [ ] `[TASK-UI.1]` Build Study Companion strict DTOs (`src/types/{auth,timetable,study,ai,guardian}.ts`), `study-utils.ts` (`BR-12` char counter `850–2,000`, `Asia/Ho_Chi_Minh` next-day helper), updated `StatusBadge`, and `MockRuntime` (`STUDENT`/`GUARDIAN` roles + `EVALUATING`/`EVALUATION_FAILED`/`INSUFFICIENT_EVIDENCE` scenarios)
+- [ ] `[TASK-UI.2]` Build Auth & 1-Time Link Code Flow (`/login`, `/register` with `STUDENT`/`GUARDIAN` role selector, and `/link-student` 8-char code generator/acceptor per `SRS O-01`)
+- [ ] `[TASK-UI.3]` Build Student Workspace Shell & Weekly Timetable (`/student/layout.tsx`, `/student/timetable` 7-day × 5-subject grid with history preservation & Minimal-Text UI)
+- [ ] `[TASK-UI.4]` Build Next-Day Plan & Review/Preview Submission Workspace (`/student/today`, `/student/tasks/[taskId]` — `REVIEW` locks `PREVIEW`, realtime `850–2,000` counter, async `EVALUATING` state, `<= 600` char AI feedback + sources, retry & max-3-revision flow)
+- [ ] `[TASK-UI.5]` Build Guardian Read-Only Dashboard (`/guardian/dashboard` daily/weekly filters) & Immutable Submission Inspector (`/guardian/submissions/[submissionId]` version history, Accuracy/Completeness, incorrect/missing points, sources — no AI cost leaks) + Responsive/Light-Dark QA
 
 ---
 
-## Phase C: API Integration & End-to-End Verification
+## Phase 3: Database Baseline & Auth/Link Backend (`backend/`)
+- [ ] `[TASK-BE.1]` Create Flyway `V1__init_study_companion_schema.sql` (14 PostgreSQL tables per `DESIGN.md` + 5 seeded Grade 6 `subjects`) and verify JPA `ddl-auto=validate` alignment
+- [ ] `[TASK-BE.2]` Upgrade `auth` module (`STUDENT`/`GUARDIAN` roles, `StudentProfile`, `GuardianLink`, 8-char 1-time Link Code APIs, and `StudyAccessGuard` anti-IDOR protection)
 
-- [ ] `[TASK-INT.1]` Implement real HTTP Services (`frontend/src/services/http/*`) wired to Spring Boot REST APIs & switch `NEXT_PUBLIC_DATA_MODE=api`
-- [ ] `[TASK-INT.2]` Full End-to-End Verification (Auth, Email Invite + `MailSender`, 50MB Upload/Download, Multi-Repo Webhook, Excel/Markdown Export & Supervisor Magic Link)
+---
+
+## Phase 4: Timetable, Study Plan & Submission Backend (`backend/`)
+- [ ] `[TASK-BE.3]` Implement `timetable` module (`Subject`, `Timetable`, `TimetableEntry` versioned CRUD preserving historical plans/submissions `BR-20`)
+- [ ] `[TASK-BE.4]` Implement `study` module (`Asia/Ho_Chi_Minh` next-day `StudyPlan`/`StudyTask` generator `BR-04..BR-07`, `REVIEW`-before-`PREVIEW` gate, `BR-12` `850–2,000` char validation, max 3 revisions post-evaluation, `Idempotency-Key`, atomic `StudySubmission` + `EvaluationJob` persistence)
+
+---
+
+## Phase 5: Brave Search + CKEY/MiMo AI Pipeline & Guardian Backend (`backend/`)
+- [ ] `[TASK-BE.5]` Implement `SearchProvider` (`BraveSearchAdapter`) & `AiEvaluationProvider` (`CkeyMimoAdapter`) with PII-free prompts, ~2,048 token context budget, max 3 sources, and strict JSON Schema + `<= 600` char feedback validator (plus PoC verification checklist)
+- [ ] `[TASK-BE.6]` Implement `KnowledgeCache`, Async `EvaluationJob` Worker (rate limiter + exponential backoff retry + `AIUsageLog`) & `guardian` Read-Only Dashboard/Submission APIs (`FR-GRD-01..08`)
+
+---
+
+## Phase 6: API Integration & Acceptance Verification (`AC-01`..`AC-20`)
+- [ ] `[TASK-INT.1]` Implement real HTTP Services (`frontend/src/services/http/*`) and flip `NEXT_PUBLIC_DATA_MODE=api`
+- [ ] `[TASK-INT.2]` Verify all 20 SRS Acceptance Criteria (`AC-01`–`AC-20`) + PoC AI evaluation quality check across all 5 subjects
