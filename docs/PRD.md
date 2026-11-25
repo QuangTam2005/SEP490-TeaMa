@@ -1,115 +1,71 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
-**Product Name:** SEP490 Capstone Copilot  
-**Target Domain:** FPT University Software Engineering Capstone Project (`SEP490`)  
-**Document Version:** 1.5 (MVP - Student Self-Management, Supervisor Review Workflow & Template Alignment)  
+**Product Name:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
+**Target Domain:** Hỗ trợ học sinh lớp 6 tự học theo thời khóa biểu & giám sát tiến độ bởi Phụ huynh/Người giám sát (`Guardian`)  
+**Document Version:** 1.0 (Baseline — Synced with `SRS-ASC-G6-001` & MVP Decisions)  
 
 ---
 
 ## 1. Product Overview & Vision
 ### 1.1 Problem Statement
-Sinh viên ngành Kỹ thuật Phần mềm (SE) ĐH FPTU thực hiện đồ án tốt nghiệp `SEP490` trong 15 tuần với 10 cột mốc (Milestones), 7 gói tài liệu báo cáo (Report 1–7), báo cáo tiến độ hàng tuần (`Project Weekly Report`) và 4 sổ theo dõi vận hành (`WBS`, `Issues`, `Defects`, `Q&A`). Việc sử dụng các công cụ rời rạc khiến nhóm dễ bị lệch pha giữa đặc tả (SRS), tiến độ code và kiểm thử, đồng thời Giảng viên hướng dẫn (GVHD) thiếu dữ liệu định lượng để đánh giá đóng góp cá nhân và chống tình trạng *free-rider*.
+Học sinh lớp 6 thường gặp 4 khó khăn trong quá trình tự học hằng ngày:
+1. Dễ quên kiến thức buổi học trước, khó kết nối mạch kiến thức liên môn.
+2. Ít chuẩn bị/đọc trước bài mới trước khi lên lớp.
+3. Có thể hiểu sai hoặc thiếu ý trọng tâm nhưng không tự phát hiện ra.
+4. Người giám sát (`Guardian`) khó nắm được thực chất học sinh đã tự viết/tự hiểu những gì thay vì chỉ nhìn điểm số bề mặt.
 
 ### 1.2 Product Vision
-Xây dựng một nền tảng quản trị dự án tập trung, tuân thủ 100% biểu mẫu và quy chế của `SEP490`. Hệ thống số hóa toàn bộ cấu trúc WBS, Use Case, Test Case, Tracking Logs, tự động đồng bộ tiến độ thực tế từ GitHub, kiểm soát checklist nộp bài lũy tiến qua 10 cột mốc và cung cấp góc nhìn minh bạch cho GVHD.
+Xây dựng nền tảng web responsive **AI Study Companion – Grade 6** với định hướng cốt lõi: **Student tự học và tự trình bày; AI kiểm chứng từ nguồn Internet và phản hồi ngắn gọn; Guardian theo dõi minh bạch trên Dashboard**.  
+Ứng dụng **không** làm bài thay học sinh, **không** chấm điểm tổng kết hay xếp hạng thay nhà trường, và **không** mặc định mọi kết quả Internet là đúng khi thiếu căn cứ.
 
 ---
 
 ## 2. Target Users & Roles (RBAC)
-1. **Team Leader (Sinh viên nhóm trưởng):**
-   - Khởi tạo dự án, cấu hình thông tin nhóm, thiết lập WBS/RACI/Quality Targets và mời thành viên.
-   - Quản lý 10 cột mốc (Milestones), chuẩn bị hồ sơ báo cáo, tạo/thu hồi Magic Link cho GVHD và xuất dữ liệu báo cáo.
-2. **Team Member (Thành viên nhóm - 4 đến 5 SV/nhóm):**
-   - Cập nhật đặc tả (Features, Use Cases, Screens, Business Rules, Messages), quản lý Task theo Iteration, viết Test Case, log Defect/Issue.
-   - Upload các file báo cáo/gói sản phẩm lên checklist của từng Milestone và theo dõi tiến độ đóng góp chung của nhóm.
-3. **Supervisor / Lecturer (Giảng viên hướng dẫn):**
-   - Truy cập không cần đăng nhập thông qua **Magic Link** riêng biệt của nhóm.
-   - Xem tổng quan tiến độ 15 tuần, thống kê đóng góp từng sinh viên, kiểm tra các sổ Tracking, trả lời trực tiếp vào mục **Q&A**, và **Phê duyệt (`Approved`) hoặc Yêu cầu chỉnh sửa (`Needs Revision`)** cho từng Milestone (không chấm điểm số thay hệ thống trường).
+1. **Student (Học sinh lớp 6):**
+   - Nhập và cập nhật **Thời khóa biểu tuần** gồm **5 môn cố định** (`Toán`, `Ngữ văn`, `Tiếng Anh`, `Khoa học tự nhiên`, `Lịch sử – Địa lý`).
+   - Xem kế hoạch học tập cho **ngày lịch kế tiếp** theo múi giờ `Asia/Ho_Chi_Minh`.
+   - Thực hiện tuần tự cặp nhiệm vụ **Review (Ôn bài cũ)** trước $\rightarrow$ **Preview (Soạn bài mới)** sau, tự viết kiến thức từ `850` đến `2.000` ký tự.
+   - Xem kết quả AI đánh giá (`Accuracy`, `Completeness`, `overall_status`, nhận xét `<= 600` ký tự, nguồn tham khảo) và có thể **cập nhật bản sửa (Revision) tối đa 3 lần** sau khi AI đánh giá xong.
+2. **Guardian (Người giám sát / Phụ huynh):**
+   - Liên kết với hồ sơ Student thông qua **mã liên kết dùng 1 lần (8 ký tự)** (`O-01`).
+   - Xem **Guardian Dashboard** ở chế độ chỉ đọc: tiến độ theo ngày/tuần, lịch sử từng phiên bản bài viết gốc bất biến của Student, đánh giá chi tiết của AI (`incorrect_points`, `missing_points`, URL nguồn & thời điểm truy xuất).
+   - **Không** sửa thời khóa biểu thay Student, **không** nộp bài thay Student, và **không** xem thông số kỹ thuật/chi phí AI (`AIUsageLog`) ở Dashboard thông thường.
 
 ---
 
 ## 3. Core Functional Requirements (MVP Scope)
 
-### Module 1: Authentication, Project Setup & Cumulative Milestones
-- **FR-01 (Auth):** Đăng ký, đăng nhập và quản lý phiên làm việc bằng **Email & Password** truyền thống (JWT Authentication).
-- **FR-02 (Project Initialization & Email Invitation):** Cho phép Leader (Owner) tạo dự án với các trường chuẩn của Report 1 (`Project Name`, `Project Code`, `Group Name`, `Software Type`) và mời thành viên qua **Email** (`Leader` hoặc `Member`). Hệ thống gửi email chứa đường link mời (`MailSender` + token bảo mật); người được mời truy cập link, đăng ký (`Sign Up`) hoặc đăng nhập (`Sign In`) bằng **đúng email đó** để gia nhập dự án tự động.
-- **FR-03 (15-Week Milestone & Cumulative Deliverables Checklist):** Khi tạo dự án, hệ thống tự động khởi tạo **10 cột mốc chuẩn của SEP490** (Tuần 1 đến Tuần 15) kèm **tỷ trọng Report tham chiếu theo Syllabus** (`R1: 4%, R2: 8%, R3: 16%, R4: 18%, R5: 18%, R6: 4%, R7: 32%` — chỉ mang tính tham chiếu ưu tiên hồ sơ, **không** dùng để chấm/tính điểm). Mỗi Milestone hiển thị sẵn **Checklist các đầu mục lũy tiến bắt buộc cần chuẩn bị**.
-- **FR-04 (Deliverable Upload & Supervisor Milestone Review):** Tại từng hạng mục trong Checklist của mỗi Milestone, thành viên có thể upload file báo cáo/source package tương ứng (`.docx`, `.pdf`, `.xlsx`, `.zip`) để chuyển trạng thái sẵn sàng kiểm tra (`Pending` $\rightarrow$ `Submitted`). GVHD có thể xem và bấm **Phê duyệt (`Approved`)** hoặc **Yêu cầu chỉnh sửa (`Needs Revision`)** kèm góp ý (không chấm điểm số).
+### Module 1: Authentication, Profiles & Student–Guardian Linking (`FR-AUTH`)
+- **FR-AUTH-01..05:** Đăng ký, đăng nhập, đăng xuất và quản lý phiên JWT với tối thiểu 2 vai trò `STUDENT` và `GUARDIAN`. Chấp nhận mọi địa chỉ email hợp lệ (không ràng buộc domain riêng).
+- **FR-AUTH-06 (Student–Guardian 1-Time Link Code — `O-01`):** Hỗ trợ liên kết tài khoản Student–Guardian bằng mã liên kết 8 ký tự dùng 1 lần tạo trực tiếp trên giao diện (không gửi Email/SMS). Guardian chỉ truy cập được dữ liệu của Student đã liên kết hợp lệ.
 
-### Module 2: Planning, WBS, RACI & Quality Targets (Report 2)
-- **FR-05 (Feature, WBS, Work Category & Auto-Complexity Estimator):**
-  - Quản lý danh sách tính năng (`FE-01`, `FE-02`...) và phân rã thành các hạng mục WBS gắn phân loại công việc (`REQUIREMENT`, `DESIGN`, `CODING`, `TESTING`, `PM`) cùng ước lượng `man-days` (tự động tính tổng effort và bảng phân bổ % công sức *Allocated Effort Distribution* theo Report 2).
-  - Tích hợp quy tắc tính độ phức tạp chuẩn của bộ môn (`Report3_Project Tracking`): cho phép nhập số `Fields` (input/cột DB) và số `Transactions` (nút bấm/xử lý nghiệp vụ) để tự động gợi ý mức độ:
-    - `Simple`: $\le 7$ fields và $\le 3$ transactions.
-    - `Medium`: $\le 15$ fields và $\le 7$ transactions.
-    - `Complex`: $> 15$ fields hoặc $> 7$ transactions.
-- **FR-06 (RACI Matrix):** Bảng phân công trách nhiệm cho từng hạng mục công việc/tài liệu theo chuẩn `D` (Do), `R` (Review), `S` (Support), `I` (Informed) cho từng thành viên.
-- **FR-07 (Risk Register & Quality Objectives):**
-  - Quản lý danh sách rủi ro dự án (`Risk Description`, `Impact`, `Possibility`, `Response Plans`).
-  - Thiết lập bảng **Quality Objectives** cho 5 giai đoạn kiểm thử (`Reviewing`, `Unit Test`, `Integration Test`, `System Test`, `Acceptance Test`) với các chỉ số mục tiêu: `Target Test Coverage (%)` và `Target Defect Rate (%)`.
+### Module 2: Weekly Timetable & Next-Day Study Plan (`FR-SCH`, `FR-PLAN`)
+- **FR-SCH-01..07 (Weekly Timetable):** Student chọn các ngày trong tuần (`MON`–`SUN`) và gán một hoặc nhiều môn trong **5 môn cố định** (`MATH`, `LIT`, `ENG`, `SCI`, `HISGEO`), kèm ghi chú/tiết học tùy chọn. Lưu thời điểm & người cập nhật dưới dạng phiên bản lịch mới; chỉnh sửa lịch **không xóa hay thay đổi** các `StudyPlan`, `StudySubmission` và `AIEvaluation` lịch sử.
+- **FR-PLAN-01..05 (Next-Day Study Plan):** Xác định ngày mục tiêu mặc định là **ngày lịch kế tiếp** theo múi giờ `Asia/Ho_Chi_Minh`. Mỗi môn trong ngày tạo đúng **1 cặp nhiệm vụ (`REVIEW` + `PREVIEW`)** kể cả khi môn xuất hiện nhiều tiết trong ngày. Nếu ngày kế tiếp không có môn, hiển thị trạng thái rỗng *"Không có môn học theo thời khóa biểu"* (không tự suy đoán ngày học bù).
 
-### Module 3: SRS Specification & Traceability Hub (Report 3)
-- **FR-08 (Structured SRS Data):** Quản lý có cấu trúc các thực thể của Report 3:
-  - `Actors` & `Use Cases` (`UC-01`, `UC-02`...).
-  - `Screens` & `Non-Screen Functions` kèm ma trận phân quyền `Screen Authorization` 8 mức chuẩn FPTU (`Query All`, `Query Own`, `Query Managed`, `Add New`, `Update All`, `Update Own`, `Update Managed`, `Delete Data` theo từng Role).
-  - `Business Rules` (`BR-01`...) và `Application Messages` (`MSG01` - Toast/Inline).
-- **FR-09 (Diagram Attachments):** Cho phép upload hình ảnh biểu đồ (`.png`, `.jpg` xuất từ Draw.io/StarUML) gắn vào từng phần tương ứng (Context Diagram, Use Case Diagram, Screen Flow, ERD).
-- **FR-10 (Traceability Matrix):** Liên kết dữ liệu xuyên suốt: `Feature` $\leftrightarrow$ `Use Case` $\leftrightarrow$ `Screen/Function` $\leftrightarrow$ `WBS Task` $\leftrightarrow$ `Test Case` $\leftrightarrow$ `Defect`.
+### Module 3: Review & Preview Submissions (`FR-REV`, `FR-PRE`, `O-04`)
+- **FR-REV-01..07 (Review — Ôn bài cũ):** Nhập **Tựa bài cũ** (bắt buộc) và **Nội dung kiến thức chủ đạo** có độ dài `850–2.000` ký tự (tính theo quy tắc chuẩn hóa newline + trim hai đầu, bao gồm khoảng trắng và dấu câu nội bộ). UI hiển thị bộ đếm ký tự realtime và chặn Submit ngoài biên (`849` hoặc `2.001`). Backend lưu bản ghi bất biến trước khi tạo `EvaluationJob`.
+- **FR-PRE-01..07 (Preview — Soạn bài mới):** Chỉ mở khóa sau khi nhiệm vụ `REVIEW` cùng môn/ngày đã được **Submit và lưu thành công** (không bắt buộc chờ AI chạy xong mới được mở Preview). Áp dụng cùng quy tắc tựa bài và `850–2.000` ký tự.
+- **Revision Policy (`O-04`):** Sau khi nhận kết quả AI (`EVALUATED`), Student được phép nộp bản cập nhật (**Revision**), **tối đa 3 lần cập nhật** cho mỗi nhiệm vụ (tối đa 4 phiên bản bất biến: `v1` gốc + `v2..v4` sửa; khóa cập nhật trong lúc đang `EVALUATING` và không ghi đè bản cũ).
 
-### Module 4: Quality Assurance & Testing (Report 5)
-- **FR-11 (Test Case Management & Execution Evidence):** Tạo và quản lý Test Case gắn với từng Use Case, phân loại theo cấp độ (`Unit Test`, `Integration Test`, `System Test`, `Acceptance Test`), trạng thái thực thi (`Untested`, `Pass`, `Fail`), kèm `Actual Result`, thời điểm thực thi (`Executed At`) và tối đa **2 ảnh chụp màn hình bằng chứng** ($\le 5\text{MB}$/ảnh, `.png`/`.jpg`/`.webp`).
-- **FR-12 (Target vs. Actual Quality Metrics):** Tự động tính toán `Actual Test Coverage (%)` và `Actual Defect Rate (%)` từ dữ liệu Test Case & Defect Log, đối chiếu trực tiếp với bảng `Quality Objectives` đã thiết lập ở FR-07.
+### Module 4: AI Verification Pipeline & Cost Control (`FR-AI`, `FR-OPS`)
+- **FR-AI-01..15 (Brave Search + MiMo v2.6 Flash via CKEY):**
+  - Chỉ kích hoạt khi Student bấm Submit hợp lệ (tuyệt đối **không** gọi AI khi đang gõ; **không** gửi lịch sử chat).
+  - Kiểm tra `KnowledgeCache` (chỉ lưu nội dung khi điều khoản API cho phép) $\rightarrow$ miss thì gọi **Brave Search API** với truy vấn `Lớp 6 + môn + tựa bài` (+ cụm từ khóa rút gọn), lấy tối đa **3 nguồn**, giới hạn ngân sách ngữ cảnh khoảng **2.048 token**.
+  - Gọi **MiMo v2.6 Flash via CKEY** 1 lượt với prompt cố định, **tuyệt đối không gửi tên thật hay thông tin định danh học sinh** (`BR-23`).
+  - Đánh giá độc lập 2 trục:
+    - `accuracy`: `CORRECT` | `PARTIALLY_CORRECT` | `INCORRECT` | `UNVERIFIABLE`
+    - `completeness`: `COMPLETE` | `INCOMPLETE` | `UNDETERMINED`
+    - `overall_status`: `GOOD` | `NEEDS_IMPROVEMENT` | `INCORRECT` | `INSUFFICIENT_EVIDENCE`
+    - `confidence`: `HIGH` | `MEDIUM` | `LOW`
+  - Nhận xét Tiếng Việt thân thiện trình độ lớp 6, tổng phần hiển thị cho Student **không vượt quá 600 ký tự**; kèm `incorrect_points`, `missing_points` và mảng `sources` (`title`, `url`, `retrieved_at`). Thiếu căn cứ trả `UNVERIFIABLE` / `UNDETERMINED` / `INSUFFICIENT_EVIDENCE`, không bịa nguồn.
+- **FR-OPS-01..07:** Xử lý bất đồng bộ qua `EvaluationJob` queue; hỗ trợ `Idempotency-Key` chống trùng job khi bấm Submit liên tục; retry có exponential backoff với `timeout`/`429`/`5xx`; lưu `AIUsageLog` (tokens, search count, latency, estimated cost) mà không ghi lộ API secret.
 
-### Module 5: Iteration Execution, Tracking Registers & GitHub Webhook
-- **FR-13 (Iteration-based Kanban Board):** Quản lý công việc trên Kanban board (`TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`) có bộ lọc phân tách rõ ràng theo **4 đợt Iteration** (`Iteration 1` - W7, `Iteration 2` - W9, `Iteration 3` - W11, `Iteration 4 / System Test` - W13).
-- **FR-14 (GitHub Webhook Integration - Multi-Repo):**
-  - Hỗ trợ gắn nhiều Repository cho mỗi dự án (VD: `Backend`, `Frontend`, `Mobile`), cung cấp Webhook URL (`/api/webhooks/github/{repoId}`) và Secret Token riêng biệt cho từng repository.
-  - Tự động parse mã Task (ví dụ `[TASK-15]`) từ tiêu đề Pull Request hoặc tên nhánh.
-  - Cập nhật danh sách PR liên kết (`github_prs`) trên Task kèm `repoLabel`, `prNumber`, `prUrl`, `status` (`OPEN`, `MERGED`, `CLOSED`) và tác giả.
-  - Tự động chuyển Task sang `IN_REVIEW` khi có PR `OPEN`, và chỉ chuyển sang `DONE` khi có ít nhất 1 PR `MERGED` và không còn PR nào đang `OPEN`.
-- **FR-15 (3 Operational Tracking Registers & Weekly Report Data):** Số hóa 3 sổ theo dõi vận hành chuẩn `Report3_Project Tracking`:
-  - `Project Issues`: Theo dõi các vấn đề phát sinh trong quá trình làm nhóm.
-  - `Product Defects`: Theo dõi lỗi phần mềm (gắn với Test Case bị Fail).
-  - `Q&A Log`: Nhật ký câu hỏi của nhóm gửi GVHD và câu trả lời phản hồi.
-  - Cho phép ghi nhận nhanh các mục `Other Matters / Suggestions` để tổng hợp vào Báo cáo tuần.
-
-### Module 6: Contribution Analytics, Audit & Data Export
-- **FR-16 (Objective Contribution Analytics):** Thống kê khách quan khối lượng công việc thực tế của từng thành viên từ dữ liệu vận hành (`WBS Tasks` hoàn thành, `Actual Man-days`, `GitHub PRs merged`, `Test Cases` đã thực thi và `%` tỷ trọng đóng góp trong nhóm) để báo cáo minh bạch cho GVHD — **không** bao gồm chức năng chấm điểm chéo 1–10.
-- **FR-17 (Automatic Record of Changes):** Tự động ghi nhận 100% lịch sử Thêm (`A`), Sửa (`M`), Xóa (`D`) trên các hạng mục SRS/WBS kèm tên người thực hiện và ngày giờ để xuất ra bảng `Record of Changes` ở đầu các Report.
-- **FR-18 (Supervisor Magic Link & Review):** Tạo token URL bảo mật (có thể thu hồi/tạo lại) cho phép GVHD xem tổng quan tiến độ, Contribution Analytics, Tracking Logs, trả lời trực tiếp vào bảng `Q&A Log`, và **Phê duyệt / Yêu cầu chỉnh sửa Milestone** kèm nhận xét.
-- **FR-19 (Markdown & Excel Exporter):**
-  - Xuất toàn bộ bảng biểu đặc tả (Use Cases, Screen Auth, Business Rules, Messages, Record of Changes) ra file **`.md` (Markdown)** dùng tiêu đề bảng Tiếng Anh chuẩn `Report 3` để sinh viên dán trực tiếp vào Word báo cáo.
-  - Xuất **Project Tracking (`.xlsx`)** đúng chuẩn **4 sheets** theo mẫu `Report3_Project Tracking.xlsx` (`WBS`, `Issues`, `Defects`, `Q&A`), kèm file **Test Report (`.xlsx`)** cho `Report 5` (`Test Cases`, `Actual Result`, `Executed At`).
-  - Xuất **Weekly Status Report (`.xlsx` / `.md`)** theo đúng 4 phần của mẫu `Project Weekly Report_GroupName.xlsx` (*Status Report*, *Project Issues*, *Next Week Plan*, *Other Matters/Suggestions*).
+### Module 5: Guardian Dashboard (`FR-GRD`)
+- **FR-GRD-01..08:** Xem tổng quan tiến độ hoàn thành theo ngày/tuần, lọc theo ngày và 5 môn học; xem nguyên văn bất biến mọi phiên bản bài viết của Student, trạng thái `EVALUATING`/`EVALUATION_FAILED`/`EVALUATED`, đầy đủ `Accuracy`, `Completeness`, `overall_status`, `feedback`, `incorrect_points`, `missing_points` và URL nguồn tham khảo.
 
 ---
 
-## 4. Non-Functional Requirements
-- **Security:** Mật khẩu hash bằng BCrypt; phân quyền chặt chẽ theo `ProjectMember`; xác thực chữ ký HMAC-SHA256 cho GitHub Webhook; Magic Link cho GVHD sử dụng UUID v4 ngẫu nhiên.
-- **Data Integrity:** Sử dụng Soft-Delete cho các thực thể quan trọng (`UseCase`, `WBS_Task`, `Defect`) để không làm gãy liên kết trong Ma trận truy xuất và giữ nguyên lịch sử `Record of Changes`.
-- **Performance:** Thời gian phản hồi API dưới 300ms; tác vụ xuất file `.xlsx` và `.md` xử lý dưới 2 giây.
-- **Usability & Typography:** Giao diện web sử dụng bộ font chữ tối ưu cho tiếng Việt (`Be Vietnam Pro`, `Inter` hoặc `Plus Jakarta Sans` hỗ trợ đầy đủ bảng mã Unicode dựng sẵn) nhằm tránh lỗi hiển thị dấu thanh khi ghi chú song ngữ Việt – Anh; các file `.xlsx` xuất ra sử dụng font `Calibri` hoặc `Arial` chuẩn Unicode để hiển thị chính xác trên mọi phiên bản Excel.
-
----
-
-## 5. Out of Scope (Không làm trong MVP)
-- Không tự động sinh file `.docx` hoàn chỉnh theo template Word (sinh viên tự viết trên Word/Google Docs và upload file hoàn chỉnh lên checklist của từng Milestone).
-- Không tích hợp trình vẽ biểu đồ trực tiếp (như Mermaid/Draw.io editor) bên trong ứng dụng.
-- Không tích hợp Google OAuth hoặc đồng bộ trực tiếp với hệ thống LMS/FAP của trường.
-- Không hỗ trợ chế độ nghiên cứu khoa học `SET490` trong phiên bản này.
-
----
-
-## 6. Seed Data Reference: 10 Milestones & Deliverables Checklist
-
-| Milestone | Tuần | Tên mốc & Giai đoạn | Trọng số OGA | Checklist Deliverables bắt buộc |
-| :--- | :---: | :--- | :---: | :--- |
-| **M01** | W01 | Project Introduction *(Initiation)* | **4%** | ☐ `Report 1: Project Introduction Document` (.docx) |
-| **M02** | W02 | Project Plan *(Plan & Req)* | **8%** | ☐ `Report 2: Project Management Plan (PMP)` (.docx)<br>☐ `Project Schedule` (.pdf / .pod) |
-| **M03** | W03 | Overall Requirement *(Plan & Req)* | **16%** | ☐ `Report 3: SRS (Part I, II.1, II.2, II.3.1)` (.docx)<br>☐ `Updated Report 1` (.docx)<br>☐ `Updated Report 2` (.docx)<br>☐ `Project Tracking (WBS, Issues, Q&A)` (.xlsx) |
-| **M04** | W05 | Software Design *(Design)* | **18%** | ☐ `Report 4: SDD (System & DB Design)` (.docx)<br>☐ `Report 5: STD (Khung ban đầu)` (.docx)<br>☐ `Demo Code Package` (Login, Register, CRUD cơ bản) (.zip)<br>☐ `Updated Reports 1, 2, 3` (.docx)<br>☐ `Updated Project Tracking` (.xlsx) |
-| **M05** | W07 | Code Iteration 1 *(Implementation)* | — | ☐ `Software Package 1: Workable Code & DB Script` (.zip)<br>☐ `Updated Report 3` (Functional Req hoàn thiện cho Iter 1)<br>☐ `Updated Report 4` (Class & Sequence Diagrams cho Iter 1)<br>☐ `Updated Report 5` (UT, IT Test Cases & Defect Log)<br>☐ `Updated Reports 1, 2` & `Updated Tracking` (.xlsx)<br>☐ *Peer-Review Iteration 1* |
-| **M06** | W09 | Code Iteration 2 *(Implementation)* | — | ☐ `Software Package 2: Code & DB Script` (.zip)<br>☐ `Updated Reports 1, 2, 3, 4, 5`<br>☐ `Updated Project Tracking` (.xlsx)<br>☐ *Peer-Review Iteration 2* |
-| **M07** | W11 | Code Iteration 3 *(Implementation)* | — | ☐ `Software Package 3: Code & DB Script` (.zip)<br>☐ `Updated Reports 1, 2, 3, 4, 5`<br>☐ `Updated Project Tracking` (.xlsx)<br>☐ *Peer-Review Iteration 3* |
-| **M08** | W13 | Full Package *(System Testing)* | — | ☐ `Full Software Package` (.zip)<br>☐ `Updated Report 5` (Full ST, IT, Defect List hoàn chỉnh)<br>☐ `Updated Reports 1, 2, 3, 4`<br>☐ `Updated Project Tracking` (.xlsx)<br>☐ *Peer-Review Iteration 4* |
-| **M09** | W14 | User Guides *(Transition)* | **4%** | ☐ `Report 6: Software User Guides (SUG)` (.docx)<br>☐ `Updated Project Tracking` (.xlsx) |
-| **M10** | W15 | Final Deliverables *(Transition & Defense)* | **32%** *(R7)* | ☐ `Report 7: Final Project Report` (.docx)<br>☐ `Final Source Code & DB Script Package` (.zip)<br>☐ `Final Test Documents & Defect List` (.xlsx / .docx)<br>☐ `Final Project Tracking` (.xlsx)<br>☐ `Defense Slides` (.pptx / .pdf) |
+## 4. Non-Functional Requirements & Out of Scope
+- **Usability & Accessibility:** Giao diện Minimal-Text, chữ đọc rõ ràng cho học sinh lớp 6, tiếng Việt mặc định (`Be Vietnam Pro` + `JetBrains Mono`), responsive trên mobile/tablet/desktop; phản hồi tích cực không mang tính trách phạt (`NFR-ACC-01`).
+- **Security & Privacy:** HTTPS/TLS; secret `CKEY_API_KEY` và `BRAVE_API_KEY` chỉ lưu tại Backend; kiểm tra chéo quyền `User`/`GuardianLink` tại server; không gửi dữ liệu định danh trẻ vị thành niên sang AI/Search (`NFR-PRIV-01..02`).
+- **Out of Scope (MVP 1.0):** Tự tạo đề thi/ngân hàng câu hỏi; chatbot hội thoại tự do; OCR/đọc ảnh chụp sách vở/thời khóa biểu; đồng bộ lịch từ trường; native mobile app; chấm điểm tổng kết/xếp hạng; Email/SMS/Push notification; mở rộng khối lớp 7–9; thanh toán/subscription.

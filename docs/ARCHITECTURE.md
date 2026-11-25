@@ -1,31 +1,33 @@
 # SYSTEM ARCHITECTURE DOCUMENT (ARCHITECTURE.md)
-**Product Name:** SEP490 Capstone Copilot (`SEP490-TeaMa`)  
-**Architecture Style:** Modular Monolith (Backend) + App Router SPA/SSR (Frontend) in a Monorepo  
-**Document Version:** 1.2  
+**Product Name:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
+**Architecture Style:** Modular Monolith (Backend) + App Router Web Client (Frontend) in a Monorepo  
+**Java Package Root:** `com.asc.studycompanion`  
+**Document Version:** 1.0 (Baseline — Clean Migration from Legacy Domain)  
 
 ---
 
 ## 1. Technology Stack
 
 ### 1.1 Backend (`backend/`)
-- **Language & Framework:** Java 21, Spring Boot 3.3+
-- **Security:** Spring Security 6, Stateless JWT (Access Token), BCrypt Password Hashing, HMAC-SHA256 (GitHub Webhook Verification), UUID v4 Magic Link Filter
-- **Database & Migration:** PostgreSQL 16, Spring Data JPA (Hibernate), Flyway (Schema Versioning)
-- **Document & File Processing:** Apache POI (`poi-ooxml` cho xuất file `.xlsx` 4 sheets `Project Tracking` chuẩn FPTU, `Test Report`, và `Weekly Report`), Java NIO (`Path`/`Files` cho Local Storage)
-- **Utilities:** Lombok, MapStruct (DTO Mapping), Jakarta Validation, Spring AOP (Auto Audit Logging)
+- **Language & Framework:** Java 21, Spring Boot 3.4.x
+- **Security:** Spring Security 6, Stateless JWT Access Token (`jjwt`), BCrypt Password Hashing, Strict Student/Guardian Anti-IDOR Guards
+- **Database & Migration:** PostgreSQL 16, Spring Data JPA (Hibernate 6.x with `ddl-auto=validate`), Flyway Migrations
+- **AI & Search Orchestration:**
+  - `SearchProvider` adapter interface $\rightarrow$ **Brave Search API** client (`RestClient` / HTTPS)
+  - `AiEvaluationProvider` adapter interface $\rightarrow$ **MiMo v2.6 Flash via CKEY** client (OpenAI-compatible Chat Completions / JSON mode)
+  - DB-backed asynchronous `EvaluationJob` queue + Spring Scheduling/Executor with rate limiting, exponential backoff + jitter retry, `KnowledgeCache`, and `AIUsageLog`
+- **Utilities:** Lombok, MapStruct, Jakarta Validation
 
 ### 1.2 Frontend (`frontend/`)
-- **Framework:** Next.js 14+ (App Router), React 18, TypeScript (Strict Mode)
-- **Styling & UI:** TailwindCSS, Shadcn/UI (Radix Primitives), Lucide React Icons
-- **Typography:** Sử dụng font chữ hỗ trợ đầy đủ dấu tiếng Việt (`Be Vietnam Pro`, `Inter` hoặc `Plus Jakarta Sans` nạp qua `next/font/google` với `subsets: ['vietnamese', 'latin']`) và `JetBrains Mono` cho các mã định danh/code (`FE-01`, `UC-01`, `TASK-15`)
-- **State & Data Fetching:** TanStack Query (React Query v5), Zustand (Client Global State), React Hook Form + Zod (Form Validation)
-- **Visualization:** Recharts (Biểu đồ tiến độ 10 cột mốc, Target vs Actual Quality và thống kê đóng góp thành viên)
+- **Framework:** Next.js 14+ (App Router), React 18, TypeScript (Strict Mode, zero `any`)
+- **Styling & UI:** TailwindCSS, Shadcn/UI (Radix Primitives), Lucide React (`strokeWidth={1.75}`), `#E85D04` Burnt Orange + Light/Dark Top Bar switcher (`next-themes`)
+- **Typography:** `Be Vietnam Pro` (`vietnamese`, `latin`) & `JetBrains Mono` (`tabular-nums` cho bộ đếm ký tự, mã môn và mốc thời gian)
+- **State & Data Fetching:** TanStack Query v5 (kèm polling trạng thái `EVALUATING`), Zustand (Client Auth Store), React Hook Form + Zod, Service Port Layer (`src/services/{mock,http}`) phục vụ UI-First Prototype trước khi nối API thật
 
-### 1.3 Infrastructure & Storage (`Docker` on VPS)
-- **Target Server:** VPS (8 vCPU, 16GB RAM, 180GB SSD)
-- **Containerization:** Docker & Docker Compose (`proxy`, `postgres`, `backend`, `frontend`)
-- **Reverse Proxy & SSL:** Nginx hoặc Caddy (tự động cấp HTTPS/SSL Let's Encrypt phục vụ GitHub Webhook và Magic Link)
-- **File Storage:** Local Filesystem gắn với Docker Named Volume (`uploads_data:/app/uploads`), phục vụ file qua endpoint bảo mật có kiểm tra quyền (không expose static public).
+### 1.3 Infrastructure & Environment
+- **Local & Container Runtime:** Docker Compose (`postgres:16`, `backend`, `frontend`)
+- **Timezone & Locale:** `Asia/Ho_Chi_Minh` (`APP_TIMEZONE`), `vi-VN`
+- **Secret Isolation:** `CKEY_API_KEY`, `BRAVE_API_KEY`, `JWT_SECRET`, DB credentials chỉ đọc từ biến môi trường tại Backend — không bao giờ truyền xuống Frontend.
 
 ---
 
@@ -33,140 +35,98 @@
 
 ```mermaid
 flowchart TB
-    subgraph Users ["Actors & External Systems"]
-        Leader["Sinh viên (Leader / Member)"]
-        Supervisor["Giảng viên hướng dẫn (GVHD)"]
-        GitHub["GitHub Webhook Service"]
+    subgraph Users ["Actors"]
+        Student["Student (Lớp 6)"]
+        Guardian["Guardian (Phụ huynh/Giám sát)"]
     end
 
-    subgraph Gateway ["Reverse Proxy & SSL (:80 / :443)"]
-        Proxy["Nginx / Caddy (HTTPS + Routing)"]
+    subgraph Client ["Frontend (Next.js 14 App Router :3000)"]
+        StudentUI["/student/* (Timetable, Next-day Plan, Review/Preview Editor)"]
+        GuardianUI["/guardian/* (Dashboard & Immutable Submission Inspector)"]
+        AuthUI["/login, /register, /link-student"]
+        SvcPort["Service Port Layer (mock <-> http) + TanStack Query"]
     end
 
-    subgraph ClientLayer ["Frontend (Next.js 14 App Router :3000)"]
-        Dashboard["(dashboard)/* - JWT Auth"]
-        SuperView["supervisor/[token] - Magic Link Auth"]
-        Zustand["Zustand Store"]
-        TanStack["TanStack Query (Cache & Sync)"]
-    end
-
-    subgraph BackendApp ["Backend Application (Spring Boot 3.3 - Java 21 :8080)"]
-        Security["Spring Security 6 (JWT & MagicLink Filter)"]
-        
-        subgraph Modules ["Modular Monolith Modules"]
-            AuthMod["auth"]
-            ProjMod["project (Milestones & Deliverables)"]
-            PlanMod["planning (WBS, RACI, Risks, Targets)"]
-            SrsMod["srs (Actors, UC, Screens, Rules)"]
-            TestMod["testing (TestCases & Metrics)"]
-            ExecMod["execution (Kanban & Webhook)"]
-            TrackMod["tracking (Issues, Defects, Q&A)"]
-            AnalyticsMod["analytics (Objective Contribution)"]
-            ExportMod["export (RecordOfChanges, .md & .xlsx)"]
+    subgraph Backend ["Backend Modular Monolith (Spring Boot 3.4 :8080)"]
+        Sec["Spring Security 6 (JWT + Role & GuardianLink Guards)"]
+        subgraph Modules ["com.asc.studycompanion.module.*"]
+            AuthMod["auth (User, StudentProfile, GuardianLink, 1-Time Link Code)"]
+            TimeMod["timetable (Subject, Timetable, TimetableEntry)"]
+            StudyMod["study (StudyPlan, StudyTask, StudySubmission, BR-12 Counter)"]
+            AiMod["ai (EvaluationJob Worker, KnowledgeCache, Brave & CKEY Adapters, UsageLog)"]
+            GuardMod["guardian (Read-Only Dashboard & History Queries)"]
         end
-
-        AOP["AuditLog Aspect (Auto A/M/D Tracking)"]
         Flyway["Flyway Migration Engine"]
     end
 
-    subgraph StorageLayer ["Data & File Storage"]
-        Postgres[("PostgreSQL 16 DB (postgres_data)")]
-        NamedVolume[("Docker Volume: uploads_data (/app/uploads)")]
+    subgraph External ["External Providers (Server-to-Server HTTPS)"]
+        Brave["Brave Search API (Max 3 sources / ~2,048 ctx tokens)"]
+        CKEY["MiMo v2.6 Flash via CKEY (JSON Schema <= 600 chars feedback)"]
     end
 
-    %% Interactions
-    Leader -->|HTTPS / JWT| Proxy
-    Supervisor -->|HTTPS / Magic Link| Proxy
-    GitHub -->|POST /api/webhooks/github/{repoId}| Proxy
+    Postgres[("PostgreSQL 16 (14 Core Tables)")]
 
-    Proxy -->|/*| ClientLayer
-    Proxy -->|/api/*| Security
-    Dashboard --> TanStack
-    SuperView --> TanStack
-    TanStack -->|/api/*| Proxy
-
-    Security --> Modules
-    AOP -.->|Intercepts CUD ops| ExportMod
-    
-    Modules --> Postgres
-    Flyway -->|Auto Migrate at Startup| Postgres
-    Modules -->|NIO Stream Read/Write| NamedVolume
-    ExportMod -->|Generates .xlsx & .md| TanStack
+    Student --> StudentUI
+    Guardian --> GuardianUI
+    StudentUI & GuardianUI & AuthUI --> SvcPort
+    SvcPort -->|HTTPS / JWT| Sec
+    Sec --> AuthMod & TimeMod & StudyMod & GuardMod
+    StudyMod -->|Save Submission first, enqueue Job| AiMod
+    AiMod -->|Cache miss -> HTTPS| Brave
+    AiMod -->|Stripped PII payload -> HTTPS| CKEY
+    AuthMod & TimeMod & StudyMod & AiMod & GuardMod --> Postgres
+    Flyway -->|Validate / Migrate| Postgres
 ```
 
 ---
 
-## 3. Monorepo Folder Structure
+## 3. Monorepo Folder Structure (Target Architecture)
 
 ```text
-SEP490-TeaMa/
-├── docs/                           # Single Source of Truth cho AI & Team
+├── docs/                               # Single Source of Truth
 │   ├── PRD.md
 │   ├── ARCHITECTURE.md
 │   ├── DESIGN.md
 │   ├── RULES.md
 │   ├── TASKS.md
 │   └── PROGRESS.md
-├── backend/                        # Spring Boot Application
-│   ├── src/main/java/com/fptu/sep490/
-│   │   ├── config/                 # Security, CORS, WebMvc, StorageConfig
-│   │   ├── common/                 # ApiResponse<T>, GlobalExceptionHandler, BaseEntity (Audit)
-│   │   ├── security/               # JwtTokenProvider, JwtAuthFilter, MagicLinkFilter
-│   │   ├── aspect/                 # AuditLogAspect (Auto Record of Changes)
-│   │   └── module/
-│   │       ├── auth/               # Login, Register, User Profile
-│   │       ├── project/            # Project, ProjectMember, ProjectRepository, Milestones (10 mốc), Deliverables
-│   │       ├── planning/           # Features, WBS, Complexity Estimator, RACI, Risks, QualityTargets
-│   │       ├── srs/                # Actors, UseCases, Screens, AuthMatrix, BusinessRules, AppMessages, Diagrams
-│   │       ├── testing/            # TestCases, Coverage & Defect Metrics
-│   │       ├── execution/          # Kanban Tasks, Iterations, GitHub Webhook Handler
-│   │       ├── tracking/           # Issues, Defects, Q&A Log, Weekly Matters
-│   │       ├── analytics/          # Contribution Stats (Tasks, Man-days, PRs, TCs)
-│   │       └── export/             # Automatic RecordOfChanges, Markdown & Excel (POI) Generators
-│   └── src/main/resources/
-│       ├── db/migration/           # Flyway SQL scripts (V1__init_schema.sql, ...)
-│       └── application.yml
-├── frontend/                       # Next.js Application
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── (auth)/             # /login, /register
-│   │   │   ├── (dashboard)/        # /projects, /projects/[id]/overview, /milestones, /wbs, /srs, /kanban, /testing, /tracking, /analytics
-│   │   │   └── supervisor/[token]/ # Giao diện Read-only + Q&A dành riêng cho GVHD (Magic Link)
-│   │   ├── components/
-│   │   │   ├── ui/                 # Shadcn/UI base components
-│   │   │   └── shared/             # DataGrid, RaciMatrixTable, ScreenAuthMatrix, KanbanBoard
-│   │   ├── lib/                    # Axios instance, API clients, Zod schemas, Utils
-│   │   ├── store/                  # Zustand stores (authStore, activeProjectStore)
-│   │   └── types/                  # TypeScript interfaces khớp 1-1 với Backend DTOs
-├── docker-compose.yml              # Orchestration cho Proxy, Postgres, Backend, Frontend
-└── .gitignore
+├── backend/
+│   └── src/main/java/com/asc/studycompanion/
+│       ├── StudyCompanionApplication.java
+│       ├── common/                     # ApiResponse<T>, AppException, ErrorCode, GlobalExceptionHandler, BaseEntity
+│       ├── config/                     # SecurityConfig, JpaAuditingConfig, AiProperties, TimeConfig
+│       ├── security/                   # JwtTokenProvider, JwtAuthFilter, UserPrincipal, CustomUserDetailsService
+│       └── module/
+│           ├── auth/                   # User, StudentProfile, GuardianLink, LinkCode, AuthController
+│           ├── timetable/              # Subject, Timetable, TimetableEntry
+│           ├── study/                  # StudyPlan, StudyTask, StudySubmission (v1..v4 immutable)
+│           ├── ai/                     # EvaluationJob, AIEvaluation, SourceReference, KnowledgeCache, AIUsageLog, Brave/CKEY adapters
+│           └── guardian/               # GuardianDashboardController & Query Service
+└── frontend/
+    └── src/
+        ├── app/
+        │   ├── (auth)/                 # /login, /register
+        │   ├── link-student/           # Student-Guardian 8-char 1-time link code flow
+        │   ├── student/                # /student/today, /student/timetable, /student/tasks/[taskId]
+        │   └── guardian/               # /guardian/dashboard, /guardian/submissions/[submissionId]
+        ├── components/                 # ui/, shared/, student/, guardian/, auth/
+        ├── lib/                        # api-client.ts, auth-token.ts, study-utils.ts (BR-12 char count)
+        ├── mocks/                      # mock-runtime.ts, fixtures/ (Phase 2 UI-First)
+        ├── services/                   # Service interfaces + mock/ & http/ implementations
+        ├── store/                      # auth-store.ts
+        └── types/                      # Strict DTO interfaces matching DESIGN.md 1-to-1
 ```
 
 ---
 
-## 4. Key Architectural Decisions & Security Mechanisms
+## 4. Key Architectural Flows
 
-### 4.1 Supervisor Magic Link Authentication (FR-18)
-- Giảng viên hướng dẫn (GVHD) truy cập trực tiếp qua URL `https://<domain>/supervisor/[token]` (Token là UUID v4 ngẫu nhiên gắn với `project_id`, có thể thu hồi/tạo mới bởi Team Leader).
-- Frontend đính kèm header `X-Supervisor-Token: <token>` trong mọi API request tại route `/supervisor/[token]`.
-- `MagicLinkFilter` trong Spring Security xác thực token và cấp quyền:
-  - `ROLE_SUPERVISOR_READONLY`: Được phép `GET` dữ liệu tổng quan, Milestone Checklist, Contribution, Tracking Logs.
-  - `WRITE_QA_LOG`: Chỉ được phép `POST/PUT` phản hồi vào mục `Q&A Log`. Mọi thao tác chỉnh sửa WBS, SRS hoặc xóa dữ liệu khác đều bị chặn (`403 Forbidden`).
-
-### 4.2 Automatic `Record of Changes` Engine (FR-17)
-- Sử dụng **Spring AOP (`@Aspect`)** kết hợp với các annotation đánh dấu trên Service methods (hoặc JPA Entity Lifecycle Listeners) để tự động bắt 100% thao tác Thêm (`A`), Sửa (`M`), Xóa (`D`) trên các thực thể SRS và WBS.
-- Ghi nhận tự động vào bảng `record_of_changes` gồm: `project_id`, `changed_date`, `change_type (A/M/D)`, `in_charge_user`, `change_description` để sẵn sàng xuất ra Markdown/Excel đúng chuẩn mục I của tất cả các Report SEP490.
-
-### 4.3 Secure File Upload & Delivery (FR-04)
-- Toàn bộ file báo cáo (`.docx`, `.pdf`, `.xlsx`), sơ đồ (`.png`, `.jpg`) và code packages (`.zip`) được lưu trữ trong Docker Named Volume `uploads_data` (`/app/uploads`).
-- **Không** mở static file mapping công khai. Tất cả thao tác tải file đi qua endpoint bảo mật: `GET /api/v1/deliverables/{id}/download` có kiểm tra JWT (thành viên trong `ProjectMember`) hoặc `X-Supervisor-Token` hợp lệ.
-- **Giới hạn kích thước:** Cấu hình giới hạn `max-file-size = 50MB` trên cả Reverse Proxy và Spring Boot (`spring.servlet.multipart.max-file-size=50MB`) để tránh quá tải khi sinh viên nén nhầm `node_modules/` hoặc `target/`.
-
-### 4.4 GitHub Webhook Verification & Multi-PR Aggregation (FR-14)
-- Hỗ trợ nhiều GitHub Repository cho mỗi dự án thông qua bảng `project_repositories` (VD: `Backend`, `Frontend`, `Mobile`).
-- Endpoint `POST /api/webhooks/github/{repoId}` mở công khai trên Spring Security nhưng bắt buộc xác thực chữ ký HMAC-SHA256 từ header `X-Hub-Signature-256` đối chiếu với `project_repositories.webhook_secret` của repository tương ứng và kiểm tra khớp `payload.repository.full_name`.
-- Tự động trích xuất mã task `[TASK-XX]` từ PR title hoặc branch name, upsert thông tin PR vào mảng `wbs_tasks.github_prs` (`JSONB`) theo khóa `(repoId, prNumber)`.
-- **Quy tắc tổng hợp trạng thái Multi-PR:** Chuyển Task sang `IN_REVIEW` khi có ít nhất 1 PR `OPEN` (kể cả khi Task trước đó ở `TODO`, `IN_PROGRESS` hoặc `DONE`), và chỉ chuyển sang `DONE` khi có ít nhất 1 PR `MERGED` và không còn PR nào đang `OPEN` (bỏ qua các PR đóng nhầm `CLOSED` chưa merge). Đồng thời tự động ghi nhận `M` vào `document_change_logs` (`report_target = 'R2'`).
-
-### 4.5 VPS Backup & High Availability
-- Cấu hình Cronjob hàng đêm trên VPS chạy `pg_dump` xuất dữ liệu PostgreSQL kết hợp nén thư mục `uploads_data` lưu trữ snapshot (giữ tối thiểu 14 ngày gần nhất trên ổ SSD 180GB và đồng bộ thêm ra cloud storage nếu cần).
+### 4.1 Immutable Submission & Async AI Evaluation Pipeline (`BR-13`, `BR-14`, `FR-OPS-01..05`)
+1. Client validates `title` non-blank and `countNormalizedChars(content)` in `[850, 2000]` before enabling `Submit` (**zero AI calls while typing**).
+2. Student sends `POST /api/study/tasks/{taskId}/submissions` with `Idempotency-Key` header.
+3. `StudyService` validates task ownership, `REVIEW` completion lock (if `PREVIEW`), revision quota (`max 3 updates after AI feedback` $\rightarrow$ max `4` versions, and blocks while `EVALUATING`), normalizes/counts characters identically to frontend, and **persists `StudySubmission` + `EvaluationJob` (`PENDING`) atomically in PostgreSQL before any external HTTP call**.
+4. Async Worker picks up `EvaluationJob`:
+   - Checks `KnowledgeCache` (by normalized `grade + subject + lessonTitle + policyVersion`).
+   - On cache miss, calls **Brave Search API** (query: `Lớp 6 + subjectName + lessonTitle`, up to 3 relevant/clean sources, ~2,048 tokens budget).
+   - Builds PII-free prompt (`grade=6`, `subject`, `taskType`, `lessonTitle`, `studentText`, `sourcesContext`) and calls **MiMo v2.6 Flash via CKEY** once.
+   - Validates JSON enum contract (`accuracy`, `completeness`, `overall_status`, `confidence`, valid `sources`, Vietnamese student display feedback `<= 600` chars). Retries transient `timeout`/`429`/`5xx` with exponential backoff + jitter; caps formatting retry at 1; transitions cleanly to `EVALUATION_FAILED` when retries exhaust without ever losing `StudySubmission`.
