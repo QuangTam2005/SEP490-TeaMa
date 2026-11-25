@@ -67,7 +67,7 @@
 ## Phase 5: Brave Search (KNTT + Wikipedia) + CKEY/MiMo AI Pipeline & Guardian Backend (`backend/`)
 
 ### Task 8 — Tích hợp Tìm kiếm KNTT/Wikipedia, Prompt không PII & MiMo/CKEY *(3 subtasks)*
-- [ ] `[TASK-BE.5a]` *(3 SP)* Xây dựng `SearchProvider` (`BraveSearchAdapter`: ưu tiên SGK **Kết nối tri thức với cuộc sống** đúng khối lớp của bé + **Wikipedia**, tối đa `2–3` nguồn tiết kiệm token, timeout/lỗi) & WireMock unit tests
+- [x] `[TASK-BE.5a]` *(3 SP)* Xây dựng `SearchProvider` (`BraveSearchAdapter`: ưu tiên SGK **Kết nối tri thức với cuộc sống** đúng khối lớp của bé + **Wikipedia**, tối đa `2–3` nguồn tiết kiệm token, timeout/lỗi) & WireMock unit tests
 - [ ] `[TASK-BE.5b]` *(5 SP)* Xây dựng PII-free Prompt Builder & `AiEvaluationProvider` (`CkeyMimoAdapter`: ngân sách token gọn, strict JSON Schema parser + ràng buộc nhận xét `<= 600` ký tự) & unit tests
 - [ ] `[TASK-BE.6a]` *(2 SP)* Xây dựng `KnowledgeCache` service (tra cứu/lưu cache theo `grade` + `subjectCode` + `lessonTitle` đã chuẩn hóa với `cache_allowed` & TTL) & unit tests
 
