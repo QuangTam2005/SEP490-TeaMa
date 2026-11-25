@@ -211,4 +211,24 @@ class BraveSearchAdapterTest {
         assertTrue(adapter.buildLessonWebQuery(tech).contains("Lớp 8 Công nghệ Bài 4: Vật liệu cơ khí Kết nối tri thức"));
         assertEquals("site:vi.wikipedia.org Vật liệu cơ khí", adapter.buildWikipediaQuery(tech));
     }
+
+    @Test
+    void safelyEncodesCurlyBracesInLessonTitlesWithoutUriTemplateCrash() {
+        server.reset();
+        String mathJson = """
+                {"web":{"results":[{"title":"Toán 6 Tập hợp","url":"https://vietjack.com/toan-6-tap-hop","description":"Tập hợp A gồm các phần tử 1, 2, 3"}]}}
+                """;
+        server.expect(requestTo(containsString("api.search.brave.com")))
+                .andExpect(requestTo(containsString("%7B1")))
+                .andRespond(withSuccess(mathJson, MediaType.APPLICATION_JSON));
+        server.expect(requestTo(containsString("vi.wikipedia.org")))
+                .andExpect(requestTo(containsString("%7B1")))
+                .andRespond(withSuccess("{\"web\":{\"results\":[]}}", MediaType.APPLICATION_JSON));
+
+        List<SearchSnippet> results = adapter.search(
+                new SearchQuery(6, SubjectCode.MATH, "Toán", "Tập hợp A = {1; 2; 3}")
+        );
+        server.verify();
+        assertEquals(1, results.size());
+    }
 }
