@@ -1,11 +1,10 @@
 export type DataMode = 'mock' | 'api';
 
 /**
- * Phase A (UI-First) defaults to 'mock'.
- * Phase C flips NEXT_PUBLIC_DATA_MODE=api to switch all services to real Spring Boot REST APIs
- * without modifying any React UI component.
+ * Defaults to 'api' (Spring Boot REST backend) in integrated runtime.
+ * Set NEXT_PUBLIC_DATA_MODE=mock to use in-memory frontend fixtures offline.
  */
 export const DATA_MODE: DataMode =
-  process.env.NEXT_PUBLIC_DATA_MODE === 'api' ? 'api' : 'mock';
+  process.env.NEXT_PUBLIC_DATA_MODE === 'mock' ? 'mock' : 'api';
 
 export const IS_MOCK_MODE = DATA_MODE === 'mock';

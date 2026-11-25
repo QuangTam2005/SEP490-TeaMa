@@ -17,7 +17,12 @@ export const studyHttpService: StudyService = {
   submitTask: (taskId: number, request: SubmitStudyRequest) =>
     apiPost<StudySubmissionResponse>(
       `/api/student/tasks/${taskId}/submissions`,
-      request
+      request,
+      {
+        headers: {
+          'Idempotency-Key': request.idempotencyKey,
+        },
+      }
     ),
 
   retryEvaluation: (submissionId: number) =>

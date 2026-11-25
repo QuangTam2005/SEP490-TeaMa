@@ -1,13 +1,18 @@
 package com.asc.studycompanion.module.study;
 
+import com.asc.studycompanion.module.ai.entity.AIEvaluation;
+import com.asc.studycompanion.module.ai.entity.OverallEvaluationStatus;
+import com.asc.studycompanion.module.ai.repository.AIEvaluationRepository;
 import com.asc.studycompanion.module.auth.entity.StudentProfile;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
 import com.asc.studycompanion.module.study.dto.NextDayStudyPlanResponse;
 import com.asc.studycompanion.module.study.entity.StudyPlan;
+import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
 import com.asc.studycompanion.module.study.repository.StudyPlanRepository;
+import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.service.StudyPlanService;
 import com.asc.studycompanion.module.timetable.entity.Subject;
 import com.asc.studycompanion.module.timetable.entity.SubjectCode;
@@ -46,12 +51,22 @@ class StudyPlanServiceTest {
     private StudyPlanRepository studyPlanRepository;
     @Mock
     private TimetableRepository timetableRepository;
+    @Mock
+    private StudySubmissionRepository studySubmissionRepository;
+    @Mock
+    private AIEvaluationRepository aiEvaluationRepository;
 
     private StudyPlanService studyPlanService;
 
     @BeforeEach
     void setUp() {
-        studyPlanService = new StudyPlanService(studyAccessGuard, studyPlanRepository, timetableRepository);
+        studyPlanService = new StudyPlanService(
+                studyAccessGuard,
+                studyPlanRepository,
+                timetableRepository,
+                studySubmissionRepository,
+                aiEvaluationRepository
+        );
         // 2026-11-29 22:00 Asia/Ho_Chi_Minh (Sunday) -> Tomorrow is Monday 2026-11-30
         studyPlanService.setClock(Clock.fixed(Instant.parse("2026-11-29T15:00:00Z"), ZoneOffset.UTC));
     }
@@ -156,5 +171,66 @@ class StudyPlanServiceTest {
         assertEquals(80L, response.planId());
         assertEquals(1, response.subjects().size());
         verify(studyPlanRepository, never()).save(any());
+    }
+
+    @Test
+    void populatesCurrentLessonTitleAndLatestEvaluationStatusOnTaskSummary() {
+        StudentProfile student = StudentProfile.builder().id(10L).timezone("Asia/Ho_Chi_Minh").build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        Timetable activeTimetable = Timetable.builder().id(6L).version(1).entries(List.of()).build();
+
+        StudyTask reviewTask = StudyTask.builder()
+                .id(11L)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.EVALUATED)
+                .revisionCount(0)
+                .build();
+        StudyTask previewTask = StudyTask.builder()
+                .id(12L)
+                .subject(math)
+                .taskType(StudyTaskType.PREVIEW)
+                .status(StudyTaskStatus.NOT_STARTED)
+                .revisionCount(0)
+                .build();
+        StudyPlan existingPlan = StudyPlan.builder()
+                .id(81L)
+                .student(student)
+                .targetDate(LocalDate.of(2026, 11, 30))
+                .timetable(activeTimetable)
+                .tasks(List.of(reviewTask, previewTask))
+                .build();
+
+        StudySubmission submission = StudySubmission.builder()
+                .id(101L)
+                .task(reviewTask)
+                .version(1)
+                .lessonTitle("Bài 2: Tập hợp các số tự nhiên")
+                .isCurrent(true)
+                .build();
+        AIEvaluation evaluation = AIEvaluation.builder()
+                .id(201L)
+                .submissionId(101L)
+                .overallStatus(OverallEvaluationStatus.GOOD)
+                .build();
+
+        when(studyAccessGuard.requireOwnedStudentProfile(1L)).thenReturn(student);
+        when(timetableRepository.findFirstByStudentIdAndStatusOrderByVersionDesc(10L, TimetableStatus.ACTIVE))
+                .thenReturn(Optional.of(activeTimetable));
+        when(studyPlanRepository.findByStudentIdAndTargetDate(10L, LocalDate.of(2026, 11, 30)))
+                .thenReturn(Optional.of(existingPlan));
+        when(studySubmissionRepository.findFirstByTaskIdAndIsCurrentTrue(11L))
+                .thenReturn(Optional.of(submission));
+        when(studySubmissionRepository.findFirstByTaskIdAndIsCurrentTrue(12L))
+                .thenReturn(Optional.empty());
+        when(aiEvaluationRepository.findBySubmissionId(101L))
+                .thenReturn(Optional.of(evaluation));
+
+        NextDayStudyPlanResponse response = studyPlanService.getNextDayPlan(1L);
+
+        assertEquals("Bài 2: Tập hợp các số tự nhiên", response.subjects().get(0).reviewTask().currentLessonTitle());
+        assertEquals(OverallEvaluationStatus.GOOD, response.subjects().get(0).reviewTask().latestEvaluationStatus());
+        assertNull(response.subjects().get(0).previewTask().currentLessonTitle());
+        assertNull(response.subjects().get(0).previewTask().latestEvaluationStatus());
     }
 }

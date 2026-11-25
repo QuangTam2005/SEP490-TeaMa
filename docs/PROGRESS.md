@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 5 Completed (`[TASK-BE.5a]`–`[TASK-BE.6c]`) $\rightarrow$ Ready for Phase 6 (`API Integration & Acceptance Verification`)  
+**Current Phase:** Phase 6 In Progress (`[TASK-INT.1]` Done $\rightarrow$ Next: `[TASK-INT.2a]` & `[TASK-INT.2b]`)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -47,7 +47,8 @@
 - **[DONE] `[TASK-BE.5b]` (`6682a54`):** Implemented `AiEvaluationProvider`, `EvaluationPromptBuilder` (zero PII, ~2,048 token context budget, KNTT/Wikipedia instruction), and `CkeyMimoAdapter` (OpenAI-compatible MiMo v2.6 Flash client, strict JSON Schema parser, graceful `<= 600`-char feedback clamping, token usage capture), backed by `EvaluationPromptBuilderTest` & `CkeyMimoAdapterTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 64, Failures: 0`).
 - **[DONE] `[TASK-BE.6a]` (`a4c5e86`):** Implemented `KnowledgeCache`, `KnowledgeCacheRepository`, and `KnowledgeCacheService` with grade/subject/title key normalization, `cacheAllowed` policy gating, and 7-day TTL storage/lookup, backed by `KnowledgeCacheServiceTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 66, Failures: 0`).
 - **[DONE] `[TASK-BE.6b]` (`5391cfe`):** Implemented `AIUsageLog`, `SchedulingConfig`, and `EvaluationJobWorker` (polling due `PENDING` jobs, `KnowledgeCache` hit optimization, exponential backoff up to 3 attempts, 3rd-failure fallback `AIEvaluation` notice transitioning to `EVALUATED` for Guardian inspection, and cost/token telemetry persistence), backed by `EvaluationJobWorkerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 68, Failures: 0`).
-- **[DONE] `[TASK-BE.6c]`:** Implemented read-only `guardian` module (`GuardianService`, `GuardianController`, `GuardianDashboardResponse`, `GuardianSubmissionDetailResponse`) providing date/subject filtering, dynamic student grade display, immutable `v1..v3` submission history, AI evaluation summaries & sources, anti-IDOR `GuardianLink` enforcement, and zero `AIUsageLog` exposure, backed by `GuardianServiceTest` & `GuardianControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 71, Failures: 0`).
+- **[DONE] `[TASK-BE.6c]` (`6509acb`):** Implemented read-only `guardian` module (`GuardianService`, `GuardianController`, `GuardianDashboardResponse`, `GuardianSubmissionDetailResponse`) providing date/subject filtering, dynamic student grade display, immutable `v1..v3` submission history, AI evaluation summaries & sources, anti-IDOR `GuardianLink` enforcement, and zero `AIUsageLog` exposure, backed by `GuardianServiceTest` & `GuardianControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 71, Failures: 0`).
+- **[DONE] `[TASK-INT.1]`:** Switched default `DATA_MODE` from `'mock'` to `'api'` across `frontend/src/services/config.ts` and `.env.example`, added `AuthHydrator` (`frontend/src/components/providers/auth-hydrator.tsx`) to hydrate `/api/auth/me` from stored JWT on page reload, added `Idempotency-Key` request header in `study.http-service.ts`, populated `currentLessonTitle` & `latestEvaluationStatus` in `StudyPlanService.toSummary(...)` (with `StudyPlanServiceTest`), and verified `.\mvnw.cmd clean test` (`Tests run: 72, Failures: 0`) plus `npm run typecheck && npm run lint && npm run build` (`11` routes compiled in `api` mode).
 
 ---
 

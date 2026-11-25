@@ -1,15 +1,20 @@
 package com.asc.studycompanion.module.study.service;
 
+import com.asc.studycompanion.module.ai.entity.AIEvaluation;
+import com.asc.studycompanion.module.ai.entity.OverallEvaluationStatus;
+import com.asc.studycompanion.module.ai.repository.AIEvaluationRepository;
 import com.asc.studycompanion.module.auth.entity.StudentProfile;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
 import com.asc.studycompanion.module.study.dto.NextDayStudyPlanResponse;
 import com.asc.studycompanion.module.study.dto.NextDaySubjectPair;
 import com.asc.studycompanion.module.study.dto.StudyTaskSummaryResponse;
 import com.asc.studycompanion.module.study.entity.StudyPlan;
+import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
 import com.asc.studycompanion.module.study.repository.StudyPlanRepository;
+import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.timetable.entity.Subject;
 import com.asc.studycompanion.module.timetable.entity.SubjectCode;
 import com.asc.studycompanion.module.timetable.entity.Timetable;
@@ -43,6 +48,8 @@ public class StudyPlanService {
     private final StudyAccessGuard studyAccessGuard;
     private final StudyPlanRepository studyPlanRepository;
     private final TimetableRepository timetableRepository;
+    private final StudySubmissionRepository studySubmissionRepository;
+    private final AIEvaluationRepository aiEvaluationRepository;
 
     @Value("${app.timezone:Asia/Ho_Chi_Minh}")
     private String appTimezone = "Asia/Ho_Chi_Minh";
@@ -226,6 +233,21 @@ public class StudyPlanService {
     }
 
     private StudyTaskSummaryResponse toSummary(StudyTask task) {
+        String currentLessonTitle = null;
+        OverallEvaluationStatus latestEvaluationStatus = null;
+        if (task.getId() != null) {
+            Optional<StudySubmission> currentSubmission = studySubmissionRepository
+                    .findFirstByTaskIdAndIsCurrentTrue(task.getId());
+            if (currentSubmission.isPresent()) {
+                StudySubmission submission = currentSubmission.get();
+                currentLessonTitle = submission.getLessonTitle();
+                if (submission.getId() != null) {
+                    latestEvaluationStatus = aiEvaluationRepository.findBySubmissionId(submission.getId())
+                            .map(AIEvaluation::getOverallStatus)
+                            .orElse(null);
+                }
+            }
+        }
         return new StudyTaskSummaryResponse(
                 task.getId(),
                 task.getSubject().getCode(),
@@ -234,8 +256,8 @@ public class StudyPlanService {
                 task.getStatus(),
                 task.getRevisionCount(),
                 StudyTask.MAX_REVISIONS,
-                null,
-                null
+                currentLessonTitle,
+                latestEvaluationStatus
         );
     }
 
