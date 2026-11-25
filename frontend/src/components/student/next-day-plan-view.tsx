@@ -8,6 +8,8 @@ import {
   CalendarDays,
   CheckCircle2,
   Compass,
+  Flame,
+  History,
   Lock,
   Sparkles,
 } from 'lucide-react';
@@ -126,6 +128,11 @@ export function NextDayPlanView() {
     },
   });
 
+  const streakQuery = useQuery({
+    queryKey: ['student-streak', runtime.resetCounter, runtime.scenario, runtime.simulatedRole],
+    queryFn: () => studyService.getStreak(),
+  });
+
   return (
     <div className="space-y-6">
       <QueryStateBoundary
@@ -181,11 +188,28 @@ export function NextDayPlanView() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-lg border border-brand/25 bg-brand-soft/60 px-4 py-2.5 text-sm font-semibold text-brand-strong dark:text-sky-200">
-                  <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
-                  <span>
-                    Hoàn thành: {completedCount}/{allTasks.length} bài
-                  </span>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div
+                    className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/70 px-3.5 py-2 text-sm font-semibold text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200"
+                    title={`Kỷ lục dài nhất: ${streakQuery.data?.longestStreak ?? 0} ngày`}
+                  >
+                    <Flame className="h-4 w-4 text-amber-500" strokeWidth={2} />
+                    <span>Chuỗi {streakQuery.data?.currentStreak ?? 0} ngày</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 rounded-lg border border-brand/25 bg-brand-soft/60 px-4 py-2 text-sm font-semibold text-brand-strong dark:text-sky-200">
+                    <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
+                    <span>
+                      Hoàn thành: {completedCount}/{allTasks.length} bài
+                    </span>
+                  </div>
+
+                  <Button asChild variant="outline" className="h-10 gap-1.5">
+                    <Link href="/student/history">
+                      <History className="h-4 w-4" strokeWidth={1.75} />
+                      <span>Lịch sử</span>
+                    </Link>
+                  </Button>
                 </div>
               </div>
 

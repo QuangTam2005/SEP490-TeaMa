@@ -1,5 +1,7 @@
 import type {
   NextDayStudyPlanResponse,
+  StudentStreakResponse,
+  StudyPlanHistoryItem,
   StudySubmissionResponse,
   StudyTaskDetailResponse,
   SubmitStudyRequest,
@@ -7,6 +9,8 @@ import type {
 
 export interface StudyService {
   getNextDayPlan(): Promise<NextDayStudyPlanResponse>;
+  getPlanHistory(from?: string, to?: string): Promise<StudyPlanHistoryItem[]>;
+  getStreak(): Promise<StudentStreakResponse>;
   getTaskDetail(taskId: number): Promise<StudyTaskDetailResponse>;
   submitTask(
     taskId: number,

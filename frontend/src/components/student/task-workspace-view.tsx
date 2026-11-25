@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -39,6 +39,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
 import { studyService } from '@/services';
+import { useAuthStore } from '@/store/auth-store';
 import type { StudySubmissionResponse } from '@/types';
 
 interface TaskWorkspaceViewProps {
@@ -243,9 +244,13 @@ function EvaluationPanel({
 export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
   const queryClient = useQueryClient();
   const runtime = useMockRuntime();
+  const userId = useAuthStore((state) => state.user?.id);
+  const draftKey = `asc_draft_${userId ?? 'guest'}_${taskId}`;
+  const restoredDraftRef = useRef(false);
 
   const [lessonTitle, setLessonTitle] = useState('');
   const [content, setContent] = useState('');
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [isComposing, setIsComposing] = useState(true);
   const [selectedVersionId, setSelectedVersionId] = useState<number | null>(null);
   const [pendingKey, setPendingKey] = useState<string>(() =>
@@ -267,6 +272,26 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
     if (detail.submissions.length === 0) {
       setIsComposing(true);
       setSelectedVersionId(null);
+      if (!restoredDraftRef.current && typeof window !== 'undefined') {
+        restoredDraftRef.current = true;
+        try {
+          const raw = window.localStorage.getItem(draftKey);
+          if (raw) {
+            const parsed = JSON.parse(raw) as {
+              lessonTitle?: string;
+              content?: string;
+              savedAt?: string;
+            };
+            if (parsed.lessonTitle || parsed.content) {
+              setLessonTitle(parsed.lessonTitle ?? '');
+              setContent(parsed.content ?? '');
+              setDraftSavedAt(parsed.savedAt ?? null);
+            }
+          }
+        } catch {
+          // Ignore corrupted draft payload
+        }
+      }
       return;
     }
 
@@ -279,7 +304,40 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
     ) {
       setIsComposing(false);
     }
-  }, [taskQuery.data]);
+  }, [taskQuery.data, draftKey]);
+
+  // Browser-only debounced auto-save draft (never calls AI while typing)
+  useEffect(() => {
+    if (!isComposing || typeof window === 'undefined') {
+      return;
+    }
+    if (!lessonTitle.trim() && !content.trim()) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      try {
+        const nowTime = new Date().toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        window.localStorage.setItem(
+          draftKey,
+          JSON.stringify({ lessonTitle, content, savedAt: nowTime })
+        );
+        setDraftSavedAt(nowTime);
+      } catch {
+        // Ignore storage quota errors
+      }
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [draftKey, isComposing, lessonTitle, content]);
+
+  const clearSavedDraft = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(draftKey);
+    }
+    setDraftSavedAt(null);
+  };
 
   const submitMutation = useMutation({
     mutationFn: () =>
@@ -289,11 +347,14 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
         idempotencyKey: pendingKey,
       }),
     onSuccess: (created) => {
+      clearSavedDraft();
       setIsComposing(false);
       setSelectedVersionId(created.id);
       setPendingKey(createIdempotencyKey(taskId, created.version + 1));
       void queryClient.invalidateQueries({ queryKey: ['student-task', taskId] });
       void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-history'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
       toast.success('Đã nộp bài! AI đang xem bài cho con nhé.');
     },
     onError: (err) => {
@@ -558,8 +619,30 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2">
-                          {submissions.length > 0 ? (
+                        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {draftSavedAt ? (
+                              <>
+                                <span>Đã lưu nháp tự động lúc {draftSavedAt}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    clearSavedDraft();
+                                    setLessonTitle('');
+                                    setContent('');
+                                  }}
+                                  className="font-semibold text-rose-600 hover:underline dark:text-rose-400"
+                                >
+                                  Xóa nháp
+                                </button>
+                              </>
+                            ) : (
+                              <span>Nháp được tự động lưu trên trình duyệt</span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            {submissions.length > 0 ? (
                             <Button
                               type="button"
                               variant="outline"
@@ -591,6 +674,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                             )}
                             Nộp bài để AI xem
                           </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

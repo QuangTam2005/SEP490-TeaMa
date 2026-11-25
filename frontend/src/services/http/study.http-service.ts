@@ -2,6 +2,8 @@ import { apiGet, apiPost } from '@/lib/api-client';
 import type { StudyService } from '@/services/study.service';
 import type {
   NextDayStudyPlanResponse,
+  StudentStreakResponse,
+  StudyPlanHistoryItem,
   StudySubmissionResponse,
   StudyTaskDetailResponse,
   SubmitStudyRequest,
@@ -10,6 +12,14 @@ import type {
 export const studyHttpService: StudyService = {
   getNextDayPlan: () =>
     apiGet<NextDayStudyPlanResponse>('/api/student/plans/next-day'),
+
+  getPlanHistory: (from?: string, to?: string) =>
+    apiGet<StudyPlanHistoryItem[]>(
+      '/api/student/plans/history',
+      from || to ? { params: { ...(from ? { from } : {}), ...(to ? { to } : {}) } } : undefined
+    ),
+
+  getStreak: () => apiGet<StudentStreakResponse>('/api/student/streak'),
 
   getTaskDetail: (taskId: number) =>
     apiGet<StudyTaskDetailResponse>(`/api/student/tasks/${taskId}`),

@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 7 In Progress (`[TASK-FEAT.1a]`–`[TASK-FEAT.2b]` Done; expanding Smart Otter production features & `850–3,000` char standard)  
+**Current Phase:** Phase 7 In Progress (`[TASK-FEAT.1a]`–`[TASK-FEAT.2c]` Done; expanding Smart Otter production features & `850–3,000` char standard)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -63,7 +63,8 @@
 - **[DONE] `[TASK-FEAT.1b]` (`7ea8d77`):** Created Flyway `V3__expand_features_and_subjects.sql` (`char_count BETWEEN 850 AND 3000`, `min_grade`/`max_grade` on `subjects` with 12 curriculum subjects for Grades `1–12`, plus `guardian_acknowledged_at`/`guardian_note`/`guardian_acknowledged_by_user_id` on `study_tasks`), updated `SubjectCode`/`Subject`/`SubjectResponse`/`SubjectController` (`?grade=` filter) & `StudyTask` entity, updated `TimetableView`/`GuardianDashboardView`/`timetable.mock-service.ts`, and verified `.\mvnw.cmd test` (`81/81` passing) plus `npm run typecheck && npm run lint && npm run build`.
 - **[DONE] `[TASK-FEAT.1c]` (`81587a2`):** Implemented `PUT /api/auth/profile` (`UpdateProfileRequest`), `PUT /api/auth/password` (`ChangePasswordRequest` with BCrypt current-password verification), `POST /api/links/unlink` (`UnlinkRequest`), `GET /api/links/children` (`LinkedChildResponse`), and multi-child `?studentId=` anti-IDOR resolution across `StudyAccessGuard`, `TimetableController`, and `GuardianController`; verified with MockMvc + `AcceptanceCoreFlowsTest` (`83/83` backend tests passing).
 - **[DONE] `[TASK-FEAT.2a]` (`bfcc263`):** Implemented `GET /api/student/plans/history` (`StudyPlanHistoryItem`) & `GET /api/student/streak` (`StudentStreakResponse` with `tomorrow`-or-`today` anchor consecutive streak computation) in `StudyPlanRepository`, `StudyPlanService`, and `StudyPlanController`; verified with unit + MockMvc tests (`84/84` backend tests passing).
-- **[DONE] `[TASK-FEAT.2b]`:** Built `/profile` (`ProfileView` + `app/profile/page.tsx`) for Student & Guardian profile updates (`fullName`, Student `grade`), password changes, and unlink / multi-child link management, wired `Tài khoản` header/mobile links in `StudentShell` & `GuardianShell`, and updated `auth`/`link` TypeScript contracts and HTTP/mock services. Verified `tsc --noEmit`, `next lint`, and `next build` (`13` routes, `0` errors).
+- **[DONE] `[TASK-FEAT.2b]` (`fef8467`):** Built `/profile` (`ProfileView` + `app/profile/page.tsx`) for Student & Guardian profile updates (`fullName`, Student `grade`), password changes, and unlink / multi-child link management, wired `Tài khoản` header/mobile links in `StudentShell` & `GuardianShell`, and updated `auth`/`link` TypeScript contracts and HTTP/mock services. Verified `tsc --noEmit`, `next lint`, and `next build` (`13` routes, `0` errors).
+- **[DONE] `[TASK-FEAT.2c]`:** Built `/student/history` (`StudyHistoryView` + `app/student/history/page.tsx`) with Streak KPIs & date filtering, added Flame Streak badge + History button to `NextDayPlanView` (`/student/today`) and `StudentShell` nav, and implemented debounced browser-only `localStorage` auto-save draft (`asc_draft_<userId>_<taskId>`) in `TaskWorkspaceView` (zero AI calls while typing). Verified `tsc --noEmit`, `next lint`, and `next build` (`14` routes, `0` errors).
 
 ---
 

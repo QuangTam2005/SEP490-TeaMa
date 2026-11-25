@@ -26,6 +26,8 @@ import type { StudyService } from '@/services/study.service';
 import type {
   AIEvaluationResponse,
   NextDayStudyPlanResponse,
+  StudentStreakResponse,
+  StudyPlanHistoryItem,
   StudySubmissionResponse,
   StudyTaskDetailResponse,
   SubmitStudyRequest,
@@ -477,6 +479,53 @@ export const studyMockService: StudyService = {
         });
       },
       { requireRole: 'STUDENT' }
+    );
+  },
+
+  async getPlanHistory(): Promise<StudyPlanHistoryItem[]> {
+    return runMockOperation<StudyPlanHistoryItem[]>(
+      () => {
+        syncBucketsWithTimetable();
+        const subjects = planState.buckets.map((bucket) => ({
+          subjectCode: bucket.subjectCode,
+          subjectName: getSubjectName(bucket.subjectCode),
+          periodNote: bucket.periodNote,
+          reviewTask: { ...bucket.reviewTask.task },
+          previewTask: { ...bucket.previewTask.task },
+        }));
+        const allTasks = subjects.flatMap((s) => [s.reviewTask, s.previewTask]);
+        return [
+          {
+            planId: 1,
+            targetDate: planState.targetDate,
+            weekdayLabel: planState.weekdayLabel,
+            totalTasks: allTasks.length,
+            completedTasks: allTasks.filter((t) => t.status === 'EVALUATED').length,
+            subjects,
+          },
+        ];
+      },
+      { requireRole: 'STUDENT', emptyFallback: [] }
+    );
+  },
+
+  async getStreak(): Promise<StudentStreakResponse> {
+    return runMockOperation<StudentStreakResponse>(
+      () => ({
+        currentStreak: 3,
+        longestStreak: 5,
+        totalCompletedDays: 8,
+        lastActiveDate: planState.targetDate,
+      }),
+      {
+        requireRole: 'STUDENT',
+        emptyFallback: {
+          currentStreak: 0,
+          longestStreak: 0,
+          totalCompletedDays: 0,
+          lastActiveDate: null,
+        },
+      }
     );
   },
 };

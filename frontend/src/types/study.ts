@@ -65,3 +65,19 @@ export interface SubmitStudyRequest {
   content: string;
   idempotencyKey: string;
 }
+
+export interface StudyPlanHistoryItem {
+  planId: number;
+  targetDate: string;
+  weekdayLabel: string;
+  totalTasks: number;
+  completedTasks: number;
+  subjects: NextDaySubjectPair[];
+}
+
+export interface StudentStreakResponse {
+  currentStreak: number;
+  longestStreak: number;
+  totalCompletedDays: number;
+  lastActiveDate: string | null;
+}

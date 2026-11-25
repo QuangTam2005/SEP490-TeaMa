@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   BookCheck,
   CalendarDays,
+  History,
   KeyRound,
   LogOut,
   Menu,
@@ -24,6 +25,11 @@ const STUDENT_NAV_ITEMS = [
     href: '/student/today',
     label: 'Bài học ngày mai',
     icon: BookCheck,
+  },
+  {
+    href: '/student/history',
+    label: 'Lịch sử học tập',
+    icon: History,
   },
   {
     href: '/student/timetable',
