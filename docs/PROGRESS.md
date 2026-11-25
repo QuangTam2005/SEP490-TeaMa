@@ -25,10 +25,10 @@
   - Confirmed continuing UI-First (`Phase 2` Mock Prototype before `Phase 3–5` Backend), 1-time 8-char Student–Guardian Link Code (`O-01`), and up to **3 post-evaluation revisions** per task (`O-04`).
 - **[DONE] `[TASK-DOC.1]` (`3aabf56`):** Rewrote `docs/PRD.md` and `docs/ARCHITECTURE.md` for `AI Study Companion – Grade 6`.
 - **[DONE] `[TASK-DOC.2]` (`6b9363a`):** Rewrote `docs/DESIGN.md`, `docs/RULES.md`, `docs/TASKS.md`, `docs/PROGRESS.md`, and `README.md`.
-- **[DONE] `[TASK-CLEAN.1]`:** Updated `docker-compose.yml`, `.env.example`, and `application.yml` (`study_companion` DB, `Asia/Ho_Chi_Minh`, `CKEY`/`MiMo` & `Brave Search` config; removed SEP490 storage/multipart config).
+- **[DONE] `[TASK-CLEAN.1]` (`eaf8fac`):** Updated `docker-compose.yml`, `.env.example`, and `application.yml` (`study_companion` DB, `Asia/Ho_Chi_Minh`, `CKEY`/`MiMo` & `Brave Search` config; removed SEP490 storage/multipart config).
+- **[DONE] `[TASK-CLEAN.2]`:** Migrated backend root package from `com.fptu.sep490` to `com.asc.studycompanion` (`StudyCompanionApplication`, `pom.xml`), removed legacy `module/project/**`, SEP490 migrations (`V1`–`V3`), and placeholders, added `timetable`/`study`/`ai`/`guardian` module stubs, updated `ErrorCode.java`, and verified `.\mvnw.cmd clean test` (`Tests run: 29, Failures: 0` — `BUILD SUCCESS`).
 
 ---
 
 ## 3. Next Steps Queue (Phase 1 — Legacy Cleanup)
-1. `[TASK-CLEAN.2]` Rename backend package to `com.asc.studycompanion`, remove legacy `module/project/**` & placeholders, update `ErrorCode.java`, and verify `./mvnw.cmd test`.
-2. `[TASK-CLEAN.3]` Remove legacy SEP490 frontend routes/components (`invite`, `projects`, `workspace`) and verify `npm run typecheck && npm run lint && npm run build`.
+1. `[TASK-CLEAN.3]` Remove legacy SEP490 frontend routes/components (`invite`, `projects`, `workspace`) and verify `npm run typecheck && npm run lint && npm run build`.

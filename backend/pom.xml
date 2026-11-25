@@ -11,11 +11,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.fptu</groupId>
-    <artifactId>sep490</artifactId>
+    <groupId>com.asc</groupId>
+    <artifactId>study-companion</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>sep490-teama-backend</name>
-    <description>SEP490 Capstone Copilot Backend (Modular Monolith)</description>
+    <name>study-companion-backend</name>
+    <description>AI Study Companion - Grade 6 Backend (Modular Monolith)</description>
 
     <properties>
         <java.version>21</java.version>
