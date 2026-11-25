@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 5 In Progress (`[TASK-BE.5b]` Completed — PII-Free Prompt & CKEY/MiMo Adapter)  
+**Current Phase:** Phase 5 In Progress (`[TASK-BE.6a]` Completed — `KnowledgeCache` Service)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -44,7 +44,8 @@
 - **[DONE] `[TASK-BE.4c]` (`f442a56`):** Implemented `EvaluationJob` (`EvaluationJobStatus`, `EvaluationJobRepository`), `SubmitStudyRequest`, `StudySubmissionService`, and `POST /api/student/tasks/{taskId}/submissions` enforcing `REVIEW`-before-`PREVIEW` (`BR-08`), `[850, 2000]` (`BR-12`), `EVALUATING` lock (`STUDY_006`), `v1..v3` max versions (`STUDY_005`), `Idempotency-Key` dedup (`BR-14`), and atomic `StudySubmission` + `PENDING` `EvaluationJob` creation, backed by `StudySubmissionServiceTest` & `StudyTaskControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 57, Failures: 0`).
 - **[DONE] `[TASK-BE.4d]` (`052438a`):** Implemented `StudySubmissionService.retryEvaluation` and `StudySubmissionController` (`POST /api/student/submissions/{submissionId}/retry-evaluation`) with `AI_004` state guarding and Student ownership checks, backed by `StudySubmissionServiceTest` & `StudySubmissionControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 59, Failures: 0`).
 - **[DONE] `[TASK-BE.5a]` (`1067b13`):** Implemented `AiProperties`, `AiClientConfig` (`braveRestClient` / `ckeyRestClient` with bounded timeouts), `SearchProvider`, and `BraveSearchAdapter` targeting **"Kết nối tri thức với cuộc sống"** textbook + **Wikipedia** (`vi.wikipedia.org`) dynamically scoped by student grade (`1–12`), capped at max 3 compact sources, backed by `BraveSearchAdapterTest`. Verified `.\mvnw.cmd test` (`Tests run: 61, Failures: 0`).
-- **[DONE] `[TASK-BE.5b]`:** Implemented `AiEvaluationProvider`, `EvaluationPromptBuilder` (zero PII, ~2,048 token context budget, KNTT/Wikipedia instruction), and `CkeyMimoAdapter` (OpenAI-compatible MiMo v2.6 Flash client, strict JSON Schema parser, graceful `<= 600`-char feedback clamping, token usage capture), backed by `EvaluationPromptBuilderTest` & `CkeyMimoAdapterTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 64, Failures: 0`).
+- **[DONE] `[TASK-BE.5b]` (`6682a54`):** Implemented `AiEvaluationProvider`, `EvaluationPromptBuilder` (zero PII, ~2,048 token context budget, KNTT/Wikipedia instruction), and `CkeyMimoAdapter` (OpenAI-compatible MiMo v2.6 Flash client, strict JSON Schema parser, graceful `<= 600`-char feedback clamping, token usage capture), backed by `EvaluationPromptBuilderTest` & `CkeyMimoAdapterTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 64, Failures: 0`).
+- **[DONE] `[TASK-BE.6a]`:** Implemented `KnowledgeCache`, `KnowledgeCacheRepository`, and `KnowledgeCacheService` with grade/subject/title key normalization, `cacheAllowed` policy gating, and 7-day TTL storage/lookup, backed by `KnowledgeCacheServiceTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 66, Failures: 0`).
 
 ---
 
