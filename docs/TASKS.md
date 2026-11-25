@@ -72,7 +72,7 @@
 - [x] `[TASK-BE.6a]` *(2 SP)* Xây dựng `KnowledgeCache` service (tra cứu/lưu cache theo `grade` + `subjectCode` + `lessonTitle` đã chuẩn hóa với `cache_allowed` & TTL) & unit tests
 
 ### Task 9 — Async Worker (3-Retry Fallback) & Guardian Read-Only APIs *(2 subtasks)*
-- [ ] `[TASK-BE.6b]` *(5 SP)* Xây dựng Async `EvaluationJob` Worker (`@Scheduled`/bounded executor, exponential backoff tối đa `3` lần, quá 3 lần ghi `AIEvaluation` fallback báo lỗi hệ thống để phụ huynh tự kiểm tra và chuyển `EVALUATED` qua Guardian, lưu `AIUsageLog`) & integration tests
+- [x] `[TASK-BE.6b]` *(5 SP)* Xây dựng Async `EvaluationJob` Worker (`@Scheduled`/bounded executor, exponential backoff tối đa `3` lần, quá 3 lần ghi `AIEvaluation` fallback báo lỗi hệ thống để phụ huynh tự kiểm tra và chuyển `EVALUATED` qua Guardian, lưu `AIUsageLog`) & integration tests
 - [ ] `[TASK-BE.6c]` *(3 SP)* Xây dựng module `guardian` Read-Only (`GET /api/guardian/dashboard` lọc ngày & môn, `GET /api/guardian/submissions/{submissionId}` lịch sử `v1..v3` + nguồn đối chiếu, không lộ `AIUsageLog`) & tests
 
 ---
