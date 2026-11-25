@@ -26,6 +26,7 @@ class EvaluationPromptBuilderTest {
         assertTrue(system.contains("Kết nối tri thức với cuộc sống"));
         assertTrue(system.contains("Wikipedia"));
         assertTrue(system.contains("INSUFFICIENT_EVIDENCE"));
+        assertTrue(system.contains("300"));
         assertTrue(system.contains("600"));
 
         AiEvaluationInput input = new AiEvaluationInput(

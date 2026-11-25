@@ -7,6 +7,7 @@ public final class StudyTextUtils {
 
     public static final int MIN_SUBMISSION_CHARS = 850;
     public static final int MAX_SUBMISSION_CHARS = 2000;
+    public static final int MIN_FEEDBACK_CHARS = 300;
     public static final int MAX_FEEDBACK_CHARS = 600;
 
     private StudyTextUtils() {

@@ -103,10 +103,29 @@ class CkeyMimoAdapterTest {
         assertEquals(OverallEvaluationStatus.NEEDS_IMPROVEMENT, result.overallStatus());
         assertEquals(ConfidenceLevel.HIGH, result.confidence());
         assertEquals(1, result.missingPoints().size());
-        assertTrue(result.feedback().length() <= 600);
+        assertTrue(result.feedback().length() >= 300 && result.feedback().length() <= 600);
         assertTrue(result.feedback().endsWith("."));
         assertEquals(512, result.inputTokens());
         assertEquals(144, result.outputTokens());
+    }
+
+    @Test
+    void padsShortFeedbackToAtLeast300CharsWithin600Bound() {
+        String shortJson = """
+                {
+                  "accuracy": "PARTIALLY_CORRECT",
+                  "completeness": "INCOMPLETE",
+                  "overallStatus": "NEEDS_IMPROVEMENT",
+                  "feedback": "Con đã nắm được định nghĩa cơ bản nhưng cần bổ sung ví dụ minh họa rõ hơn.",
+                  "incorrectPoints": ["Nhầm dấu khi chuyển vế"],
+                  "missingPoints": ["Thiếu 2 ví dụ số hữu tỉ âm"],
+                  "confidence": "HIGH"
+                }
+                """;
+        AiEvaluationResult result = adapter.parseAndValidateJson(shortJson, 200, 80, "laguna-xs-2.1");
+        assertTrue(result.feedback().length() >= 300,
+                "Expected >= 300 chars but got " + result.feedback().length());
+        assertTrue(result.feedback().length() <= 600);
     }
 
     @Test

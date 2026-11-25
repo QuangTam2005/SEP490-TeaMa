@@ -46,41 +46,96 @@ class BraveSearchAdapterTest {
     }
 
     @Test
-    void queryTargetsKnttTextbookAndWikipediaAndCapsResultsToThree() {
+    void searchesLessonWebsitesAndWikipediaAndCapsRequestsAndSourcesToThree() {
         String longDesc = "Kiến thức trọng tâm ".repeat(40);
-        String mockJson = """
+        String webJson = """
                 {
                   "web": {
                     "results": [
                       { "title": "Blog chung", "url": "https://example.com/1", "description": "Mô tả 1" },
-                      { "title": "Wikipedia - Ước chung lớn nhất", "url": "https://vi.wikipedia.org/wiki/UCLN", "description": "Định nghĩa Wikipedia" },
                       { "title": "Toán 7 Kết nối tri thức - Bài 11", "url": "https://loigiaihay.com/ket-noi-tri-thuc-bai-11", "description": "%s" },
-                      { "title": "Trang 4", "url": "https://example.com/4", "description": "Mô tả 4" }
+                      { "title": "VietJack Toán 7 - Ước chung lớn nhất", "url": "https://vietjack.com/toan-7/ucln", "description": "Lý thuyết trọng tâm" }
                     ]
                   }
                 }
                 """.formatted(longDesc);
 
+        String wikiJson = """
+                {
+                  "web": {
+                    "results": [
+                      { "title": "Wikipedia - Ước chung lớn nhất", "url": "https://vi.wikipedia.org/wiki/UCLN", "description": "Định nghĩa Wikipedia chuẩn xác" }
+                    ]
+                  }
+                }
+                """;
+
+        // Request 1: educational lesson websites
         server.expect(requestTo(containsString("api.search.brave.com")))
                 .andExpect(requestTo(containsString("country=ALL")))
                 .andExpect(requestTo(containsString("search_lang=vi")))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("X-Subscription-Token", "test-brave-key"))
-                .andRespond(withSuccess(mockJson, MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(webJson, MediaType.APPLICATION_JSON));
 
-        SearchQuery query = new SearchQuery(7, SubjectCode.MATH, "Toán", "Ước chung lớn nhất");
-        String q = adapter.buildKnttWikipediaQuery(query);
-        assertTrue(q.contains("Lớp 7"));
-        assertTrue(q.contains("Kết nối tri thức với cuộc sống"));
-        assertTrue(q.contains("vi.wikipedia.org"));
+        // Request 2: Wikipedia directly for the lesson title (Request 3 skipped since 2+1 = 3 sources collected)
+        server.expect(requestTo(containsString("vi.wikipedia.org")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(wikiJson, MediaType.APPLICATION_JSON));
+
+        SearchQuery query = new SearchQuery(
+                7,
+                SubjectCode.MATH,
+                "Toán",
+                "Ước chung lớn nhất",
+                "Ước chung lớn nhất của hai hay nhiều số là số lớn nhất trong tập hợp các ước chung của các số đó."
+        );
+        assertTrue(adapter.buildLessonWebQuery(query).contains("Lớp 7 Toán Ước chung lớn nhất"));
+        assertTrue(adapter.buildWikipediaQuery(query).contains("site:vi.wikipedia.org Ước chung lớn nhất"));
 
         List<SearchSnippet> results = adapter.search(query);
         server.verify();
 
+        assertEquals(2, adapter.consumeLastRequestCount());
         assertEquals(3, results.size());
         assertTrue(results.get(0).title().contains("Kết nối tri thức"));
-        assertTrue(results.get(1).url().contains("wikipedia.org"));
+        assertTrue(results.get(2).url().contains("vi.wikipedia.org"));
         assertTrue(results.get(0).snippet().length() <= 350);
+    }
+
+    @Test
+    void usesSubmissionMainContentAsThirdFallbackRequestWhenPrimarySearchNeedsMoreSources() {
+        String emptyJson = "{\"web\":{\"results\":[]}}";
+        String contentJson = """
+                {
+                  "web": {
+                    "results": [
+                      { "title": "Số hữu tỉ trên Wikipedia", "url": "https://vi.wikipedia.org/wiki/So_huu_ti", "description": "Số viết dưới dạng a/b với b khác 0" }
+                    ]
+                  }
+                }
+                """;
+
+        server.expect(requestTo(containsString("api.search.brave.com")))
+                .andRespond(withSuccess(emptyJson, MediaType.APPLICATION_JSON));
+        server.expect(requestTo(containsString("vi.wikipedia.org")))
+                .andRespond(withSuccess(emptyJson, MediaType.APPLICATION_JSON));
+        server.expect(requestTo(containsString("api.search.brave.com")))
+                .andRespond(withSuccess(contentJson, MediaType.APPLICATION_JSON));
+
+        SearchQuery query = new SearchQuery(
+                7,
+                SubjectCode.MATH,
+                "Toán",
+                "Bài tập tự chọn",
+                "Số hữu tỉ là số được viết dưới dạng phân số a trên b với a, b thuộc tập số nguyên và b khác 0."
+        );
+        List<SearchSnippet> results = adapter.search(query);
+        server.verify();
+
+        assertEquals(3, adapter.consumeLastRequestCount());
+        assertEquals(1, results.size());
+        assertTrue(results.get(0).url().contains("vi.wikipedia.org"));
     }
 
     @Test

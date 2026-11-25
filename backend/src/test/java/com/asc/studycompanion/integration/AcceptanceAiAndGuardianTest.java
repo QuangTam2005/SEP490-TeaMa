@@ -139,24 +139,36 @@ class AcceptanceAiAndGuardianTest {
             long reviewTaskId = pair.get("reviewTask").get("id").asLong();
             String lessonTitle = lessons.get(subject);
 
-            // Brave mock returning 4 hits -> adapter caps to <= 3 and prefers KNTT + Wikipedia
-            String braveJson = """
+            // Request 1: Educational websites covering lesson title (returns 2 URLs)
+            String braveWebJson = """
                     {
                       "web": {
                         "results": [
-                          { "title": "Blog tham khảo ngoài", "url": "https://blog.example.com/extra", "description": "Tóm tắt chung" },
                           { "title": "%s Lớp 6 - Kết nối tri thức với cuộc sống", "url": "https://loigiaihay.com/kntt-%s", "description": "Nội dung chuẩn SGK Kết nối tri thức với cuộc sống môn %s" },
-                          { "title": "Wikipedia: %s", "url": "https://vi.wikipedia.org/wiki/%s", "description": "Kiến thức bách khoa chính xác từ Wikipedia" },
-                          { "title": "Nguồn thứ 4 bị cắt", "url": "https://ignored.example.com/4", "description": "Không dùng để tiết kiệm token" }
+                          { "title": "Blog tham khảo ngoài", "url": "https://blog.example.com/extra-%s", "description": "Tóm tắt chung về bài học" }
                         ]
                       }
                     }
-                    """.formatted(subject.name(), subject.name(), subject.name(), lessonTitle, subject.name());
+                    """.formatted(subject.name(), subject.name(), subject.name(), subject.name());
+
+            // Request 2: Wikipedia directly for lesson title (returns 1 Wikipedia URL -> 2+1 = 3 total)
+            String braveWikiJson = """
+                    {
+                      "web": {
+                        "results": [
+                          { "title": "Wikipedia: %s", "url": "https://vi.wikipedia.org/wiki/%s", "description": "Kiến thức bách khoa chính xác từ Wikipedia" }
+                        ]
+                      }
+                    }
+                    """.formatted(lessonTitle, subject.name());
 
             braveServer.expect(requestTo(containsString("api.search.brave.com")))
                     .andExpect(method(HttpMethod.GET))
                     .andExpect(requestTo(not(containsString("bao.ngoc.pii"))))
-                    .andRespond(withSuccess(braveJson, MediaType.APPLICATION_JSON));
+                    .andRespond(withSuccess(braveWebJson, MediaType.APPLICATION_JSON));
+            braveServer.expect(requestTo(containsString("vi.wikipedia.org")))
+                    .andExpect(method(HttpMethod.GET))
+                    .andRespond(withSuccess(braveWikiJson, MediaType.APPLICATION_JSON));
 
             String aiFeedbackLong = ("Nhận xét môn " + subject.name() + ": con trình bày ý chính rất rõ ràng và bám sát sách Kết nối tri thức. ").repeat(8);
             String ckeyPayload = wrapChatCompletion(h, """
@@ -199,7 +211,7 @@ class AcceptanceAiAndGuardianTest {
         assertEquals(5, h.evaluations.size());
         assertEquals(5, h.usageLogs.size());
         h.evaluations.forEach(ev -> {
-            assertTrue(ev.getFeedback().length() <= 600);
+            assertTrue(ev.getFeedback().length() >= 300 && ev.getFeedback().length() <= 600);
             assertTrue(ev.getSources().size() <= 3 && !ev.getSources().isEmpty());
             assertEquals(OverallEvaluationStatus.GOOD, ev.getOverallStatus());
         });
@@ -240,11 +252,15 @@ class AcceptanceAiAndGuardianTest {
         ckeyServer.verify();
         assertTrue(Boolean.TRUE.equals(h.usageLogs.get(h.usageLogs.size() - 1).getCacheHit()));
 
-        // AC-13: PREVIEW task with empty search results -> INSUFFICIENT_EVIDENCE without inventing sources
+        // AC-13: PREVIEW task with empty search results (3 max Brave calls) -> INSUFFICIENT_EVIDENCE
         braveServer.reset();
         ckeyServer.reset();
         long mathPreviewId = pairs.get(0).get("previewTask").get("id").asLong();
 
+        braveServer.expect(requestTo(containsString("api.search.brave.com")))
+                .andRespond(withSuccess("{\"web\":{\"results\":[]}}", MediaType.APPLICATION_JSON));
+        braveServer.expect(requestTo(containsString("vi.wikipedia.org")))
+                .andRespond(withSuccess("{\"web\":{\"results\":[]}}", MediaType.APPLICATION_JSON));
         braveServer.expect(requestTo(containsString("api.search.brave.com")))
                 .andRespond(withSuccess("{\"web\":{\"results\":[]}}", MediaType.APPLICATION_JSON));
         String insufficientPayload = wrapChatCompletion(h, """
@@ -346,19 +362,30 @@ class AcceptanceAiAndGuardianTest {
         long litReviewId = subjects.get(1).get("reviewTask").get("id").asLong();
 
         // Part A (AC-18..AC-19): Submit MATH v1 & v2 cleanly so Guardian sees immutable version history
-        String braveMathJson = """
-                {"web":{"results":[{"title":"Toán 7 Kết nối tri thức - Số hữu tỉ","url":"https://loigiaihay.com/toan-7-kntt","description":"Tập hợp Q các số hữu tỉ"},{"title":"Wikipedia: Số hữu tỉ","url":"https://vi.wikipedia.org/wiki/So_huu_ti","description":"Khái niệm số hữu tỉ"}]}}
+        String braveMathWebJson = """
+                {"web":{"results":[{"title":"Toán 7 Kết nối tri thức - Số hữu tỉ","url":"https://loigiaihay.com/toan-7-kntt","description":"Tập hợp Q các số hữu tỉ"},{"title":"VietJack Toán 7 - Số hữu tỉ","url":"https://vietjack.com/toan-7-so-huu-ti","description":"Kiến thức trọng tâm số hữu tỉ"}]}}
                 """;
+        String braveWikiJson = """
+                {"web":{"results":[{"title":"Wikipedia: Số hữu tỉ","url":"https://vi.wikipedia.org/wiki/So_huu_ti","description":"Khái niệm số hữu tỉ"}]}}
+                """;
+        String v2Feedback320 = "Bản v2 đúng kiến thức SGK Toán 7 Kết nối tri thức. "
+                .concat("Con đã trình bày định nghĩa số hữu tỉ và điều kiện mẫu số khác không rất đầy đủ, rõ ràng. ".repeat(4))
+                .trim();
         for (int version = 1; version <= 2; version++) {
             braveServer.reset();
             ckeyServer.reset();
             if (version == 1) {
                 braveServer.expect(requestTo(containsString("api.search.brave.com")))
-                        .andRespond(withSuccess(braveMathJson, MediaType.APPLICATION_JSON));
+                        .andRespond(withSuccess(braveMathWebJson, MediaType.APPLICATION_JSON));
+                braveServer.expect(requestTo(containsString("vi.wikipedia.org")))
+                        .andRespond(withSuccess(braveWikiJson, MediaType.APPLICATION_JSON));
             }
+            String feedback = version == 2
+                    ? v2Feedback320
+                    : "Bản v1 đúng kiến thức SGK Toán 7 Kết nối tri thức. ".concat("Con cần bổ sung thêm ví dụ minh họa phân số bằng nhau để bài học đầy đủ và dễ nhớ hơn nữa nhé. ".repeat(4));
             String okPayload = wrapChatCompletion(h, """
-                    {"accuracy":"CORRECT","completeness":"COMPLETE","overallStatus":"GOOD","feedback":"Bản v%d đúng kiến thức SGK Toán 7 Kết nối tri thức.","incorrectPoints":[],"missingPoints":[],"confidence":"HIGH"}
-                    """.formatted(version));
+                    {"accuracy":"CORRECT","completeness":"COMPLETE","overallStatus":"GOOD","feedback":"%s","incorrectPoints":[],"missingPoints":[],"confidence":"HIGH"}
+                    """.formatted(feedback));
             ckeyServer.expect(requestTo("https://api.ckey.example/v1/chat/completions"))
                     .andRespond(withSuccess(okPayload, MediaType.APPLICATION_JSON));
 
@@ -404,7 +431,9 @@ class AcceptanceAiAndGuardianTest {
             braveServer.reset();
             ckeyServer.reset();
             braveServer.expect(requestTo(containsString("api.search.brave.com")))
-                    .andRespond(withSuccess(braveMathJson, MediaType.APPLICATION_JSON));
+                    .andRespond(withSuccess(braveMathWebJson, MediaType.APPLICATION_JSON));
+            braveServer.expect(requestTo(containsString("vi.wikipedia.org")))
+                    .andRespond(withSuccess(braveWikiJson, MediaType.APPLICATION_JSON));
             ckeyServer.expect(requestTo("https://api.ckey.example/v1/chat/completions"))
                     .andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE));
 
@@ -439,7 +468,7 @@ class AcceptanceAiAndGuardianTest {
                 .andExpect(jsonPath("$.data.totalTasks").value(2))
                 .andExpect(jsonPath("$.data.completedTasks").value(1))
                 .andExpect(jsonPath("$.data.items[0].subjectCode").value("MATH"))
-                .andExpect(jsonPath("$.data.items[0].evaluation.feedback").value("Bản v2 đúng kiến thức SGK Toán 7 Kết nối tri thức."));
+                .andExpect(jsonPath("$.data.items[0].evaluation.feedback").value(v2Feedback320));
 
         // Guardian sees LIT fallback task cleanly as EVALUATED on dashboard
         h.mockMvc.perform(get("/api/guardian/dashboard?date=2026-11-30&subjectCode=LIT")
@@ -455,7 +484,7 @@ class AcceptanceAiAndGuardianTest {
                 .andExpect(jsonPath("$.data.versions.length()").value(2))
                 .andExpect(jsonPath("$.data.versions[0].version").value(2))
                 .andExpect(jsonPath("$.data.versions[1].version").value(1))
-                .andExpect(jsonPath("$.data.versions[1].evaluation.sources.length()").value(2))
+                .andExpect(jsonPath("$.data.versions[1].evaluation.sources.length()").value(3))
                 .andReturn();
 
         String rawDetailBody = detailRes.getResponse().getContentAsString();

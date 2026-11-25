@@ -24,9 +24,9 @@
 3. **Save Before AI & No AI While Typing (`BR-13`, `BR-14`):** Tuyệt đối không gọi Brave Search hoặc MiMo khi đang nhập liệu. Backend bắt buộc lưu `StudySubmission` và `EvaluationJob` vào PostgreSQL trước khi gọi API ngoài; sử dụng `Idempotency-Key` chống trùng job.
 4. **AI Privacy, KNTT + Wikipedia Grounding & 3-Retry Fallback (`BR-17`, `BR-18`, `BR-23`):**
    - Tuyệt đối không gửi tên thật, email, ID học sinh hoặc lịch sử chat sang Brave/MiMo; chỉ gửi `grade`, `subject`, `taskType`, `lessonTitle`, `studentText`.
-   - Ưu tiên đối chiếu theo sách chuẩn **Kết nối tri thức với cuộc sống** và **Wikipedia**, giới hạn tối đa **2–3 nguồn** để tránh tốn token.
+   - Tìm kiếm đối chiếu từ **Wikipedia** (`vi.wikipedia.org`) và các website có nội dung về bài học đó (ưu tiên SGK **Kết nối tri thức với cuộc sống**), truy vấn theo tựa đề bài học và nội dung chính trích từ bài soạn/ôn; mỗi lần review bài chỉ gửi **tối đa 3 request vào Brave** và giữ tối đa **3 nguồn** để tiết kiệm token.
    - Nếu AI lỗi khi xử lý, **retry tối đa 3 lần**. Quá 3 lần vẫn lỗi thì **ngưng retry**, ghi nhận nhận xét fallback báo hệ thống AI lỗi để phụ huynh tự kiểm tra bài làm và chuyển trạng thái qua Guardian như đã review xong (không làm tính năng check thủ công riêng).
-   - Phần nhận xét hiển thị cho Student **không vượt quá 600 ký tự** — không cắt ngang câu chữ ngẫu nhiên (`SRS §11`).
+   - Phần nhận xét AI hiển thị cho Student phải có độ dài **tối thiểu 300 ký tự và tối đa 600 ký tự** (tính cả dấu câu và khoảng trắng) — không cắt ngang câu chữ ngẫu nhiên (`SRS §11`).
 5. **Secret & Cost Protection (`NFR-SEC-02`, `§3.2`):** `CKEY_API_KEY`, `BRAVE_API_KEY`, `JWT_SECRET` chỉ nằm ở Backend; không bao giờ log secret hoặc trả `AIUsageLog` ra Guardian Dashboard thông thường.
 
 ---

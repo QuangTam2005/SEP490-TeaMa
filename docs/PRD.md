@@ -51,8 +51,8 @@ Xây dựng nền tảng web responsive **AI Study Companion** với định hư
 ### Module 4: AI Verification Pipeline & Cost Control (`FR-AI`, `FR-OPS`)
 - **FR-AI-01..15 (Brave Search + MiMo v2.6 Flash via CKEY):**
   - Chỉ kích hoạt khi Student bấm Submit hợp lệ (tuyệt đối **không** gọi AI khi đang gõ; **không** gửi PII/tên/email/ID).
-  - Nguồn chuẩn hóa: ưu tiên SGK **Kết nối tri thức với cuộc sống** (đúng `grade` của Student) và **Wikipedia** (`vi.wikipedia.org`), giới hạn ít nguồn (**tối đa `2–3` nguồn**, ngân sách ngữ cảnh tối đa ~`2.048` tokens) để tiết kiệm token.
-  - Đánh giá độc lập `accuracy`, `completeness`, `overall_status`, `confidence`, nhận xét Tiếng Việt thân thiện `<= 600` ký tự, `incorrect_points`, `missing_points`, `sources`.
+  - Nguồn chuẩn hóa: tìm kiếm từ **Wikipedia** (`vi.wikipedia.org`) và các website học tập có nội dung về bài học đó (ưu tiên SGK **Kết nối tri thức với cuộc sống** đúng `grade` của Student) dựa theo tựa đề bài học & nội dung chính trích từ bài soạn/ôn; mỗi lần chấm gửi **tối đa 3 request vào Brave** và giữ tối đa **3 nguồn** (ngân sách ngữ cảnh ~`2.048` tokens).
+  - Đánh giá độc lập `accuracy`, `completeness`, `overall_status`, `confidence`, nhận xét Tiếng Việt thân thiện **từ 300 đến 600 ký tự** (tính cả dấu câu và khoảng trắng), `incorrect_points`, `missing_points`, `sources`.
 - **FR-OPS-01..07 (3-Attempt Retry & Fallback to Guardian):**
   - Xử lý bất đồng bộ qua `EvaluationJob` + `Idempotency-Key`.
   - Khi lỗi gọi/parse AI, Worker **retry tự động tối đa 3 lần** (exponential backoff).

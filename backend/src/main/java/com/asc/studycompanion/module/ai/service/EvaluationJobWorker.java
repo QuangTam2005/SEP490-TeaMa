@@ -111,13 +111,16 @@ public class EvaluationJobWorker {
                 snippets = cachedSources.get();
                 cacheHit = true;
             } else {
-                searchCount = 1;
                 snippets = searchProvider.search(new SearchQuery(
                         grade,
                         task.getSubject().getCode(),
                         task.getSubject().getName(),
-                        submission.getLessonTitle()
+                        submission.getLessonTitle(),
+                        submission.getContent()
                 ));
+                searchCount = (searchProvider instanceof com.asc.studycompanion.module.ai.provider.BraveSearchAdapter braveAdapter)
+                        ? braveAdapter.consumeLastRequestCount()
+                        : 1;
                 knowledgeCacheService.store(
                         grade,
                         task.getSubject().getCode(),

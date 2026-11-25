@@ -118,10 +118,10 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
             if (feedbackNode == null || feedbackNode.asText().isBlank()) {
                 throw new AppException(ErrorCode.AI_RESPONSE_INVALID, "AI feedback missing");
             }
-            String feedback = clampFeedbackGracefully(feedbackNode.asText().trim());
 
             List<String> incorrectPoints = readStringList(root.get("incorrectPoints"));
             List<String> missingPoints = readStringList(root.get("missingPoints"));
+            String feedback = ensureFeedbackBounds(feedbackNode.asText().trim(), incorrectPoints, missingPoints);
 
             String canonicalJson = objectMapper.writeValueAsString(root);
             return new AiEvaluationResult(
@@ -144,19 +144,62 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
     }
 
     /**
-     * Enforces <= 600 chars without abruptly cutting mid-word or mid-sentence when possible.
+     * Ensures AI feedback stays strictly within 300..600 characters (including punctuation & spaces).
+     */
+    public static String ensureFeedbackBounds(
+            String rawFeedback,
+            List<String> incorrectPoints,
+            List<String> missingPoints
+    ) {
+        String clamped = clampFeedbackGracefully(rawFeedback);
+        if (clamped.length() >= StudyTextUtils.MIN_FEEDBACK_CHARS) {
+            return clamped;
+        }
+
+        StringBuilder sb = new StringBuilder(clamped);
+        if (!clamped.endsWith(".") && !clamped.endsWith("!") && !clamped.endsWith("?")) {
+            sb.append('.');
+        }
+
+        if (incorrectPoints != null && !incorrectPoints.isEmpty()) {
+            sb.append(" Điểm cần lưu ý thêm: ").append(String.join("; ", incorrectPoints)).append('.');
+        }
+        if (sb.length() < StudyTextUtils.MIN_FEEDBACK_CHARS && missingPoints != null && !missingPoints.isEmpty()) {
+            sb.append(" Phần con nên bổ sung: ").append(String.join("; ", missingPoints)).append('.');
+        }
+
+        List<String> guidanceClauses = List.of(
+                " Con hãy đọc kỹ lại nội dung bài học từ Wikipedia và tài liệu học tập tham khảo để chắc chắn từng khái niệm quan trọng.",
+                " Việc rà soát thêm ví dụ minh họa cụ thể, diễn đạt lại bằng lời của con và kiểm tra trình tự lập luận sẽ giúp bài làm đầy đủ, mạch lạc và vững kiến thức hơn rất nhiều."
+        );
+        for (String clause : guidanceClauses) {
+            if (sb.length() >= StudyTextUtils.MIN_FEEDBACK_CHARS) {
+                break;
+            }
+            sb.append(clause);
+        }
+        return clampFeedbackGracefully(sb.toString());
+    }
+
+    /**
+     * Enforces <= 600 chars without abruptly cutting mid-word or mid-sentence when possible,
+     * while preserving at least 300 characters when input exceeds 600 chars.
      */
     public static String clampFeedbackGracefully(String rawFeedback) {
-        if (rawFeedback.length() <= StudyTextUtils.MAX_FEEDBACK_CHARS) {
-            return rawFeedback;
+        if (rawFeedback == null) {
+            return "";
         }
-        String slice = rawFeedback.substring(0, StudyTextUtils.MAX_FEEDBACK_CHARS);
+        String trimmed = rawFeedback.trim();
+        if (trimmed.length() <= StudyTextUtils.MAX_FEEDBACK_CHARS) {
+            return trimmed;
+        }
+        String slice = trimmed.substring(0, StudyTextUtils.MAX_FEEDBACK_CHARS);
         int lastSentence = Math.max(slice.lastIndexOf('.'), Math.max(slice.lastIndexOf('!'), slice.lastIndexOf('?')));
-        if (lastSentence >= 250) {
+        if (lastSentence >= StudyTextUtils.MIN_FEEDBACK_CHARS) {
             return slice.substring(0, lastSentence + 1).trim();
         }
         int lastSpace = slice.lastIndexOf(' ');
-        if (lastSpace > 400) {
+        if (lastSpace >= StudyTextUtils.MIN_FEEDBACK_CHARS + 50) {
             return slice.substring(0, lastSpace).trim() + "...";
         }
         return slice.substring(0, StudyTextUtils.MAX_FEEDBACK_CHARS - 3).trim() + "...";

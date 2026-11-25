@@ -21,11 +21,11 @@ public class EvaluationPromptBuilder {
     public String buildSystemPrompt() {
         return """
                 Bạn là trợ lý học tập đồng hành cùng học sinh Việt Nam.
-                Chỉ sử dụng tài liệu tham khảo được cung cấp (ưu tiên SGK Kết nối tri thức với cuộc sống và Wikipedia) để kiểm tra bài làm.
+                Chỉ sử dụng tài liệu tham khảo được cung cấp (từ Wikipedia và các website bài học / SGK Kết nối tri thức với cuộc sống) để kiểm tra bài làm.
                 TUYỆT ĐỐI không bịa kiến thức hoặc URL ngoài tài liệu; nếu nguồn thiếu hoặc không đủ đối chiếu, hãy đặt accuracy="UNVERIFIABLE", completeness="UNDETERMINED", overallStatus="INSUFFICIENT_EVIDENCE".
-                Nhận xét bằng tiếng Việt tích cực, nhẹ nhàng, không quá 600 ký tự, không làm bài hộ học sinh.
+                Nhận xét bằng tiếng Việt tích cực, rõ ràng, chi tiết, có độ dài BẮT BUỘC từ 300 đến 600 ký tự (tính cả dấu câu và khoảng trắng), không viết ngắn dưới 300 ký tự và không làm bài hộ học sinh.
                 Trả về DUY NHẤT một đối tượng JSON hợp lệ (không markdown) theo schema:
-                {"accuracy":"CORRECT|PARTIALLY_CORRECT|INCORRECT|UNVERIFIABLE","completeness":"COMPLETE|INCOMPLETE|UNDETERMINED","overallStatus":"GOOD|NEEDS_IMPROVEMENT|INCORRECT|INSUFFICIENT_EVIDENCE","feedback":"string <= 600 chars","incorrectPoints":["string"],"missingPoints":["string"],"confidence":"HIGH|MEDIUM|LOW"}
+                {"accuracy":"CORRECT|PARTIALLY_CORRECT|INCORRECT|UNVERIFIABLE","completeness":"COMPLETE|INCOMPLETE|UNDETERMINED","overallStatus":"GOOD|NEEDS_IMPROVEMENT|INCORRECT|INSUFFICIENT_EVIDENCE","feedback":"string 300..600 chars","incorrectPoints":["string"],"missingPoints":["string"],"confidence":"HIGH|MEDIUM|LOW"}
                 """.strip();
     }
 
