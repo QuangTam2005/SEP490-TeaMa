@@ -120,7 +120,7 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
             ConfidenceLevel confidence = parseEnum(root, "confidence", ConfidenceLevel.class);
 
             JsonNode feedbackNode = root.get("feedback");
-            if (feedbackNode == null || feedbackNode.asText().isBlank()) {
+            if (feedbackNode == null || feedbackNode.isNull() || !feedbackNode.isTextual() || feedbackNode.asText().isBlank()) {
                 throw new AppException(ErrorCode.AI_RESPONSE_INVALID, "AI feedback missing");
             }
 
@@ -229,16 +229,17 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
         if (lastSentence >= StudyTextUtils.MIN_FEEDBACK_CHARS) {
             return slice.substring(0, lastSentence + 1).trim();
         }
-        int lastSpace = slice.lastIndexOf(' ');
+        String ellipsisWindow = trimmed.substring(0, StudyTextUtils.MAX_FEEDBACK_CHARS - 3);
+        int lastSpace = ellipsisWindow.lastIndexOf(' ');
         if (lastSpace >= StudyTextUtils.MIN_FEEDBACK_CHARS + 50) {
-            return slice.substring(0, lastSpace).trim() + "...";
+            return ellipsisWindow.substring(0, lastSpace).trim() + "...";
         }
-        return slice.substring(0, StudyTextUtils.MAX_FEEDBACK_CHARS - 3).trim() + "...";
+        return ellipsisWindow.trim() + "...";
     }
 
     private static <E extends Enum<E>> E parseEnum(JsonNode root, String field, Class<E> enumType) {
         JsonNode node = root.get(field);
-        if (node == null || node.asText().isBlank()) {
+        if (node == null || node.isNull() || !node.isTextual() || node.asText().isBlank()) {
             throw new IllegalArgumentException("Missing enum field: " + field);
         }
         return Enum.valueOf(enumType, node.asText().trim());
@@ -277,7 +278,7 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
         }
         List<String> result = new ArrayList<>();
         for (JsonNode item : arrayNode) {
-            if (item != null && !item.asText().isBlank()) {
+            if (item != null && !item.isNull() && item.isTextual() && !item.asText().isBlank()) {
                 result.add(item.asText().trim());
             }
         }

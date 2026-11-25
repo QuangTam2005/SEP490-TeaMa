@@ -72,7 +72,7 @@ class OpsUsageControllerTest {
                         .cacheHit(false)
                         .estimatedCostUsd(new BigDecimal("0.001250"))
                         .latencyMs(820)
-                        .status("SUCCESS")
+                        .status("SUCCEEDED")
                         .createdAt(Instant.now())
                         .build(),
                 AIUsageLog.builder()
@@ -86,7 +86,7 @@ class OpsUsageControllerTest {
                         .cacheHit(true)
                         .estimatedCostUsd(new BigDecimal("0.000800"))
                         .latencyMs(410)
-                        .status("SUCCESS")
+                        .status("SUCCEEDED")
                         .createdAt(Instant.now())
                         .build()
         ));
@@ -98,6 +98,7 @@ class OpsUsageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalCalls").value(2))
                 .andExpect(jsonPath("$.data.cacheHits").value(1))
+                .andExpect(jsonPath("$.data.failedCalls").value(0))
                 .andExpect(jsonPath("$.data.totalInputTokens").value(2100))
                 .andExpect(jsonPath("$.data.totalOutputTokens").value(650))
                 .andExpect(jsonPath("$.data.totalSearchCount").value(2))

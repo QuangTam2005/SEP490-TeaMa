@@ -18,6 +18,7 @@ export type ApiErrorCode =
   | 'SYS_500'
   | 'SYS_400'
   | 'SYS_404'
+  | 'SYS_429'
   | 'VAL_001'
   | 'VAL_002'
   | 'VAL_003'

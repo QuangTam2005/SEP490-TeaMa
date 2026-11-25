@@ -229,7 +229,11 @@ public class StudyPlanService {
         List<StudyPlan> plans = (fromDate != null && toDate != null)
                 ? studyPlanRepository.findAllByStudentIdAndTargetDateBetweenOrderByTargetDateDesc(
                         student.getId(), fromDate, toDate)
-                : studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(student.getId());
+                : studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(student.getId())
+                        .stream()
+                        .filter(plan -> (fromDate == null || !plan.getTargetDate().isBefore(fromDate))
+                                && (toDate == null || !plan.getTargetDate().isAfter(toDate)))
+                        .toList();
 
         return plans.stream()
                 .filter(plan -> !plan.getTasks().isEmpty())

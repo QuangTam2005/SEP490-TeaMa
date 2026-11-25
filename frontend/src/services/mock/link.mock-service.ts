@@ -136,7 +136,7 @@ export const linkMockService: LinkService = {
         if (normalized === 'INVALID0') {
           throw new ApiClientError({
             status: 404,
-            errorCode: 'AUTH_008',
+            errorCode: 'AUTH_007',
             message: 'Không tìm thấy mã liên kết phù hợp.',
             fieldErrors: {
               linkCode: 'Mã liên kết không tồn tại.',

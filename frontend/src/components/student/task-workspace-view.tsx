@@ -45,7 +45,7 @@ import {
 } from '@/lib/anti-paste';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
-import { studyService } from '@/services';
+import { IS_MOCK_MODE, studyService } from '@/services';
 import { useAuthStore } from '@/store/auth-store';
 import type { StudySubmissionResponse } from '@/types';
 
@@ -252,8 +252,10 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
   const queryClient = useQueryClient();
   const runtime = useMockRuntime();
   const userId = useAuthStore((state) => state.user?.id);
+  const canUseDraftKey = IS_MOCK_MODE || Boolean(userId);
   const draftKey = `asc_draft_${userId ?? 'guest'}_${taskId}`;
-  const restoredDraftRef = useRef(false);
+  const initializedTaskRef = useRef<number | null>(null);
+  const restoredDraftKeyRef = useRef<string | null>(null);
   const lastPasteToastRef = useRef(0);
   const pasteBannerTimerRef = useRef<number | null>(null);
 
@@ -279,11 +281,20 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
     if (!detail) {
       return;
     }
+
+    const isFirstTaskInit = initializedTaskRef.current !== taskId;
     if (detail.submissions.length === 0) {
-      setIsComposing(true);
-      setSelectedVersionId(null);
-      if (!restoredDraftRef.current && typeof window !== 'undefined') {
-        restoredDraftRef.current = true;
+      if (isFirstTaskInit) {
+        initializedTaskRef.current = taskId;
+        setIsComposing(true);
+        setSelectedVersionId(null);
+      }
+      if (
+        canUseDraftKey &&
+        restoredDraftKeyRef.current !== draftKey &&
+        typeof window !== 'undefined'
+      ) {
+        restoredDraftKeyRef.current = draftKey;
         try {
           const raw = window.localStorage.getItem(draftKey);
           if (raw) {
@@ -307,23 +318,29 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
 
     const latest = detail.submissions[0];
     setSelectedVersionId((prev) => prev ?? latest.id);
-    if (
-      detail.task.status === 'EVALUATING' ||
-      detail.task.status === 'EVALUATED' ||
-      detail.task.status === 'EVALUATION_FAILED'
+    if (detail.task.status === 'EVALUATING') {
+      setIsComposing(false);
+    } else if (
+      isFirstTaskInit &&
+      (detail.task.status === 'EVALUATED' ||
+        detail.task.status === 'EVALUATION_FAILED')
     ) {
       setIsComposing(false);
     }
-  }, [taskQuery.data, draftKey]);
+    if (isFirstTaskInit) {
+      initializedTaskRef.current = taskId;
+    }
+  }, [taskId, taskQuery.data, draftKey, canUseDraftKey]);
 
   // Browser-only debounced auto-save draft (never calls AI while typing)
   useEffect(() => {
-    if (!isComposing || typeof window === 'undefined') {
+    if (!canUseDraftKey || !isComposing || typeof window === 'undefined') {
       return;
     }
     if (!lessonTitle.trim() && !content.trim()) {
       return;
     }
+    const baseVersion = taskQuery.data?.submissions[0]?.version ?? 0;
     const timer = window.setTimeout(() => {
       try {
         const nowTime = new Date().toLocaleTimeString('vi-VN', {
@@ -332,7 +349,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
         });
         window.localStorage.setItem(
           draftKey,
-          JSON.stringify({ lessonTitle, content, savedAt: nowTime })
+          JSON.stringify({ lessonTitle, content, savedAt: nowTime, baseVersion })
         );
         setDraftSavedAt(nowTime);
       } catch {
@@ -340,7 +357,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
       }
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [draftKey, isComposing, lessonTitle, content]);
+  }, [draftKey, canUseDraftKey, isComposing, lessonTitle, content, taskQuery.data]);
 
   const clearSavedDraft = () => {
     if (typeof window !== 'undefined') {
@@ -418,9 +435,37 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
   );
 
   const handleStartRevision = (latestSub?: StudySubmissionResponse) => {
-    setLessonTitle(latestSub?.lessonTitle ?? '');
-    setContent(latestSub?.content ?? '');
-    setPendingKey(createIdempotencyKey(taskId, (latestSub?.version ?? 0) + 1));
+    const baseVersion = latestSub?.version ?? 0;
+    let restoredRevision = false;
+    if (canUseDraftKey && typeof window !== 'undefined') {
+      try {
+        const raw = window.localStorage.getItem(draftKey);
+        if (raw) {
+          const parsed = JSON.parse(raw) as {
+            lessonTitle?: string;
+            content?: string;
+            savedAt?: string;
+            baseVersion?: number;
+          };
+          if (
+            parsed.baseVersion === baseVersion &&
+            (parsed.lessonTitle || parsed.content)
+          ) {
+            setLessonTitle(parsed.lessonTitle ?? latestSub?.lessonTitle ?? '');
+            setContent(parsed.content ?? latestSub?.content ?? '');
+            setDraftSavedAt(parsed.savedAt ?? null);
+            restoredRevision = true;
+          }
+        }
+      } catch {
+        // Ignore malformed revision draft
+      }
+    }
+    if (!restoredRevision) {
+      setLessonTitle(latestSub?.lessonTitle ?? '');
+      setContent(latestSub?.content ?? '');
+    }
+    setPendingKey(createIdempotencyKey(taskId, baseVersion + 1));
     setIsComposing(true);
   };
 

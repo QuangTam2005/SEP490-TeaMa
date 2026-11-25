@@ -26,14 +26,17 @@ import { GRADE_OPTIONS } from '@/lib/study-utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
 import { IS_MOCK_MODE, authService, linkService } from '@/services';
 import { useAuthStore } from '@/store/auth-store';
+import { useGuardianStore } from '@/store/guardian-store';
 import type { UserRole } from '@/types';
 
 export function ProfileView() {
   const queryClient = useQueryClient();
   const runtime = useMockRuntime();
   const user = useAuthStore((state) => state.user);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
   const syncUser = useAuthStore((state) => state.syncUser);
 
+  const isAuthReady = IS_MOCK_MODE || (isHydrated && user !== null);
   const activeRole: UserRole = IS_MOCK_MODE
     ? runtime.simulatedRole
     : user?.role ?? 'STUDENT';
@@ -65,7 +68,7 @@ export function ProfileView() {
       runtime.scenario,
     ],
     queryFn: () => linkService.getCurrentLink(),
-    enabled: activeRole === 'STUDENT',
+    enabled: isAuthReady && activeRole === 'STUDENT',
   });
 
   const childrenQuery = useQuery({
@@ -76,7 +79,7 @@ export function ProfileView() {
       runtime.scenario,
     ],
     queryFn: () => linkService.getLinkedChildren(),
-    enabled: activeRole === 'GUARDIAN',
+    enabled: isAuthReady && activeRole === 'GUARDIAN',
   });
 
   const profileMutation = useMutation({
@@ -121,10 +124,13 @@ export function ProfileView() {
     mutationFn: (studentId?: number) => linkService.unlink(studentId),
     onSuccess: async () => {
       setConfirmUnlinkId(null);
+      useGuardianStore.getState().setSelectedStudentId(null);
       await queryClient.invalidateQueries({ queryKey: ['profile-student-link'] });
       await queryClient.invalidateQueries({ queryKey: ['linked-children'] });
       await queryClient.invalidateQueries({ queryKey: ['student-link-code'] });
       await queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+      await queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+      await queryClient.invalidateQueries({ queryKey: ['student-timetable'] });
       try {
         const refreshedUser = await authService.getCurrentUser();
         syncUser(refreshedUser);
@@ -164,6 +170,14 @@ export function ProfileView() {
     }
     passwordMutation.mutate();
   };
+
+  if (!isAuthReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-canvas">
+        <Loader2 className="h-6 w-6 animate-spin text-brand-strong" />
+      </div>
+    );
+  }
 
   const wrapWithShell = (content: ReactNode) =>
     activeRole === 'GUARDIAN' ? (

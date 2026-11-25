@@ -25,18 +25,21 @@ import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
-import { IS_MOCK_MODE, linkService } from '@/services';
+import { IS_MOCK_MODE, authService, linkService } from '@/services';
 import { useAuthStore } from '@/store/auth-store';
 import type { UserRole } from '@/types';
 
 export function LinkStudentView() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+  const syncUser = useAuthStore((state) => state.syncUser);
   const runtime = useMockRuntime();
   const [codeInput, setCodeInput] = useState('');
   const [copied, setCopied] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const isAuthReady = IS_MOCK_MODE || (isHydrated && user !== null);
   const activeRole: UserRole = IS_MOCK_MODE
     ? runtime.simulatedRole
     : user?.role ?? 'STUDENT';
@@ -47,6 +50,7 @@ export function LinkStudentView() {
   const linkQuery = useQuery({
     queryKey: ['student-link-code', activeRole, runtime.resetCounter, runtime.scenario],
     queryFn: () => linkService.getCurrentLink(),
+    enabled: isAuthReady,
   });
 
   const generateMutation = useMutation({
@@ -65,13 +69,25 @@ export function LinkStudentView() {
 
   const acceptMutation = useMutation({
     mutationFn: (code: string) => linkService.acceptLinkCode(code),
-    onSuccess: (linked) => {
+    onSuccess: async (linked) => {
       setSubmitError(null);
       setCodeInput('');
       queryClient.setQueryData(
         ['student-link-code', activeRole, runtime.resetCounter, runtime.scenario],
         linked
       );
+      await queryClient.invalidateQueries({ queryKey: ['linked-children'] });
+      await queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+      await queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+      await queryClient.invalidateQueries({ queryKey: ['student-timetable'] });
+      if (!IS_MOCK_MODE) {
+        try {
+          const refreshed = await authService.getCurrentUser();
+          syncUser(refreshed);
+        } catch {
+          // Ignore silent refresh failure
+        }
+      }
       toast.success(`Đã liên kết với ${linked.linkedUserName ?? 'học sinh'}`);
     },
     onError: (err) => {
@@ -120,13 +136,24 @@ export function LinkStudentView() {
       </header>
 
       <main className="mx-auto max-w-xl px-4 py-8 sm:px-6">
+        {!isAuthReady ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-brand-strong" />
+          </div>
+        ) : (
         <QueryStateBoundary
           data={linkQuery.data}
           isLoading={linkQuery.isLoading}
           isError={linkQuery.isError}
           error={linkQuery.error}
           onRetry={() => void linkQuery.refetch()}
-          isEmpty={(d) => d === null && activeRole === 'STUDENT'}
+          isEmpty={(d) =>
+            activeRole === 'STUDENT' &&
+            (!d ||
+              d.status === 'REVOKED' ||
+              (d.status === 'PENDING' &&
+                new Date(d.expiresAt).getTime() <= Date.now()))
+          }
           emptyState={{
             title: 'Chưa có mã liên kết',
             description: 'Bấm nút bên dưới để tạo mã 8 ký tự cho bố mẹ nhập.',
@@ -311,6 +338,7 @@ export function LinkStudentView() {
             )
           }
         </QueryStateBoundary>
+        )}
       </main>
     </div>
   );

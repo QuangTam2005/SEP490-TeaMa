@@ -9,8 +9,10 @@ import type { AuthResponse, UserResponse } from '@/types';
 interface AuthState {
   user: UserResponse | null;
   isAuthenticated: boolean;
+  isHydrated: boolean;
   setSession: (auth: AuthResponse) => void;
   syncUser: (user: UserResponse | null) => void;
+  markHydrated: () => void;
   clearSession: () => void;
   hasStoredToken: () => boolean;
 }
@@ -18,19 +20,24 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
+  isHydrated: false,
 
   setSession: (auth: AuthResponse) => {
     setAccessToken(auth.accessToken);
-    set({ user: auth.user, isAuthenticated: true });
+    set({ user: auth.user, isAuthenticated: true, isHydrated: true });
   },
 
   syncUser: (user: UserResponse | null) => {
-    set({ user, isAuthenticated: user !== null });
+    set({ user, isAuthenticated: user !== null, isHydrated: true });
+  },
+
+  markHydrated: () => {
+    set({ isHydrated: true });
   },
 
   clearSession: () => {
     clearAccessToken();
-    set({ user: null, isAuthenticated: false });
+    set({ user: null, isAuthenticated: false, isHydrated: true });
   },
 
   hasStoredToken: () => Boolean(getAccessToken()),

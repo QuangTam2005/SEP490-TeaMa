@@ -11,10 +11,12 @@ import { useAuthStore } from '@/store/auth-store';
 export function AuthHydrator() {
   const user = useAuthStore((state) => state.user);
   const syncUser = useAuthStore((state) => state.syncUser);
+  const markHydrated = useAuthStore((state) => state.markHydrated);
   const clearSession = useAuthStore((state) => state.clearSession);
 
   useEffect(() => {
     if (user || !getAccessToken()) {
+      markHydrated();
       return;
     }
 
@@ -35,7 +37,7 @@ export function AuthHydrator() {
     return () => {
       cancelled = true;
     };
-  }, [user, syncUser, clearSession]);
+  }, [user, syncUser, markHydrated, clearSession]);
 
   return null;
 }

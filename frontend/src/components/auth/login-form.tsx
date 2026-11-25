@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +25,7 @@ import {
 import { setSimulatedRole } from '@/mocks/mock-runtime';
 import { authService, IS_MOCK_MODE } from '@/services';
 import { useAuthStore } from '@/store/auth-store';
+import { useGuardianStore } from '@/store/guardian-store';
 
 const loginSchema = z.object({
   email: z
@@ -38,6 +40,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setSession = useAuthStore((state) => state.setSession);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -64,6 +67,8 @@ export function LoginForm() {
       if (IS_MOCK_MODE) {
         setSimulatedRole(auth.user.role);
       }
+      queryClient.clear();
+      useGuardianStore.getState().setSelectedStudentId(null);
       setSession(auth);
       toast.success(`Chào mừng ${auth.user.fullName}`);
       router.push(

@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   CalendarDays,
   LayoutDashboard,
@@ -18,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { BrandLogo } from '@/components/shared/brand-logo';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { useAuthStore } from '@/store/auth-store';
+import { useGuardianStore } from '@/store/guardian-store';
 import { cn } from '@/lib/utils';
 
 const GUARDIAN_NAV_ITEMS = [
@@ -40,12 +42,15 @@ interface GuardianShellProps {
 export function GuardianShell({ children }: GuardianShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     clearSession();
+    useGuardianStore.getState().setSelectedStudentId(null);
+    queryClient.clear();
     router.push('/login');
   };
 

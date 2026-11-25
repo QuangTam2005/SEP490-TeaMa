@@ -80,7 +80,7 @@ public class OpsUsageController {
             if (isHit) {
                 cacheHits++;
             }
-            if (!"SUCCESS".equalsIgnoreCase(log.getStatus())) {
+            if (!"SUCCEEDED".equalsIgnoreCase(log.getStatus()) && !"SUCCESS".equalsIgnoreCase(log.getStatus())) {
                 failedCalls++;
             }
             int inTokens = log.getInputTokens() != null ? log.getInputTokens() : 0;

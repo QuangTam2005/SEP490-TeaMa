@@ -261,5 +261,20 @@ class StudySubmissionServiceTest {
                 () -> submissionService.retryEvaluation(1L, 601L)
         );
         assertEquals(ErrorCode.AI_RETRY_NOT_ALLOWED, rejectEx.getErrorCode());
+
+        // Fallback state (task EVALUATED while job FAILED) must also reject retry to protect uq_ai_evaluations_submission
+        failedJob.setStatus(EvaluationJobStatus.FAILED);
+        AppException fallbackReject = assertThrows(
+                AppException.class,
+                () -> submissionService.retryEvaluation(1L, 601L)
+        );
+        assertEquals(ErrorCode.AI_RETRY_NOT_ALLOWED, fallbackReject.getErrorCode());
+
+        // Oversized Idempotency-Key header > 64 chars throws VAL_001 instead of DB truncation 500
+        AppException keyTooLong = assertThrows(
+                AppException.class,
+                () -> submissionService.submitTask(1L, 101L, new SubmitStudyRequest("Bài", "a".repeat(450), null), "k".repeat(65))
+        );
+        assertEquals(ErrorCode.VALIDATION_FAILED, keyTooLong.getErrorCode());
     }
 }

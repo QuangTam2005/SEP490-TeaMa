@@ -28,9 +28,13 @@ import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -65,8 +69,10 @@ public class EvaluationJobWorker {
     private final AiEvaluationProvider aiEvaluationProvider;
     private final AiProperties aiProperties;
 
+    @Autowired(required = false)
+    private PlatformTransactionManager transactionManager;
+
     @Scheduled(fixedDelayString = "${app.ai.worker-poll-ms:3000}")
-    @Transactional
     public void pollAndExecuteDueJobs() {
         List<EvaluationJob> dueJobs = evaluationJobRepository
                 .findTop5ByStatusAndNextRetryAtLessThanEqualOrderByCreatedAtAsc(
@@ -74,7 +80,17 @@ public class EvaluationJobWorker {
                         Instant.now()
                 );
         for (EvaluationJob job : dueJobs) {
-            processJob(job.getId());
+            if (transactionManager != null) {
+                TransactionTemplate perJobTx = new TransactionTemplate(transactionManager);
+                perJobTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                try {
+                    perJobTx.executeWithoutResult(status -> processJob(job.getId()));
+                } catch (RuntimeException ex) {
+                    log.error("Isolated EvaluationJob {} failed unexpectedly: {}", job.getId(), ex.getMessage(), ex);
+                }
+            } else {
+                processJob(job.getId());
+            }
         }
     }
 
@@ -166,18 +182,18 @@ public class EvaluationJobWorker {
             AiEvaluationResult aiResult,
             List<SearchSnippet> snippets
     ) {
-        AIEvaluation evaluation = AIEvaluation.builder()
-                .submissionId(submission.getId())
-                .accuracy(aiResult.accuracy())
-                .completeness(aiResult.completeness())
-                .overallStatus(aiResult.overallStatus())
-                .feedback(aiResult.feedback())
-                .incorrectPoints(aiResult.incorrectPoints())
-                .missingPoints(aiResult.missingPoints())
-                .confidence(aiResult.confidence())
-                .rawSanitizedResponse(aiResult.rawSanitizedJson())
-                .evaluatedAt(Instant.now())
-                .build();
+        AIEvaluation evaluation = aiEvaluationRepository.findBySubmissionId(submission.getId())
+                .orElseGet(() -> AIEvaluation.builder().submissionId(submission.getId()).build());
+        evaluation.setAccuracy(aiResult.accuracy());
+        evaluation.setCompleteness(aiResult.completeness());
+        evaluation.setOverallStatus(aiResult.overallStatus());
+        evaluation.setFeedback(aiResult.feedback());
+        evaluation.setIncorrectPoints(aiResult.incorrectPoints());
+        evaluation.setMissingPoints(aiResult.missingPoints());
+        evaluation.setConfidence(aiResult.confidence());
+        evaluation.setRawSanitizedResponse(aiResult.rawSanitizedJson());
+        evaluation.setEvaluatedAt(Instant.now());
+        evaluation.getSources().clear();
 
         if (snippets != null) {
             for (SearchSnippet snippet : snippets) {

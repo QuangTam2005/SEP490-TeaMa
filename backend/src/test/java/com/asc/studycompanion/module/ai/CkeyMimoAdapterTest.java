@@ -199,4 +199,30 @@ class CkeyMimoAdapterTest {
         assertEquals(OverallEvaluationStatus.INSUFFICIENT_EVIDENCE, insufficient.overallStatus());
         assertEquals(CompletenessLevel.UNDETERMINED, insufficient.completeness());
     }
+
+    @Test
+    void clampsBoundarySpaceAt599StrictlyUnder600AndRejectsJsonNullFeedback() {
+        // Space at index 599 must still produce <= 600 chars after appending "..."
+        String boundaryFeedback = "a".repeat(599) + " wordoverflow";
+        String clamped = CkeyMimoAdapter.clampFeedbackGracefully(boundaryFeedback);
+        assertTrue(clamped.length() <= 600, "Expected <= 600 chars, got " + clamped.length());
+        assertTrue(clamped.endsWith("..."));
+
+        String nullFeedbackJson = """
+                {
+                  "accuracy": "CORRECT",
+                  "completeness": "COMPLETE",
+                  "overallStatus": "GOOD",
+                  "feedback": null,
+                  "incorrectPoints": [null],
+                  "missingPoints": [],
+                  "confidence": "HIGH"
+                }
+                """;
+        AppException nullEx = assertThrows(
+                AppException.class,
+                () -> adapter.parseAndValidateJson(nullFeedbackJson, 10, 10, "mimo-v2-flash")
+        );
+        assertEquals(ErrorCode.AI_RESPONSE_INVALID, nullEx.getErrorCode());
+    }
 }

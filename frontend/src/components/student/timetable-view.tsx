@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CalendarDays,
   Check,
   History,
+  Link2,
   Loader2,
   Save,
   Users,
@@ -42,6 +44,7 @@ export function TimetableView() {
   const queryClient = useQueryClient();
   const runtime = useMockRuntime();
   const user = useAuthStore((state) => state.user);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
   const syncUser = useAuthStore((state) => state.syncUser);
   const selectedStudentId = useGuardianStore((state) => state.selectedStudentId);
   const setSelectedStudentId = useGuardianStore(
@@ -52,6 +55,7 @@ export function TimetableView() {
   );
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  const isAuthReady = IS_MOCK_MODE || (isHydrated && user !== null);
   const isStudentMode = IS_MOCK_MODE
     ? runtime.simulatedRole === 'STUDENT'
     : user?.role === 'STUDENT';
@@ -64,8 +68,15 @@ export function TimetableView() {
       runtime.simulatedRole,
     ],
     queryFn: () => linkService.getLinkedChildren(),
-    enabled: !isStudentMode,
+    enabled: isAuthReady && !isStudentMode,
   });
+
+  const hasNoLinkedChild =
+    isAuthReady &&
+    !isStudentMode &&
+    !IS_MOCK_MODE &&
+    childrenQuery.isSuccess &&
+    (childrenQuery.data?.length ?? 0) === 0;
 
   useEffect(() => {
     if (isStudentMode || !childrenQuery.data?.length) {
@@ -93,6 +104,7 @@ export function TimetableView() {
   const subjectsQuery = useQuery({
     queryKey: ['subjects', activeGrade ?? 'all'],
     queryFn: () => timetableService.getSubjects(activeGrade),
+    enabled: isAuthReady && (isStudentMode || IS_MOCK_MODE || Boolean(activeChild)),
   });
 
   const baseSubjects =
@@ -140,6 +152,9 @@ export function TimetableView() {
       timetableService.getTimetable(
         isStudentMode ? undefined : (selectedStudentId ?? undefined)
       ),
+    enabled:
+      isAuthReady &&
+      (isStudentMode || IS_MOCK_MODE || Boolean(selectedStudentId)),
   });
 
   useEffect(() => {
@@ -282,9 +297,33 @@ export function TimetableView() {
         </div>
       </div>
 
+      {hasNoLinkedChild ? (
+        <Card className="mx-auto max-w-xl">
+          <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-brand-strong">
+              <Link2 className="h-6 w-6" strokeWidth={1.75} />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-lg font-bold text-foreground">
+                Chưa liên kết với tài khoản học sinh
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Phụ huynh cần nhập mã liên kết 8 ký tự từ tài khoản học sinh để xem và chỉnh thời khóa biểu.
+              </p>
+            </div>
+            <Button asChild className="h-11 gap-2">
+              <Link href="/link-student">Nhập mã liên kết 8 ký tự</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
       <QueryStateBoundary
         data={timetableQuery.data}
-        isLoading={timetableQuery.isLoading}
+        isLoading={
+          !isAuthReady ||
+          (!isStudentMode && !IS_MOCK_MODE && childrenQuery.isLoading) ||
+          timetableQuery.isLoading
+        }
         isError={timetableQuery.isError}
         error={timetableQuery.error}
         onRetry={() => void timetableQuery.refetch()}
@@ -415,6 +454,7 @@ export function TimetableView() {
           </>
         )}
       </QueryStateBoundary>
+      )}
     </div>
   );
 }

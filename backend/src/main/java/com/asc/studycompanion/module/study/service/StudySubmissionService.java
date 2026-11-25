@@ -136,8 +136,9 @@ public class StudySubmissionService {
         EvaluationJob job = evaluationJobRepository.findBySubmissionId(submissionId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVALUATION_JOB_NOT_FOUND));
 
-        if (job.getStatus() != EvaluationJobStatus.FAILED
-                && task.getStatus() != StudyTaskStatus.EVALUATION_FAILED) {
+        if (task.getStatus() == StudyTaskStatus.EVALUATED
+                || (job.getStatus() != EvaluationJobStatus.FAILED
+                && task.getStatus() != StudyTaskStatus.EVALUATION_FAILED)) {
             throw new AppException(ErrorCode.AI_RETRY_NOT_ALLOWED);
         }
 
@@ -187,6 +188,10 @@ public class StudySubmissionService {
         if (resolved == null || resolved.isBlank()) {
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Thiếu mã chống trùng Idempotency-Key");
         }
-        return resolved;
+        String trimmed = resolved.trim();
+        if (trimmed.length() > 64) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Mã chống trùng Idempotency-Key tối đa 64 ký tự");
+        }
+        return trimmed;
     }
 }

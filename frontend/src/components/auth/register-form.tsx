@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,6 +19,7 @@ import {
 import { authService, IS_MOCK_MODE } from '@/services';
 import { setSimulatedRole } from '@/mocks/mock-runtime';
 import { useAuthStore } from '@/store/auth-store';
+import { useGuardianStore } from '@/store/guardian-store';
 import { GRADE_OPTIONS } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 
@@ -54,6 +56,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setSession = useAuthStore((state) => state.setSession);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -92,6 +95,8 @@ export function RegisterForm() {
       if (IS_MOCK_MODE) {
         setSimulatedRole(auth.user.role);
       }
+      queryClient.clear();
+      useGuardianStore.getState().setSelectedStudentId(null);
       setSession(auth);
       toast.success('Tạo tài khoản thành công');
       if (auth.user.role === 'GUARDIAN') {

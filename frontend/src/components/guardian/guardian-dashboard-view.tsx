@@ -16,6 +16,7 @@ import {
   Download,
   Eye,
   HeartHandshake,
+  Link2,
   Loader2,
   RotateCcw,
   ShieldCheck,
@@ -42,7 +43,8 @@ import {
 } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
-import { guardianService, linkService } from '@/services';
+import { IS_MOCK_MODE, guardianService, linkService } from '@/services';
+import { useAuthStore } from '@/store/auth-store';
 import { useGuardianStore } from '@/store/guardian-store';
 import type { GuardianTaskItem, StudyTaskStatus, SubjectCode } from '@/types';
 
@@ -66,10 +68,14 @@ export function GuardianDashboardView() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const runtime = useMockRuntime();
+  const user = useAuthStore((state) => state.user);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
   const selectedStudentId = useGuardianStore((state) => state.selectedStudentId);
   const setSelectedStudentId = useGuardianStore(
     (state) => state.setSelectedStudentId
   );
+
+  const isGuardianReady = IS_MOCK_MODE || (isHydrated && user?.role === 'GUARDIAN');
 
   const [selectedDate, setSelectedDate] = useState<string>(() =>
     getNextTargetDateIso()
@@ -90,7 +96,16 @@ export function GuardianDashboardView() {
       runtime.simulatedRole,
     ],
     queryFn: () => linkService.getLinkedChildren(),
+    enabled: isGuardianReady,
   });
+
+  const hasLinkedChildren =
+    IS_MOCK_MODE || (childrenQuery.data?.length ?? 0) > 0;
+  const hasNoLinkedChild =
+    isGuardianReady &&
+    !IS_MOCK_MODE &&
+    childrenQuery.isSuccess &&
+    (childrenQuery.data?.length ?? 0) === 0;
 
   useEffect(() => {
     const children = childrenQuery.data;
@@ -123,6 +138,10 @@ export function GuardianDashboardView() {
         subjectCode: selectedSubject,
         studentId: selectedStudentId ?? undefined,
       }),
+    enabled:
+      isGuardianReady &&
+      hasLinkedChildren &&
+      (IS_MOCK_MODE || Boolean(selectedStudentId)),
   });
 
   const weeklyQuery = useQuery({
@@ -139,6 +158,10 @@ export function GuardianDashboardView() {
         weekStart,
         studentId: selectedStudentId ?? undefined,
       }),
+    enabled:
+      isGuardianReady &&
+      hasLinkedChildren &&
+      (IS_MOCK_MODE || Boolean(selectedStudentId)),
   });
 
   const skipMutation = useMutation({
@@ -476,9 +499,33 @@ export function GuardianDashboardView() {
         ))}
       </div>
 
+      {hasNoLinkedChild ? (
+        <Card className="mx-auto max-w-xl">
+          <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-brand-strong">
+              <Link2 className="h-6 w-6" strokeWidth={1.75} />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-lg font-bold text-foreground">
+                Chưa liên kết với tài khoản học sinh
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Phụ huynh cần nhập mã liên kết 8 ký tự từ tài khoản học sinh để xem tiến độ.
+              </p>
+            </div>
+            <Button asChild className="h-11 gap-2">
+              <Link href="/link-student">Nhập mã liên kết 8 ký tự</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
       <QueryStateBoundary
         data={dashboardQuery.data}
-        isLoading={dashboardQuery.isLoading}
+        isLoading={
+          !isGuardianReady ||
+          (!IS_MOCK_MODE && childrenQuery.isLoading) ||
+          dashboardQuery.isLoading
+        }
         isError={dashboardQuery.isError}
         error={dashboardQuery.error}
         onRetry={() => void dashboardQuery.refetch()}
@@ -579,10 +626,14 @@ export function GuardianDashboardView() {
                       <StatusBadge status={item.status} />
                     </div>
 
-                    {item.evaluation ? (
+                    {(item.evaluation || item.guardianAcknowledgedAt) ? (
                       <div className="flex flex-wrap gap-1.5">
-                        <StatusBadge status={item.evaluation.overallStatus} />
-                        <StatusBadge status={item.evaluation.accuracy} />
+                        {item.evaluation ? (
+                          <>
+                            <StatusBadge status={item.evaluation.overallStatus} />
+                            <StatusBadge status={item.evaluation.accuracy} />
+                          </>
+                        ) : null}
                         {item.guardianAcknowledgedAt ? (
                           <Badge variant="success" className="gap-1">
                             <HeartHandshake className="h-3 w-3" />
@@ -647,6 +698,7 @@ export function GuardianDashboardView() {
           </div>
         )}
       </QueryStateBoundary>
+      )}
     </div>
   );
 }

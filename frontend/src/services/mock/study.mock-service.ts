@@ -358,12 +358,21 @@ export const studyMockService: StudyService = {
         }
 
         const { bucket, detail } = found;
+        if (detail.task.status === 'SKIPPED') {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Nhiệm vụ này đã được phụ huynh đánh dấu bỏ qua.',
+          });
+        }
+
         if (
           detail.task.taskType === 'PREVIEW' &&
+          bucket.reviewTask.task.status !== 'SKIPPED' &&
           bucket.reviewTask.submissions.length === 0
         ) {
           throw new ApiClientError({
-            status: 409,
+            status: 400,
             errorCode: 'STUDY_003',
             message: 'Con cần nộp bài Ôn bài cũ trước khi làm Soạn bài mới nhé.',
           });
@@ -372,7 +381,7 @@ export const studyMockService: StudyService = {
         if (detail.task.status === 'EVALUATING') {
           throw new ApiClientError({
             status: 409,
-            errorCode: 'STUDY_004',
+            errorCode: 'STUDY_006',
             message: 'AI đang đánh giá bài vừa nộp, con đợi vài giây nhé.',
           });
         }
@@ -409,7 +418,7 @@ export const studyMockService: StudyService = {
         ) {
           throw new ApiClientError({
             status: 400,
-            errorCode: 'STUDY_002',
+            errorCode: 'STUDY_004',
             message: `Bài viết cần từ ${MIN_SUBMISSION_CHARS} đến ${MAX_SUBMISSION_CHARS} ký tự (hiện tại: ${charCount}).`,
             fieldErrors: {
               content: `Độ dài hợp lệ: ${MIN_SUBMISSION_CHARS}–${MAX_SUBMISSION_CHARS} ký tự (đang có ${charCount}).`,

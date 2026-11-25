@@ -193,7 +193,8 @@ export function NextDayPlanView() {
             s.reviewTask,
             s.previewTask,
           ]);
-          const completedCount = allTasks.filter(
+          const activeTasks = allTasks.filter((t) => t.status !== 'SKIPPED');
+          const completedCount = activeTasks.filter(
             (t) => t.status === 'EVALUATED'
           ).length;
 
@@ -231,7 +232,7 @@ export function NextDayPlanView() {
                   <div className="flex items-center gap-2 rounded-lg border border-brand/25 bg-brand-soft/60 px-4 py-2 text-sm font-semibold text-brand-strong dark:text-sky-200">
                     <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
                     <span>
-                      Hoàn thành: {completedCount}/{allTasks.length} bài
+                      Hoàn thành: {completedCount}/{activeTasks.length} bài
                     </span>
                   </div>
 
