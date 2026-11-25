@@ -1,6 +1,7 @@
 package com.asc.studycompanion.security;
 
 import com.asc.studycompanion.module.auth.entity.User;
+import com.asc.studycompanion.module.auth.entity.UserRole;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Authenticated student principal stored in SecurityContextHolder.
+ * Authenticated principal stored in SecurityContextHolder.
  * getUsername() returns the numeric userId string so SecurityAuditorHelper
  * can extract created_by/updated_by without coupling common/ to module/auth/.
  */
@@ -19,26 +20,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserPrincipal implements UserDetails {
 
-    private static final List<GrantedAuthority> DEFAULT_AUTHORITIES =
-            List.of(new SimpleGrantedAuthority("ROLE_USER"));
-
     private final Long id;
     private final String email;
     private final String passwordHash;
     private final String fullName;
+    private final UserRole role;
 
     public static UserPrincipal from(User user) {
         return new UserPrincipal(
                 user.getId(),
                 user.getEmail(),
                 user.getPasswordHash(),
-                user.getFullName()
+                user.getFullName(),
+                user.getRole()
         );
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return DEFAULT_AUTHORITIES;
+        String authorityName = "ROLE_" + (role != null ? role.name() : UserRole.STUDENT.name());
+        return List.of(new SimpleGrantedAuthority(authorityName));
     }
 
     @Override

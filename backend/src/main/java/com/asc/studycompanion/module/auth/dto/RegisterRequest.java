@@ -1,11 +1,13 @@
 package com.asc.studycompanion.module.auth.dto;
 
+import com.asc.studycompanion.module.auth.entity.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
- * Payload for student registration. Accepts any valid email domain.
+ * Payload for STUDENT or GUARDIAN account registration. Accepts any valid email domain.
  */
 public record RegisterRequest(
         @NotBlank(message = "Email không được để trống")
@@ -21,16 +23,11 @@ public record RegisterRequest(
         @Size(max = 150, message = "Họ và tên tối đa 150 ký tự")
         String fullName,
 
-        @Size(max = 20, message = "Mã sinh viên tối đa 20 ký tự")
-        String studentCode,
-
-        @Size(max = 20, message = "Số điện thoại tối đa 20 ký tự")
-        String phone
+        @NotNull(message = "Vai trò không được để trống")
+        UserRole role
 ) {
     public RegisterRequest {
         email = email != null ? email.trim() : null;
         fullName = fullName != null ? fullName.trim() : null;
-        studentCode = (studentCode != null && !studentCode.isBlank()) ? studentCode.trim() : null;
-        phone = (phone != null && !phone.isBlank()) ? phone.trim() : null;
     }
 }

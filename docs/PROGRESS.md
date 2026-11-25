@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 3 In Progress (`[TASK-BE.1b]` Completed — All 14 Flyway Schema Tables Ready)  
+**Current Phase:** Phase 3 In Progress (`[TASK-BE.2a]` Completed — Auth Roles & StudentProfile Provisioning)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -33,6 +33,8 @@
 - **[DONE] `[TASK-UI.3]` (`9185caa`):** Built `study-seed.ts` (Grade 6 timetable, BR-12-compliant `850–2,000` char Vietnamese submissions & `<= 600` char AI evaluations), `timetable.service.ts` (+ `timetableMockService` & `timetableHttpService`), `StudentShell` (`app/student/layout.tsx` Ocean Blue + White responsive header), and `/student/timetable` (`TimetableView` 7-day × 5-subject desktop grid & mobile day cards with `periodNote` and history-preserving versioning). Verified `typecheck`, `lint`, `build` passed cleanly.
 - **[DONE] `[TASK-UI.4]` (`8fdeee6`):** Built `study.service.ts` (+ `studyMockService` & `studyHttpService`), `/student/today` (`NextDayPlanView` showing tomorrow's `Asia/Ho_Chi_Minh` subject plan with `REVIEW` -> `PREVIEW` sequential gate & empty schedule state), and `/student/tasks/[taskId]` (`TaskWorkspaceView` with live `850–2,000` normalized char bar, idempotent submission, async `EVALUATING` polling, `<= 600` char AI feedback + clickable sources, retry on `EVALUATION_FAILED`, and up to 3 post-evaluation immutable revisions). Verified `typecheck`, `lint`, `build` passed cleanly.
 - **[DONE] `[TASK-UI.5]`:** Built `guardian.service.ts` (+ `guardianMockService` & `guardianHttpService`), `GuardianShell` (`/guardian/layout.tsx`), `/guardian/dashboard` (`GuardianDashboardView` with date & subject filters, completion summary, desktop `DataTable` + mobile cards), and `/guardian/submissions/[submissionId]` (`SubmissionDetailView` read-only immutable student version inspector with Accuracy/Completeness, incorrect/missing points, clickable `sources` + `retrievedAt`, and zero `AIUsageLog`/cost leaks). Verified `typecheck`, `lint`, `build` (`10` App Router routes compiled with `0` errors/warnings).
+- **[DONE] `[TASK-BE.1a]` (`cd59bfc`) & `[TASK-BE.1b]` (`687854e`):** Created Flyway `V1__init_auth_and_curriculum_schema.sql` & `V2__init_study_and_ai_schema.sql` covering all 14 PostgreSQL tables (`users`, `student_profiles`, `guardian_links`, 5 seeded `subjects`, `timetables`, `timetable_entries`, `study_plans`, `study_tasks`, `study_submissions`, `ai_evaluations`, `source_references`, `evaluation_jobs`, `ai_usage_logs`, `knowledge_cache`).
+- **[DONE] `[TASK-BE.2a]`:** Upgraded `auth` module with `UserRole` (`STUDENT`/`GUARDIAN`), `UserStatus`, `StudentProfile`, `GuardianLink`, `ROLE_*` `UserPrincipal`, auto-provisioning `StudentProfile` on Student registration, open email validation, active `GuardianLink` lookup in `GET /api/auth/me` & `login`, and CORS `"Idempotency-Key"` header. Verified `.\mvnw.cmd clean test` (`Tests run: 31, Failures: 0`).
 
 ---
 

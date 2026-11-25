@@ -21,8 +21,7 @@ import java.io.IOException;
 
 /**
  * Stateless Bearer JWT authentication filter.
- * Skips requests carrying X-Supervisor-Token and safely translates expired/missing-user
- * tokens into 401 ApiResponse via RestAuthenticationEntryPoint.
+ * Safely translates expired/missing-user tokens into 401 ApiResponse via RestAuthenticationEntryPoint.
  */
 @Slf4j
 @Component
@@ -31,7 +30,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     public static final String AUTH_ERROR_CODE_ATTR = "AUTH_ERROR_CODE";
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final String SUPERVISOR_TOKEN_HEADER = "X-Supervisor-Token";
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
@@ -42,11 +40,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        if (StringUtils.hasText(request.getHeader(SUPERVISOR_TOKEN_HEADER))) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String token = extractBearerToken(request);
         if (token == null) {
             filterChain.doFilter(request, response);

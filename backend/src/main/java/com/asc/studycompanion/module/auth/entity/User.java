@@ -3,19 +3,21 @@ package com.asc.studycompanion.module.auth.entity;
 import com.asc.studycompanion.common.entity.BaseTimestampEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Student user account mapped to the users table.
- * Extends BaseTimestampEntity only (no is_deleted, created_by, or updated_by).
+ * User account entity mapped to the users table (STUDENT or GUARDIAN).
  */
 @Getter
 @Setter
@@ -39,12 +41,12 @@ public class User extends BaseTimestampEntity {
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
-    @Column(name = "student_code", length = 20)
-    private String studentCode;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private UserRole role;
 
-    @Column(name = "phone", length = 20)
-    private String phone;
-
-    @Column(name = "avatar_url", length = 500)
-    private String avatarUrl;
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private UserStatus status = UserStatus.ACTIVE;
 }

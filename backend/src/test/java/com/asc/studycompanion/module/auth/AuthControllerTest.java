@@ -11,6 +11,7 @@ import com.asc.studycompanion.module.auth.dto.AuthResponse;
 import com.asc.studycompanion.module.auth.dto.LoginRequest;
 import com.asc.studycompanion.module.auth.dto.RegisterRequest;
 import com.asc.studycompanion.module.auth.dto.UserResponse;
+import com.asc.studycompanion.module.auth.entity.UserRole;
 import com.asc.studycompanion.module.auth.service.AuthService;
 import com.asc.studycompanion.security.UserPrincipal;
 import org.junit.jupiter.api.AfterEach;
@@ -66,22 +67,22 @@ class AuthControllerTest {
     void registerTrimsWhitespaceEmailAndReturns201() throws Exception {
         UserResponse user = new UserResponse(
                 1L,
-                "user@gmail.com",
-                "Nguyen Van A",
-                "SE180001",
+                "hocsinh@gmail.com",
+                "Nguyen Minh Khoi",
+                UserRole.STUDENT,
+                6,
                 null,
-                null,
-                Instant.parse("2026-11-16T05:00:00Z")
+                Instant.parse("2026-11-25T02:00:00Z")
         );
         when(authService.register(any(RegisterRequest.class)))
                 .thenReturn(new AuthResponse("jwt-token", "Bearer", 86_400_000L, user));
 
         String body = """
                 {
-                  "email": "  user@gmail.com  ",
+                  "email": "  hocsinh@gmail.com  ",
                   "password": "password123",
-                  "fullName": "  Nguyen Van A ",
-                  "studentCode": "SE180001"
+                  "fullName": "  Nguyen Minh Khoi ",
+                  "role": "STUDENT"
                 }
                 """;
 
@@ -91,11 +92,13 @@ class AuthControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
-                .andExpect(jsonPath("$.data.user.email").value("user@gmail.com"));
+                .andExpect(jsonPath("$.data.user.email").value("hocsinh@gmail.com"))
+                .andExpect(jsonPath("$.data.user.role").value("STUDENT"))
+                .andExpect(jsonPath("$.data.user.grade").value(6));
     }
 
     @Test
-    void registerValidationRejectsInvalidEmailAndShortPassword() throws Exception {
+    void registerValidationRejectsInvalidEmailAndMissingRole() throws Exception {
         String body = """
                 {
                   "email": "not-an-email",
@@ -112,19 +115,28 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("VAL_001"))
                 .andExpect(jsonPath("$.data.email").exists())
                 .andExpect(jsonPath("$.data.password").exists())
-                .andExpect(jsonPath("$.data.fullName").exists());
+                .andExpect(jsonPath("$.data.fullName").exists())
+                .andExpect(jsonPath("$.data.role").exists());
     }
 
     @Test
     void loginReturns200OnSuccessAnd401OnInvalidCredentials() throws Exception {
-        UserResponse user = new UserResponse(2L, "dev@outlook.com", "Tran B", null, null, null, Instant.now());
+        UserResponse user = new UserResponse(
+                2L,
+                "phuhuynh@outlook.com",
+                "Nguyen Thu Hang",
+                UserRole.GUARDIAN,
+                null,
+                "Nguyen Minh Khoi",
+                Instant.now()
+        );
         when(authService.login(any(LoginRequest.class)))
                 .thenReturn(new AuthResponse("jwt-ok", "Bearer", 86_400_000L, user))
                 .thenThrow(new AppException(ErrorCode.INVALID_CREDENTIALS));
 
         String body = """
                 {
-                  "email": " dev@outlook.com ",
+                  "email": " phuhuynh@outlook.com ",
                   "password": "password123"
                 }
                 """;
@@ -134,7 +146,9 @@ class AuthControllerTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.accessToken").value("jwt-ok"));
+                .andExpect(jsonPath("$.data.accessToken").value("jwt-ok"))
+                .andExpect(jsonPath("$.data.user.role").value("GUARDIAN"))
+                .andExpect(jsonPath("$.data.user.linkedStudentName").value("Nguyen Minh Khoi"));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -151,18 +165,33 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value("AUTH_001"));
 
-        UserPrincipal principal = new UserPrincipal(12L, "team@gmail.com", "hash", "Pham C");
+        UserPrincipal principal = new UserPrincipal(
+                12L,
+                "hocsinh@gmail.com",
+                "hash",
+                "Nguyen Minh Khoi",
+                UserRole.STUDENT
+        );
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())
         );
 
-        UserResponse user = new UserResponse(12L, "team@gmail.com", "Pham C", "SE180999", null, null, Instant.now());
+        UserResponse user = new UserResponse(
+                12L,
+                "hocsinh@gmail.com",
+                "Nguyen Minh Khoi",
+                UserRole.STUDENT,
+                6,
+                null,
+                Instant.now()
+        );
         when(authService.getCurrentUser(12L)).thenReturn(user);
 
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(12))
-                .andExpect(jsonPath("$.data.email").value("team@gmail.com"));
+                .andExpect(jsonPath("$.data.email").value("hocsinh@gmail.com"))
+                .andExpect(jsonPath("$.data.grade").value(6));
     }
 }

@@ -40,6 +40,6 @@ class SecurityCorsTest {
                 config.getAllowedOrigins()
         );
         assertTrue(config.getExposedHeaders().contains("Content-Disposition"));
-        assertTrue(config.getAllowedHeaders().contains("X-Supervisor-Token"));
+        assertTrue(config.getAllowedHeaders().contains("Idempotency-Key"));
     }
 }

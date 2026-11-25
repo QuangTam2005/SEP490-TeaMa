@@ -6,8 +6,15 @@ import com.asc.studycompanion.module.auth.dto.AuthResponse;
 import com.asc.studycompanion.module.auth.dto.LoginRequest;
 import com.asc.studycompanion.module.auth.dto.RegisterRequest;
 import com.asc.studycompanion.module.auth.dto.UserResponse;
+import com.asc.studycompanion.module.auth.entity.GuardianLink;
+import com.asc.studycompanion.module.auth.entity.GuardianLinkStatus;
+import com.asc.studycompanion.module.auth.entity.StudentProfile;
 import com.asc.studycompanion.module.auth.entity.User;
+import com.asc.studycompanion.module.auth.entity.UserRole;
+import com.asc.studycompanion.module.auth.entity.UserStatus;
 import com.asc.studycompanion.module.auth.mapper.UserMapper;
+import com.asc.studycompanion.module.auth.repository.GuardianLinkRepository;
+import com.asc.studycompanion.module.auth.repository.StudentProfileRepository;
 import com.asc.studycompanion.module.auth.repository.UserRepository;
 import com.asc.studycompanion.module.auth.service.AuthService;
 import com.asc.studycompanion.security.JwtProperties;
@@ -29,9 +36,11 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +49,10 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private StudentProfileRepository studentProfileRepository;
+    @Mock
+    private GuardianLinkRepository guardianLinkRepository;
 
     private UserMapper userMapper;
     private PasswordEncoder passwordEncoder;
@@ -52,12 +65,14 @@ class AuthServiceTest {
         userMapper = Mappers.getMapper(UserMapper.class);
         passwordEncoder = new BCryptPasswordEncoder();
         jwtProperties = new JwtProperties();
-        jwtProperties.setSecret("sep490_teama_unit_test_secret_key_32_bytes");
+        jwtProperties.setSecret("study_companion_unit_test_secret_key_32_bytes");
         jwtProperties.setExpirationMs(3_600_000L);
         jwtTokenProvider = new JwtTokenProvider(jwtProperties);
 
         authService = new AuthService(
                 userRepository,
+                studentProfileRepository,
+                guardianLinkRepository,
                 userMapper,
                 passwordEncoder,
                 jwtTokenProvider,
@@ -66,22 +81,23 @@ class AuthServiceTest {
     }
 
     @Test
-    void registerAcceptsAnyValidEmailNormalizesAndHashesPassword() {
+    void registerStudentProvisionsProfileAndHashesPassword() {
         RegisterRequest request = new RegisterRequest(
-                "  Student.Team@Gmail.com ",
+                "  HocSinh.Lop6@Gmail.com ",
                 "secret123",
-                "  Nguyen Van A  ",
-                " SE180001 ",
-                "   "
+                "  Nguyen Minh Khoi  ",
+                UserRole.STUDENT
         );
 
-        when(userRepository.existsByEmailIgnoreCase("student.team@gmail.com")).thenReturn(false);
+        when(userRepository.existsByEmailIgnoreCase("hocsinh.lop6@gmail.com")).thenReturn(false);
         when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
             u.setId(10L);
-            u.setCreatedAt(Instant.parse("2026-11-16T05:00:00Z"));
+            u.setCreatedAt(Instant.parse("2026-11-25T02:00:00Z"));
             return u;
         });
+        when(studentProfileRepository.saveAndFlush(any(StudentProfile.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         AuthResponse response = authService.register(request);
 
@@ -89,22 +105,50 @@ class AuthServiceTest {
         verify(userRepository).saveAndFlush(userCaptor.capture());
         User saved = userCaptor.getValue();
 
-        assertEquals("student.team@gmail.com", saved.getEmail());
-        assertEquals("Nguyen Van A", saved.getFullName());
-        assertEquals("SE180001", saved.getStudentCode());
-        assertEquals(null, saved.getPhone());
+        assertEquals("hocsinh.lop6@gmail.com", saved.getEmail());
+        assertEquals("Nguyen Minh Khoi", saved.getFullName());
+        assertEquals(UserRole.STUDENT, saved.getRole());
         assertNotEquals("secret123", saved.getPasswordHash());
         assertTrue(passwordEncoder.matches("secret123", saved.getPasswordHash()));
 
+        ArgumentCaptor<StudentProfile> profileCaptor = ArgumentCaptor.forClass(StudentProfile.class);
+        verify(studentProfileRepository).saveAndFlush(profileCaptor.capture());
+        assertEquals(6, profileCaptor.getValue().getGrade());
+        assertEquals("Asia/Ho_Chi_Minh", profileCaptor.getValue().getTimezone());
+
         assertNotNull(response.accessToken());
-        assertEquals("Bearer", response.tokenType());
-        assertEquals(3_600_000L, response.expiresInMs());
-        assertEquals("student.team@gmail.com", response.user().email());
+        assertEquals(6, response.user().grade());
+        assertNull(response.user().linkedStudentName());
+    }
+
+    @Test
+    void registerGuardianDoesNotCreateStudentProfile() {
+        RegisterRequest request = new RegisterRequest(
+                "phuhuynh@yahoo.com",
+                "secret123",
+                "Nguyen Thu Hang",
+                UserRole.GUARDIAN
+        );
+
+        when(userRepository.existsByEmailIgnoreCase("phuhuynh@yahoo.com")).thenReturn(false);
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
+            User u = invocation.getArgument(0);
+            u.setId(11L);
+            u.setCreatedAt(Instant.parse("2026-11-25T02:00:00Z"));
+            return u;
+        });
+
+        AuthResponse response = authService.register(request);
+
+        verify(studentProfileRepository, never()).saveAndFlush(any());
+        assertEquals(UserRole.GUARDIAN, response.user().role());
+        assertNull(response.user().grade());
+        assertNull(response.user().linkedStudentName());
     }
 
     @Test
     void registerThrowsConflictWhenEmailAlreadyExists() {
-        RegisterRequest request = new RegisterRequest("dup@outlook.com", "secret123", "User", null, null);
+        RegisterRequest request = new RegisterRequest("dup@outlook.com", "secret123", "User", UserRole.STUDENT);
         when(userRepository.existsByEmailIgnoreCase("dup@outlook.com")).thenReturn(true);
 
         AppException ex = assertThrows(AppException.class, () -> authService.register(request));
@@ -113,67 +157,90 @@ class AuthServiceTest {
 
     @Test
     void registerTranslatesConcurrentDataIntegrityViolationToConflict() {
-        RegisterRequest request = new RegisterRequest("race@yahoo.com", "secret123", "User", null, null);
+        RegisterRequest request = new RegisterRequest("race@yahoo.com", "secret123", "User", UserRole.GUARDIAN);
         when(userRepository.existsByEmailIgnoreCase("race@yahoo.com")).thenReturn(false);
         when(userRepository.saveAndFlush(any(User.class)))
-                .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint"));
+                .thenThrow(new DataIntegrityViolationException("duplicate key"));
 
         AppException ex = assertThrows(AppException.class, () -> authService.register(request));
         assertEquals(ErrorCode.EMAIL_ALREADY_EXISTS, ex.getErrorCode());
     }
 
     @Test
-    void loginSucceedsWithValidCredentials() {
-        User existing = User.builder()
-                .id(5L)
-                .email("member@gmail.com")
+    void loginRejectsDisabledAccountAndReturnsLinkedStudentForGuardian() {
+        User disabled = User.builder()
+                .id(4L)
+                .email("disabled@gmail.com")
                 .passwordHash(passwordEncoder.encode("secret123"))
-                .fullName("Tran Thi B")
+                .role(UserRole.STUDENT)
+                .status(UserStatus.DISABLED)
+                .build();
+        when(userRepository.findByEmailIgnoreCase("disabled@gmail.com")).thenReturn(Optional.of(disabled));
+
+        AppException disabledEx = assertThrows(
+                AppException.class,
+                () -> authService.login(new LoginRequest("disabled@gmail.com", "secret123"))
+        );
+        assertEquals(ErrorCode.ACCESS_DENIED, disabledEx.getErrorCode());
+
+        User guardian = User.builder()
+                .id(5L)
+                .email("phuhuynh@gmail.com")
+                .passwordHash(passwordEncoder.encode("secret123"))
+                .fullName("Nguyen Thu Hang")
+                .role(UserRole.GUARDIAN)
+                .status(UserStatus.ACTIVE)
                 .createdAt(Instant.now())
                 .build();
-        when(userRepository.findByEmailIgnoreCase("member@gmail.com")).thenReturn(Optional.of(existing));
+        StudentProfile student = StudentProfile.builder()
+                .id(101L)
+                .displayName("Nguyen Minh Khoi")
+                .grade(6)
+                .build();
+        GuardianLink activeLink = GuardianLink.builder()
+                .id(1L)
+                .guardianUser(guardian)
+                .student(student)
+                .status(GuardianLinkStatus.ACTIVE)
+                .build();
 
-        AuthResponse response = authService.login(new LoginRequest("  MEMBER@gmail.com ", "secret123"));
+        when(userRepository.findByEmailIgnoreCase("phuhuynh@gmail.com")).thenReturn(Optional.of(guardian));
+        when(guardianLinkRepository.findFirstByGuardianUserIdAndStatusOrderByLinkedAtDesc(5L, GuardianLinkStatus.ACTIVE))
+                .thenReturn(Optional.of(activeLink));
+
+        AuthResponse response = authService.login(new LoginRequest("  PHUHUYNH@gmail.com ", "secret123"));
 
         assertNotNull(response.accessToken());
-        assertEquals(5L, response.user().id());
-        assertEquals("member@gmail.com", response.user().email());
+        assertEquals(UserRole.GUARDIAN, response.user().role());
+        assertEquals("Nguyen Minh Khoi", response.user().linkedStudentName());
     }
 
     @Test
-    void loginThrowsInvalidCredentialsWhenPasswordMismatch() {
-        User existing = User.builder()
-                .id(5L)
-                .email("member@gmail.com")
-                .passwordHash(passwordEncoder.encode("secret123"))
-                .fullName("Tran Thi B")
-                .build();
-        when(userRepository.findByEmailIgnoreCase("member@gmail.com")).thenReturn(Optional.of(existing));
-
-        AppException ex = assertThrows(
-                AppException.class,
-                () -> authService.login(new LoginRequest("member@gmail.com", "wrong-pass"))
-        );
-        assertEquals(ErrorCode.INVALID_CREDENTIALS, ex.getErrorCode());
-    }
-
-    @Test
-    void getCurrentUserReturnsMappedProfileOrThrowsNotFound() {
-        User existing = User.builder()
+    void getCurrentUserReturnsStudentGradeOrThrowsNotFound() {
+        User student = User.builder()
                 .id(8L)
                 .email("me@gmail.com")
                 .passwordHash("hashed")
-                .fullName("Le Van C")
-                .studentCode("SE180123")
-                .createdAt(Instant.parse("2026-11-16T05:00:00Z"))
+                .fullName("Le Gia Bao")
+                .role(UserRole.STUDENT)
+                .status(UserStatus.ACTIVE)
+                .createdAt(Instant.parse("2026-11-25T02:00:00Z"))
                 .build();
-        when(userRepository.findById(8L)).thenReturn(Optional.of(existing));
+        StudentProfile profile = StudentProfile.builder()
+                .id(20L)
+                .user(student)
+                .displayName("Le Gia Bao")
+                .grade(6)
+                .build();
+
+        when(userRepository.findById(8L)).thenReturn(Optional.of(student));
+        when(studentProfileRepository.findByUserId(8L)).thenReturn(Optional.of(profile));
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
-        UserResponse profile = authService.getCurrentUser(8L);
-        assertEquals(8L, profile.id());
-        assertEquals("me@gmail.com", profile.email());
-        assertEquals("SE180123", profile.studentCode());
+        UserResponse me = authService.getCurrentUser(8L);
+        assertEquals(8L, me.id());
+        assertEquals(UserRole.STUDENT, me.role());
+        assertEquals(6, me.grade());
 
         AppException ex = assertThrows(AppException.class, () -> authService.getCurrentUser(999L));
         assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());

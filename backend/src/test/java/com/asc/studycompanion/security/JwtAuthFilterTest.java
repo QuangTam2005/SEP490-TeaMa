@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.common.util.SecurityAuditorHelper;
+import com.asc.studycompanion.module.auth.entity.UserRole;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,8 +59,8 @@ class JwtAuthFilterTest {
 
     @Test
     void validBearerTokenAuthenticatesPrincipalAndPopulatesAuditorUserId() throws Exception {
-        String token = jwtTokenProvider.generateToken(42L, "dev@fpt.edu.vn");
-        UserPrincipal principal = new UserPrincipal(42L, "dev@fpt.edu.vn", "hash", "Nguyen Van A");
+        String token = jwtTokenProvider.generateToken(42L, "hocsinh@gmail.com");
+        UserPrincipal principal = new UserPrincipal(42L, "hocsinh@gmail.com", "hash", "Nguyen Minh Khoi", UserRole.STUDENT);
         when(userDetailsService.loadUserById(42L)).thenReturn(principal);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -71,6 +72,8 @@ class JwtAuthFilterTest {
 
         verify(filterChain).doFilter(request, response);
         assertEquals(42L, SecurityAuditorHelper.getCurrentUserId().orElse(null));
+        assertTrue(principal.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_STUDENT".equals(a.getAuthority())));
         assertNull(request.getAttribute(JwtAuthFilter.AUTH_ERROR_CODE_ATTR));
     }
 
@@ -99,10 +102,9 @@ class JwtAuthFilterTest {
     }
 
     @Test
-    void supervisorTokenHeaderSkipsJwtValidation() throws Exception {
+    void invalidBearerTokenClearsContextAndSetsUnauthorizedAttr() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("X-Supervisor-Token", "550e8400-e29b-41d4-a716-446655440000");
-        request.addHeader("Authorization", "Bearer invalid-should-be-ignored");
+        request.addHeader("Authorization", "Bearer invalid-token-value");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = mock(FilterChain.class);
 
@@ -111,6 +113,7 @@ class JwtAuthFilterTest {
         verify(filterChain).doFilter(request, response);
         verifyNoInteractions(userDetailsService);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertEquals(ErrorCode.UNAUTHORIZED, request.getAttribute(JwtAuthFilter.AUTH_ERROR_CODE_ATTR));
     }
 
     @Test
