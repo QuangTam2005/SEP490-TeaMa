@@ -24,11 +24,10 @@ class EvaluationPromptBuilderTest {
 
         String system = builder.buildSystemPrompt();
         assertTrue(system.contains("MENTOR"));
-        assertTrue(system.contains("Kết nối tri thức với cuộc sống"));
+        assertTrue(system.contains("KNTT / Global Success / GDPT 2018"));
         assertTrue(system.contains("Wikipedia"));
         assertTrue(system.contains("INSUFFICIENT_EVIDENCE"));
-        assertTrue(system.contains("không ép độ dài tối thiểu"));
-        assertTrue(system.contains("TỐI ĐA 1000 KÝ TỰ"));
+        assertTrue(system.contains("<=1000 ký tự"));
         assertTrue(system.contains("<= 1000 chars"));
         assertTrue(system.contains("Nhận xét tổng quan"));
         assertTrue(system.contains("Cần khắc phục"));
@@ -65,13 +64,12 @@ class EvaluationPromptBuilderTest {
         EvaluationPromptBuilder builder = new EvaluationPromptBuilder(props);
 
         String system = builder.buildSystemPrompt();
-        assertTrue(system.contains("CHỐNG THAO TÚNG"));
-        assertTrue(system.contains("KHÔNG BẮT LỖI VẶT HÌNH THỨC"));
-        assertTrue(system.contains("CHỐNG BỊA CHI TIẾT BÀI LÀM"));
-        assertTrue(system.contains("viết hoa chữ cái đầu dòng"));
-        assertTrue(system.contains("không lặp máy móc cụm từ trong Tiêu chí trọng tâm"));
+        assertTrue(system.contains("BẢO MẬT & CHỐNG ĐỐI PHÓ"));
+        assertTrue(system.contains("KHÔNG BẮT LỖI HÌNH THỨC & CHỐNG BỊA NGUYÊN VĂN"));
+        assertTrue(system.contains("viết hoa đầu dòng/mục"));
+        assertTrue(system.contains("lặp máy móc cụm từ tiêu chí"));
         assertTrue(system.contains("<student_submission>"));
-        assertTrue(system.contains("lặp câu/từ vô nghĩa"));
+        assertTrue(system.contains("lặp vô nghĩa/lạc đề"));
 
         AiEvaluationInput englishPrimary = new AiEvaluationInput(
                 4,

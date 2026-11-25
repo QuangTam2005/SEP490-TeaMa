@@ -188,9 +188,12 @@ class AcceptanceAiAndGuardianTest {
                     }
                     """.formatted(aiFeedbackLong.replace("\"", "\\\"")));
 
+            String expectedTextbookContext = subject == SubjectCode.ENG
+                    ? "Global Success"
+                    : "Kết nối tri thức với cuộc sống";
             ckeyServer.expect(requestTo("https://api.ckey.example/v1/chat/completions"))
                     .andExpect(method(HttpMethod.POST))
-                    .andExpect(content().string(containsString("Kết nối tri thức với cuộc sống")))
+                    .andExpect(content().string(containsString(expectedTextbookContext)))
                     .andExpect(content().string(not(containsString("bao.ngoc.pii@example.com"))))
                     .andExpect(content().string(not(containsString("Lê Bảo Ngọc PII"))))
                     .andRespond(withSuccess(ckeyPayload, MediaType.APPLICATION_JSON));
