@@ -179,7 +179,7 @@ function EvaluationPanel({
           <StatusBadge status={evaluation.confidence} />
         </div>
 
-        <div className="rounded-lg border border-brand/20 bg-brand-soft/35 p-3.5 text-sm leading-relaxed text-foreground dark:bg-sky-950/25">
+        <div className="break-words rounded-lg border border-brand/20 bg-brand-soft/35 p-3.5 text-sm leading-relaxed text-foreground [overflow-wrap:anywhere] dark:bg-sky-950/25">
           {clampedFeedback}
         </div>
 
@@ -188,7 +188,7 @@ function EvaluationPanel({
             <p className="text-xs font-bold uppercase tracking-wide text-rose-600 dark:text-rose-400">
               Điểm cần chỉnh lại
             </p>
-            <ul className="list-disc space-y-1 pl-4 text-sm text-foreground">
+            <ul className="list-disc space-y-1 pl-4 text-sm text-foreground [overflow-wrap:anywhere]">
               {evaluation.incorrectPoints.map((point, idx) => (
                 <li key={idx}>{point}</li>
               ))}
@@ -201,7 +201,7 @@ function EvaluationPanel({
             <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
               Ý nên bổ sung thêm
             </p>
-            <ul className="list-disc space-y-1 pl-4 text-sm text-foreground">
+            <ul className="list-disc space-y-1 pl-4 text-sm text-foreground [overflow-wrap:anywhere]">
               {evaluation.missingPoints.map((point, idx) => (
                 <li key={idx}>{point}</li>
               ))}
@@ -228,7 +228,7 @@ function EvaluationPanel({
                   className="block rounded-lg border bg-background p-2.5 transition-colors hover:border-brand hover:bg-brand-soft/30"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-xs font-semibold text-brand-strong dark:text-sky-300">
+                    <span className="min-w-0 break-words text-xs font-semibold text-brand-strong [overflow-wrap:anywhere] dark:text-sky-300">
                       {src.title}
                     </span>
                     <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -581,7 +581,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                     </Badge>
                     <StatusBadge status={task.status} />
                   </div>
-                  <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  <h1 className="break-words text-xl font-bold tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-2xl">
                     {activeSubmission?.lessonTitle ??
                       (task.taskType === 'REVIEW'
                         ? `Ôn bài cũ môn ${task.subjectName}`
@@ -613,7 +613,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 xl:gap-8">
                 {/* Left / Main editor or immutable submission reader */}
-                <div className="space-y-4 lg:col-span-7 2xl:col-span-8">
+                <div className="min-w-0 space-y-4 lg:col-span-7 2xl:col-span-8">
                   {submissions.length > 0 ? (
                     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3">
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -872,10 +872,10 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3 pt-4">
-                        <p className="text-sm font-semibold text-foreground">
+                        <p className="break-words text-sm font-semibold text-foreground [overflow-wrap:anywhere]">
                           Bài: {activeSubmission.lessonTitle}
                         </p>
-                        <div className="whitespace-pre-wrap rounded-lg border bg-muted/25 p-4 text-sm leading-relaxed text-foreground">
+                        <div className="break-words whitespace-pre-wrap rounded-lg border bg-muted/25 p-4 text-sm leading-relaxed text-foreground [overflow-wrap:anywhere]">
                           {activeSubmission.content}
                         </div>
                         {submissions.length >= 3 ||
@@ -890,7 +890,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                 </div>
 
                 {/* Right / AI evaluation panel */}
-                <div className="lg:sticky lg:top-24 lg:col-span-5 lg:self-start 2xl:col-span-4">
+                <div className="min-w-0 lg:sticky lg:top-24 lg:col-span-5 lg:self-start 2xl:col-span-4">
                   <EvaluationPanel
                     submission={activeSubmission}
                     isEvaluating={isEvaluating}

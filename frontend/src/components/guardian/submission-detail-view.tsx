@@ -128,7 +128,7 @@ export function SubmissionDetailView({
                     </Badge>
                     <StatusBadge status={detail.status} />
                   </div>
-                  <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  <h1 className="break-words text-xl font-bold tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-2xl">
                     {activeVersion?.lessonTitle ?? 'Bài làm của học sinh'}
                   </h1>
                   <p className="text-xs text-muted-foreground">
@@ -167,7 +167,7 @@ export function SubmissionDetailView({
               {activeVersion ? (
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 xl:gap-8">
                   {/* Immutable student submission */}
-                  <Card className="lg:col-span-7 2xl:col-span-8">
+                  <Card className="min-w-0 overflow-hidden lg:col-span-7 2xl:col-span-8">
                     <CardHeader className="border-b pb-3.5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <CardTitle className="text-base">
@@ -179,10 +179,10 @@ export function SubmissionDetailView({
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3 pt-4">
-                      <p className="text-sm font-semibold text-foreground">
+                      <p className="break-words text-sm font-semibold text-foreground [overflow-wrap:anywhere]">
                         Tên bài: {activeVersion.lessonTitle}
                       </p>
-                      <div className="whitespace-pre-wrap rounded-lg border bg-muted/25 p-4 text-sm leading-relaxed text-foreground">
+                      <div className="break-words whitespace-pre-wrap rounded-lg border bg-muted/25 p-4 text-sm leading-relaxed text-foreground [overflow-wrap:anywhere]">
                         {activeVersion.content}
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -195,7 +195,7 @@ export function SubmissionDetailView({
                   </Card>
 
                   {/* Read-only AI Evaluation + Sources (Zero cost/token leak) */}
-                  <Card className="border-brand/25 lg:sticky lg:top-24 lg:col-span-5 lg:self-start 2xl:col-span-4">
+                  <Card className="min-w-0 overflow-hidden border-brand/25 lg:sticky lg:top-24 lg:col-span-5 lg:self-start 2xl:col-span-4">
                     <CardHeader className="border-b bg-brand-soft/35 pb-3.5 dark:bg-sky-950/30">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -228,7 +228,7 @@ export function SubmissionDetailView({
                             />
                           </div>
 
-                          <div className="rounded-lg border border-brand/20 bg-brand-soft/35 p-3.5 text-sm leading-relaxed text-foreground dark:bg-sky-950/25">
+                          <div className="break-words rounded-lg border border-brand/20 bg-brand-soft/35 p-3.5 text-sm leading-relaxed text-foreground [overflow-wrap:anywhere] dark:bg-sky-950/25">
                             {activeVersion.evaluation.feedback}
                           </div>
 
@@ -238,7 +238,7 @@ export function SubmissionDetailView({
                               <p className="text-xs font-bold uppercase tracking-wide text-rose-600 dark:text-rose-400">
                                 Điểm sai / chưa chính xác
                               </p>
-                              <ul className="list-disc space-y-1 pl-4 text-sm text-foreground">
+                              <ul className="list-disc space-y-1 pl-4 text-sm text-foreground [overflow-wrap:anywhere]">
                                 {activeVersion.evaluation.incorrectPoints.map(
                                   (point, idx) => (
                                     <li key={idx}>{point}</li>
@@ -253,7 +253,7 @@ export function SubmissionDetailView({
                               <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
                                 Điểm còn thiếu
                               </p>
-                              <ul className="list-disc space-y-1 pl-4 text-sm text-foreground">
+                              <ul className="list-disc space-y-1 pl-4 text-sm text-foreground [overflow-wrap:anywhere]">
                                 {activeVersion.evaluation.missingPoints.map(
                                   (point, idx) => (
                                     <li key={idx}>{point}</li>
@@ -283,7 +283,7 @@ export function SubmissionDetailView({
                                     className="block rounded-lg border bg-background p-2.5 transition-colors hover:border-brand hover:bg-brand-soft/30"
                                   >
                                     <div className="flex items-start justify-between gap-2">
-                                      <span className="text-xs font-semibold text-brand-strong dark:text-sky-300">
+                                      <span className="min-w-0 break-words text-xs font-semibold text-brand-strong [overflow-wrap:anywhere] dark:text-sky-300">
                                         {src.title}
                                       </span>
                                       <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />

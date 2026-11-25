@@ -248,7 +248,7 @@ export function GuardianDashboardView() {
       key: 'lessonTitle',
       header: 'Bài học',
       render: (row) => (
-        <span className="text-sm text-foreground">
+        <span className="block max-w-xs break-words text-sm text-foreground [overflow-wrap:anywhere]">
           {row.lessonTitle ?? 'Chưa nộp bài'}
         </span>
       ),
@@ -619,7 +619,7 @@ export function GuardianDashboardView() {
                             ? 'Ôn bài cũ'
                             : 'Soạn bài mới'}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="break-words text-sm text-muted-foreground [overflow-wrap:anywhere]">
                           {item.lessonTitle ?? 'Chưa nộp bài'}
                         </p>
                       </div>
@@ -644,7 +644,7 @@ export function GuardianDashboardView() {
                     ) : null}
 
                     {item.guardianNote ? (
-                      <p className="rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
+                      <p className="break-words rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground [overflow-wrap:anywhere]">
                         Lời nhắn của phụ huynh: &ldquo;{item.guardianNote}&rdquo;
                       </p>
                     ) : null}
