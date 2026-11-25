@@ -8,6 +8,7 @@ import {
   History,
   Loader2,
   Save,
+  Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -23,8 +24,14 @@ import {
 } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
-import { IS_MOCK_MODE, authService, timetableService } from '@/services';
+import {
+  IS_MOCK_MODE,
+  authService,
+  linkService,
+  timetableService,
+} from '@/services';
 import { useAuthStore } from '@/store/auth-store';
+import { useGuardianStore } from '@/store/guardian-store';
 import type { SubjectCode, TimetableEntryDto, Weekday } from '@/types';
 
 function makeCellKey(weekday: Weekday, subjectCode: SubjectCode): string {
@@ -36,6 +43,10 @@ export function TimetableView() {
   const runtime = useMockRuntime();
   const user = useAuthStore((state) => state.user);
   const syncUser = useAuthStore((state) => state.syncUser);
+  const selectedStudentId = useGuardianStore((state) => state.selectedStudentId);
+  const setSelectedStudentId = useGuardianStore(
+    (state) => state.setSelectedStudentId
+  );
   const [draftMap, setDraftMap] = useState<Map<string, TimetableEntryDto>>(
     () => new Map()
   );
@@ -45,7 +56,40 @@ export function TimetableView() {
     ? runtime.simulatedRole === 'STUDENT'
     : user?.role === 'STUDENT';
 
-  const activeGrade = isStudentMode ? (user?.grade ?? 6) : undefined;
+  const childrenQuery = useQuery({
+    queryKey: [
+      'linked-children',
+      runtime.resetCounter,
+      runtime.scenario,
+      runtime.simulatedRole,
+    ],
+    queryFn: () => linkService.getLinkedChildren(),
+    enabled: !isStudentMode,
+  });
+
+  useEffect(() => {
+    if (isStudentMode || !childrenQuery.data?.length) {
+      return;
+    }
+    const stillValid = childrenQuery.data.some(
+      (c) => c.studentId === selectedStudentId
+    );
+    if (!selectedStudentId || !stillValid) {
+      setSelectedStudentId(childrenQuery.data[0].studentId);
+    }
+  }, [
+    isStudentMode,
+    childrenQuery.data,
+    selectedStudentId,
+    setSelectedStudentId,
+  ]);
+
+  const activeChild = childrenQuery.data?.find(
+    (c) => c.studentId === selectedStudentId
+  );
+  const activeGrade = isStudentMode
+    ? (user?.grade ?? 6)
+    : activeChild?.grade;
   const subjectsQuery = useQuery({
     queryKey: ['subjects', activeGrade ?? 'all'],
     queryFn: () => timetableService.getSubjects(activeGrade),
@@ -85,8 +129,17 @@ export function TimetableView() {
   });
 
   const timetableQuery = useQuery({
-    queryKey: ['student-timetable', runtime.resetCounter, runtime.scenario, runtime.simulatedRole],
-    queryFn: () => timetableService.getTimetable(),
+    queryKey: [
+      'student-timetable',
+      isStudentMode ? 'self' : selectedStudentId,
+      runtime.resetCounter,
+      runtime.scenario,
+      runtime.simulatedRole,
+    ],
+    queryFn: () =>
+      timetableService.getTimetable(
+        isStudentMode ? undefined : (selectedStudentId ?? undefined)
+      ),
   });
 
   useEffect(() => {
@@ -107,10 +160,19 @@ export function TimetableView() {
 
   const saveMutation = useMutation({
     mutationFn: (entries: TimetableEntryDto[]) =>
-      timetableService.updateTimetable({ entries }),
+      timetableService.updateTimetable(
+        { entries },
+        isStudentMode ? undefined : (selectedStudentId ?? undefined)
+      ),
     onSuccess: (saved) => {
       queryClient.setQueryData(
-        ['student-timetable', runtime.resetCounter, runtime.scenario, runtime.simulatedRole],
+        [
+          'student-timetable',
+          isStudentMode ? 'self' : selectedStudentId,
+          runtime.resetCounter,
+          runtime.scenario,
+          runtime.simulatedRole,
+        ],
         saved
       );
       void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
@@ -183,6 +245,25 @@ export function TimetableView() {
                 </option>
               ))}
             </select>
+          ) : childrenQuery.data && childrenQuery.data.length > 0 ? (
+            <div className="flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+              <select
+                aria-label="Chọn học sinh chỉnh thời khóa biểu"
+                value={selectedStudentId ?? ''}
+                onChange={(e) => {
+                  const id = Number(e.target.value);
+                  setSelectedStudentId(Number.isFinite(id) ? id : null);
+                }}
+                className="h-11 rounded-lg border bg-background px-3 text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {childrenQuery.data.map((child) => (
+                  <option key={child.studentId} value={child.studentId}>
+                    {child.displayName} (Lớp {child.grade})
+                  </option>
+                ))}
+              </select>
+            </div>
           ) : null}
 
           <Button

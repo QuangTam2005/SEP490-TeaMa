@@ -35,6 +35,8 @@ export interface StudyTaskSummaryResponse {
   maxRevisions: number;
   currentLessonTitle: string | null;
   latestEvaluationStatus: AIEvaluationResponse['overallStatus'] | null;
+  guardianAcknowledgedAt?: string | null;
+  guardianNote?: string | null;
 }
 
 export interface NextDaySubjectPair {

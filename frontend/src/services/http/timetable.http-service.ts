@@ -12,7 +12,15 @@ export const timetableHttpService: TimetableService = {
       '/api/subjects',
       grade ? { params: { grade } } : undefined
     ),
-  getTimetable: () => apiGet<TimetableResponse>('/api/student/timetable'),
-  updateTimetable: (request: UpdateTimetableRequest) =>
-    apiPut<TimetableResponse>('/api/student/timetable', request),
+  getTimetable: (studentId?: number) =>
+    apiGet<TimetableResponse>(
+      '/api/student/timetable',
+      studentId ? { params: { studentId } } : undefined
+    ),
+  updateTimetable: (request: UpdateTimetableRequest, studentId?: number) =>
+    apiPut<TimetableResponse>(
+      '/api/student/timetable',
+      request,
+      studentId ? { params: { studentId } } : undefined
+    ),
 };

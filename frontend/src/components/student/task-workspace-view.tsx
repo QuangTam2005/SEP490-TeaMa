@@ -484,6 +484,19 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                 </div>
               </div>
 
+              {task.guardianAcknowledgedAt ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">
+                  <p className="font-semibold">
+                    Phụ huynh đã xem bài ({new Date(task.guardianAcknowledgedAt).toLocaleString('vi-VN')})
+                  </p>
+                  {task.guardianNote ? (
+                    <p className="mt-1 text-emerald-800 dark:text-emerald-300">
+                      Lời nhắn từ bố mẹ: &ldquo;{task.guardianNote}&rdquo;
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 {/* Left / Main editor or immutable submission reader */}
                 <div className="space-y-4 lg:col-span-7">

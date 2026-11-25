@@ -2,19 +2,27 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   BookOpenCheck,
+  CheckCircle2,
   Compass,
   ExternalLink,
+  HeartHandshake,
   History,
+  Loader2,
+  Send,
   Sparkles,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { StatusBadge } from '@/components/shared/status-badge';
+import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
 import { formatViDate } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
@@ -27,10 +35,12 @@ interface SubmissionDetailViewProps {
 export function SubmissionDetailView({
   submissionId,
 }: SubmissionDetailViewProps) {
+  const queryClient = useQueryClient();
   const runtime = useMockRuntime();
   const [selectedVersionId, setSelectedVersionId] = useState<number>(
     submissionId
   );
+  const [noteInput, setNoteInput] = useState('');
 
   const detailQuery = useQuery({
     queryKey: [
@@ -52,7 +62,26 @@ export function SubmissionDetailView({
         hasTarget ? submissionId : detailQuery.data.versions[0].id
       );
     }
+    if (detailQuery.data) {
+      setNoteInput(detailQuery.data.guardianNote ?? '');
+    }
   }, [detailQuery.data, submissionId]);
+
+  const acknowledgeMutation = useMutation({
+    mutationFn: (taskId: number) =>
+      guardianService.acknowledgeTask(taskId, { note: noteInput.trim() || null }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['guardian-submission', submissionId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+      toast.success('Đã xác nhận xem bài và gửi lời nhắn động viên cho con');
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
 
   return (
     <div className="space-y-5">
@@ -281,6 +310,60 @@ export function SubmissionDetailView({
                   </Card>
                 </div>
               ) : null}
+
+              {/* Parent Acknowledge & Encouragement Note Card */}
+              <Card className="border-emerald-200/80 bg-emerald-50/30 dark:border-emerald-900/60 dark:bg-emerald-950/15">
+                <CardHeader className="pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <HeartHandshake
+                        className="h-5 w-5 text-emerald-600 dark:text-emerald-400"
+                        strokeWidth={1.75}
+                      />
+                      Xác nhận của Phụ huynh &amp; Lời nhắn động viên
+                    </CardTitle>
+                    {detail.guardianAcknowledgedAt ? (
+                      <Badge variant="success" className="gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Đã xem lúc{' '}
+                        {new Date(detail.guardianAcknowledgedAt).toLocaleString(
+                          'vi-VN'
+                        )}
+                      </Badge>
+                    ) : null}
+                  </div>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Input
+                    value={noteInput}
+                    onChange={(e) => setNoteInput(e.target.value)}
+                    maxLength={300}
+                    placeholder="Viết lời khen hoặc dặn dò nhẹ nhàng gửi tới con (không bắt buộc)..."
+                    className="h-11 flex-1 bg-background"
+                  />
+                  <Button
+                    type="button"
+                    className="h-11 gap-2 px-5 font-semibold"
+                    disabled={
+                      !detail.taskId || acknowledgeMutation.isPending
+                    }
+                    onClick={() => {
+                      if (detail.taskId) {
+                        acknowledgeMutation.mutate(detail.taskId);
+                      }
+                    }}
+                  >
+                    {acknowledgeMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" strokeWidth={1.75} />
+                    )}
+                    {detail.guardianAcknowledgedAt
+                      ? 'Cập nhật xác nhận'
+                      : 'Bấm Đã xem & Gửi'}
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           );
         }}

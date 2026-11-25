@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -9,12 +9,20 @@ import {
   BookOpenCheck,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   Compass,
+  Download,
   Eye,
+  HeartHandshake,
+  Loader2,
   ShieldCheck,
   Sparkles,
+  Users,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,29 +32,76 @@ import {
 } from '@/components/shared/data-table';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { StatusBadge } from '@/components/shared/status-badge';
+import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
 import {
-  ALL_SUBJECTS,
   formatViDate,
   getNextTargetDateIso,
+  getSubjectsForGrade,
 } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
-import { guardianService } from '@/services';
+import { guardianService, linkService } from '@/services';
+import { useGuardianStore } from '@/store/guardian-store';
 import type { GuardianTaskItem, SubjectCode } from '@/types';
 
-const SUBJECT_FILTERS: { code: SubjectCode | 'ALL'; label: string }[] = [
-  { code: 'ALL', label: 'Tất cả môn' },
-  ...ALL_SUBJECTS.map((s) => ({ code: s.code, label: s.name })),
-];
+function shiftIsoDate(isoDate: string, days: number): string {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, (m || 1) - 1, d || 1));
+  dt.setUTCDate(dt.getUTCDate() + days);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getMondayIso(isoDate: string): string {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, (m || 1) - 1, d || 1));
+  const day = dt.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  dt.setUTCDate(dt.getUTCDate() + diff);
+  return dt.toISOString().slice(0, 10);
+}
 
 export function GuardianDashboardView() {
   const router = useRouter();
   const runtime = useMockRuntime();
+  const selectedStudentId = useGuardianStore((state) => state.selectedStudentId);
+  const setSelectedStudentId = useGuardianStore(
+    (state) => state.setSelectedStudentId
+  );
+
   const [selectedDate, setSelectedDate] = useState<string>(() =>
     getNextTargetDateIso()
   );
   const [selectedSubject, setSelectedSubject] = useState<SubjectCode | 'ALL'>(
     'ALL'
+  );
+  const [weekStart, setWeekStart] = useState<string>(() =>
+    getMondayIso(getNextTargetDateIso())
+  );
+  const [isExporting, setIsExporting] = useState(false);
+
+  const childrenQuery = useQuery({
+    queryKey: [
+      'linked-children',
+      runtime.resetCounter,
+      runtime.scenario,
+      runtime.simulatedRole,
+    ],
+    queryFn: () => linkService.getLinkedChildren(),
+  });
+
+  useEffect(() => {
+    const children = childrenQuery.data;
+    if (!children || children.length === 0) {
+      return;
+    }
+    const stillValid = children.some((c) => c.studentId === selectedStudentId);
+    if (!selectedStudentId || !stillValid) {
+      setSelectedStudentId(children[0].studentId);
+    }
+  }, [childrenQuery.data, selectedStudentId, setSelectedStudentId]);
+
+  const activeChild = childrenQuery.data?.find(
+    (c) => c.studentId === selectedStudentId
   );
 
   const dashboardQuery = useQuery({
@@ -54,6 +109,7 @@ export function GuardianDashboardView() {
       'guardian-dashboard',
       selectedDate,
       selectedSubject,
+      selectedStudentId,
       runtime.resetCounter,
       runtime.scenario,
       runtime.simulatedRole,
@@ -62,8 +118,56 @@ export function GuardianDashboardView() {
       guardianService.getDashboard({
         date: selectedDate,
         subjectCode: selectedSubject,
+        studentId: selectedStudentId ?? undefined,
       }),
   });
+
+  const weeklyQuery = useQuery({
+    queryKey: [
+      'guardian-weekly',
+      weekStart,
+      selectedStudentId,
+      runtime.resetCounter,
+      runtime.scenario,
+      runtime.simulatedRole,
+    ],
+    queryFn: () =>
+      guardianService.getWeeklySummary({
+        weekStart,
+        studentId: selectedStudentId ?? undefined,
+      }),
+  });
+
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await guardianService.exportReport({
+        studentId: selectedStudentId ?? undefined,
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bao-cao-hoc-tap-${selectedDate}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Đã tải báo cáo Excel thành công');
+    } catch (err) {
+      toast.error(extractApiErrorMessage(err));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const activeGrade = dashboardQuery.data?.grade ?? activeChild?.grade ?? 6;
+  const subjectFilters: { code: SubjectCode | 'ALL'; label: string }[] = [
+    { code: 'ALL', label: 'Tất cả môn' },
+    ...getSubjectsForGrade(activeGrade).map((s) => ({
+      code: s.code,
+      label: s.name,
+    })),
+  ];
 
   const columns: DataTableColumn<GuardianTaskItem>[] = [
     {
@@ -117,12 +221,17 @@ export function GuardianDashboardView() {
     },
     {
       key: 'revisions',
-      header: 'Phiên bản',
+      header: 'Xác nhận PH',
       align: 'center',
-      mono: true,
-      render: (row) => (
-        <span>{row.currentSubmissionId ? `${Math.min(row.revisionCount + 1, 3)}/3` : '0/3'}</span>
-      ),
+      render: (row) =>
+        row.guardianAcknowledgedAt ? (
+          <Badge variant="success" className="gap-1">
+            <HeartHandshake className="h-3 w-3" />
+            Đã xem
+          </Badge>
+        ) : (
+          <span className="text-xs text-muted-foreground">Chưa xem</span>
+        ),
     },
     {
       key: 'action',
@@ -166,24 +275,129 @@ export function GuardianDashboardView() {
           ) : null}
         </div>
 
-        <div className="flex items-center gap-2">
-          <CalendarDays
-            className="h-4 w-4 text-muted-foreground"
-            strokeWidth={1.75}
-          />
-          <Input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            aria-label="Chọn ngày theo dõi"
-            className="h-10 w-44"
-          />
+        <div className="flex flex-wrap items-center gap-2.5">
+          {childrenQuery.data && childrenQuery.data.length > 1 ? (
+            <div className="flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+              <select
+                aria-label="Chọn học sinh đang theo dõi"
+                value={selectedStudentId ?? ''}
+                onChange={(e) => {
+                  const id = Number(e.target.value);
+                  setSelectedStudentId(Number.isFinite(id) ? id : null);
+                  setSelectedSubject('ALL');
+                }}
+                className="h-10 rounded-lg border bg-background px-3 text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {childrenQuery.data.map((child) => (
+                  <option key={child.studentId} value={child.studentId}>
+                    {child.displayName} (Lớp {child.grade})
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+
+          <div className="flex items-center gap-2">
+            <CalendarDays
+              className="h-4 w-4 text-muted-foreground"
+              strokeWidth={1.75}
+            />
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              aria-label="Chọn ngày theo dõi"
+              className="h-10 w-44"
+            />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 gap-1.5"
+            disabled={isExporting || !dashboardQuery.data?.linkedStudentName}
+            onClick={() => void handleExportExcel()}
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" strokeWidth={1.75} />
+            )}
+            <span>Xuất Excel</span>
+          </Button>
         </div>
       </div>
 
+      {/* Weekly Progress Card */}
+      {weeklyQuery.data ? (
+        <Card>
+          <CardHeader className="flex flex-col gap-2 pb-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="text-base">
+                Tổng quan tuần ({formatViDate(weeklyQuery.data.weekStart)} –{' '}
+                {formatViDate(weeklyQuery.data.weekEnd)})
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Hoàn thành {weeklyQuery.data.completedTasks}/
+                {weeklyQuery.data.totalTasks} nhiệm vụ · Phụ huynh đã xem{' '}
+                {weeklyQuery.data.acknowledgedTasks} bài
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9"
+                aria-label="Tuần trước"
+                onClick={() => setWeekStart((prev) => shiftIsoDate(prev, -7))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9"
+                aria-label="Tuần sau"
+                onClick={() => setWeekStart((prev) => shiftIsoDate(prev, 7))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          {weeklyQuery.data.days.length > 0 ? (
+            <CardContent className="grid grid-cols-2 gap-2 sm:grid-cols-7">
+              {weeklyQuery.data.days.map((day) => (
+                <button
+                  key={day.date}
+                  type="button"
+                  onClick={() => setSelectedDate(day.date)}
+                  className={cn(
+                    'flex flex-col items-center rounded-lg border p-2.5 text-center transition-colors',
+                    selectedDate === day.date
+                      ? 'border-brand-strong bg-brand-soft/60 text-brand-strong dark:text-sky-200'
+                      : 'bg-background hover:bg-muted'
+                  )}
+                >
+                  <span className="text-xs font-semibold">{day.weekdayLabel}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {day.date.slice(5).split('-').reverse().join('/')}
+                  </span>
+                  <span className="mt-1 font-mono text-xs font-bold">
+                    {day.completedTasks}/{day.totalTasks}
+                  </span>
+                </button>
+              ))}
+            </CardContent>
+          ) : null}
+        </Card>
+      ) : null}
+
       {/* Subject filter pills */}
       <div className="flex flex-wrap gap-2">
-        {SUBJECT_FILTERS.map((filter) => (
+        {subjectFilters.map((filter) => (
           <button
             key={filter.code}
             type="button"
@@ -307,7 +521,19 @@ export function GuardianDashboardView() {
                       <div className="flex flex-wrap gap-1.5">
                         <StatusBadge status={item.evaluation.overallStatus} />
                         <StatusBadge status={item.evaluation.accuracy} />
+                        {item.guardianAcknowledgedAt ? (
+                          <Badge variant="success" className="gap-1">
+                            <HeartHandshake className="h-3 w-3" />
+                            Đã xem
+                          </Badge>
+                        ) : null}
                       </div>
+                    ) : null}
+
+                    {item.guardianNote ? (
+                      <p className="rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
+                        Lời nhắn của phụ huynh: &ldquo;{item.guardianNote}&rdquo;
+                      </p>
                     ) : null}
 
                     {item.currentSubmissionId ? (

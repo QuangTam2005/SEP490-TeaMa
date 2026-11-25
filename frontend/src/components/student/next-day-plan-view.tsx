@@ -76,6 +76,17 @@ function TaskActionButton({
             {task.revisionCount}/{task.maxRevisions} lần)
           </p>
         ) : null}
+
+        {task.guardianAcknowledgedAt ? (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-2.5 py-1.5 text-xs text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200">
+            <p className="font-semibold">Phụ huynh đã xem bài</p>
+            {task.guardianNote ? (
+              <p className="mt-0.5 text-emerald-700 dark:text-emerald-300">
+                &ldquo;{task.guardianNote}&rdquo;
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {isBlocked ? (

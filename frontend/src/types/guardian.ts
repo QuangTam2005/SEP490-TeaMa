@@ -35,6 +35,8 @@ export interface GuardianTaskItem {
     AIEvaluationResponse,
     'accuracy' | 'completeness' | 'overallStatus' | 'feedback' | 'evaluatedAt'
   > | null;
+  guardianAcknowledgedAt?: string | null;
+  guardianNote?: string | null;
 }
 
 export interface GuardianDashboardResponse {
@@ -50,6 +52,7 @@ export interface GuardianDashboardResponse {
 
 export interface GuardianSubmissionDetailResponse {
   submissionId: number;
+  taskId?: number | null;
   studentName: string;
   targetDate: string;
   subjectCode: SubjectCode;
@@ -57,5 +60,45 @@ export interface GuardianSubmissionDetailResponse {
   taskType: StudyTaskType;
   status: StudyTaskStatus;
   revisionCount: number;
+  guardianAcknowledgedAt?: string | null;
+  guardianNote?: string | null;
   versions: StudySubmissionResponse[];
+}
+
+export interface GuardianAcknowledgeRequest {
+  note?: string | null;
+}
+
+export interface GuardianAcknowledgeResponse {
+  taskId: number;
+  acknowledgedAt: string;
+  note: string | null;
+}
+
+export interface GuardianWeeklyDaySummary {
+  date: string;
+  weekdayLabel: string;
+  totalTasks: number;
+  completedTasks: number;
+  acknowledgedTasks: number;
+}
+
+export interface GuardianWeeklySubjectStat {
+  subjectCode: SubjectCode;
+  subjectName: string;
+  totalTasks: number;
+  completedTasks: number;
+}
+
+export interface GuardianWeeklySummaryResponse {
+  studentId: number;
+  studentName: string;
+  grade: number;
+  weekStart: string;
+  weekEnd: string;
+  totalTasks: number;
+  completedTasks: number;
+  acknowledgedTasks: number;
+  days: GuardianWeeklyDaySummary[];
+  subjects: GuardianWeeklySubjectStat[];
 }

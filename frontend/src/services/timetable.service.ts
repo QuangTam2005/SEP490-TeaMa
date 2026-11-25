@@ -6,6 +6,9 @@ import type {
 
 export interface TimetableService {
   getSubjects(grade?: number): Promise<SubjectResponse[]>;
-  getTimetable(): Promise<TimetableResponse>;
-  updateTimetable(request: UpdateTimetableRequest): Promise<TimetableResponse>;
+  getTimetable(studentId?: number): Promise<TimetableResponse>;
+  updateTimetable(
+    request: UpdateTimetableRequest,
+    studentId?: number
+  ): Promise<TimetableResponse>;
 }
