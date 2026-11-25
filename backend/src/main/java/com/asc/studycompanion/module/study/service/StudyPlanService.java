@@ -7,6 +7,8 @@ import com.asc.studycompanion.module.auth.entity.StudentProfile;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
 import com.asc.studycompanion.module.study.dto.NextDayStudyPlanResponse;
 import com.asc.studycompanion.module.study.dto.NextDaySubjectPair;
+import com.asc.studycompanion.module.study.dto.StudentStreakResponse;
+import com.asc.studycompanion.module.study.dto.StudyPlanHistoryItem;
 import com.asc.studycompanion.module.study.dto.StudyTaskSummaryResponse;
 import com.asc.studycompanion.module.study.entity.StudyPlan;
 import com.asc.studycompanion.module.study.entity.StudySubmission;
@@ -176,6 +178,92 @@ public class StudyPlanService {
 
         StudyPlan saved = studyPlanRepository.save(plan);
         return toPlanResponse(saved, saved.getTargetDate(), weekdayLabel, targetWeekday);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudyPlanHistoryItem> getPlanHistory(Long studentUserId, LocalDate fromDate, LocalDate toDate) {
+        StudentProfile student = studyAccessGuard.requireOwnedStudentProfile(studentUserId);
+        List<StudyPlan> plans = (fromDate != null && toDate != null)
+                ? studyPlanRepository.findAllByStudentIdAndTargetDateBetweenOrderByTargetDateDesc(
+                        student.getId(), fromDate, toDate)
+                : studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(student.getId());
+
+        return plans.stream()
+                .filter(plan -> !plan.getTasks().isEmpty())
+                .limit(30)
+                .map(plan -> {
+                    int weekday = plan.getTargetDate().getDayOfWeek().getValue();
+                    String weekdayLabel = WEEKDAY_LABELS.get(weekday - 1);
+                    NextDayStudyPlanResponse planDto = toPlanResponse(plan, plan.getTargetDate(), weekdayLabel, weekday);
+                    int totalTasks = plan.getTasks().size();
+                    int completedTasks = (int) plan.getTasks().stream()
+                            .filter(t -> t.getStatus() == StudyTaskStatus.EVALUATED)
+                            .count();
+                    return new StudyPlanHistoryItem(
+                            plan.getId(),
+                            plan.getTargetDate(),
+                            weekdayLabel,
+                            totalTasks,
+                            completedTasks,
+                            planDto.subjects()
+                    );
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public StudentStreakResponse getStreak(Long studentUserId) {
+        StudentProfile student = studyAccessGuard.requireOwnedStudentProfile(studentUserId);
+        ZoneId zoneId = ZoneId.of(resolveTimezone(student));
+        LocalDate today = LocalDate.now(clock.withZone(zoneId));
+        LocalDate tomorrow = today.plusDays(1);
+
+        List<LocalDate> completedDates = studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(student.getId())
+                .stream()
+                .filter(plan -> plan.getTasks().stream()
+                        .anyMatch(task -> task.getStatus() == StudyTaskStatus.EVALUATED))
+                .map(StudyPlan::getTargetDate)
+                .distinct()
+                .sorted()
+                .toList();
+
+        if (completedDates.isEmpty()) {
+            return new StudentStreakResponse(0, 0, 0, null);
+        }
+
+        int longestStreak = 1;
+        int running = 1;
+        for (int i = 1; i < completedDates.size(); i++) {
+            if (completedDates.get(i).equals(completedDates.get(i - 1).plusDays(1))) {
+                running++;
+                if (running > longestStreak) {
+                    longestStreak = running;
+                }
+            } else {
+                running = 1;
+            }
+        }
+
+        java.util.Set<LocalDate> dateSet = new java.util.HashSet<>(completedDates);
+        LocalDate anchor = dateSet.contains(tomorrow)
+                ? tomorrow
+                : (dateSet.contains(today) ? today : null);
+
+        int currentStreak = 0;
+        if (anchor != null) {
+            LocalDate cursor = anchor;
+            while (dateSet.contains(cursor)) {
+                currentStreak++;
+                cursor = cursor.minusDays(1);
+            }
+        }
+
+        return new StudentStreakResponse(
+                currentStreak,
+                longestStreak,
+                completedDates.size(),
+                completedDates.get(completedDates.size() - 1)
+        );
     }
 
     private NextDayStudyPlanResponse toPlanResponse(

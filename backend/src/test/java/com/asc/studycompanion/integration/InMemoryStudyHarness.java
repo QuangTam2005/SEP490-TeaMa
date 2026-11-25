@@ -415,6 +415,27 @@ final class InMemoryStudyHarness {
                                     && Objects.equals(p.getTargetDate(), date))
                             .findFirst();
                 });
+        lenient().when(studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(anyLong()))
+                .thenAnswer(inv -> {
+                    Long sId = inv.getArgument(0);
+                    return plans.stream()
+                            .filter(p -> Objects.equals(p.getStudent().getId(), sId))
+                            .sorted(Comparator.comparing(StudyPlan::getTargetDate).reversed())
+                            .toList();
+                });
+        lenient().when(studyPlanRepository.findAllByStudentIdAndTargetDateBetweenOrderByTargetDateDesc(
+                anyLong(), any(LocalDate.class), any(LocalDate.class)))
+                .thenAnswer(inv -> {
+                    Long sId = inv.getArgument(0);
+                    LocalDate from = inv.getArgument(1);
+                    LocalDate to = inv.getArgument(2);
+                    return plans.stream()
+                            .filter(p -> Objects.equals(p.getStudent().getId(), sId)
+                                    && !p.getTargetDate().isBefore(from)
+                                    && !p.getTargetDate().isAfter(to))
+                            .sorted(Comparator.comparing(StudyPlan::getTargetDate).reversed())
+                            .toList();
+                });
         lenient().when(studyPlanRepository.saveAndFlush(any(StudyPlan.class))).thenAnswer(inv -> persistPlan(inv.getArgument(0)));
         lenient().when(studyPlanRepository.save(any(StudyPlan.class))).thenAnswer(inv -> persistPlan(inv.getArgument(0)));
 

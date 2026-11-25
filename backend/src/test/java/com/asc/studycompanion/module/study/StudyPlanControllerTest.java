@@ -76,5 +76,23 @@ class StudyPlanControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.weekdayLabel").value("Thứ 2"))
                 .andExpect(jsonPath("$.data.hasSchedule").value(false));
+
+        when(studyPlanService.getPlanHistory(1L, null, null)).thenReturn(List.of(
+                new com.asc.studycompanion.module.study.dto.StudyPlanHistoryItem(
+                        5L, LocalDate.of(2026, 11, 29), "Chủ nhật", 2, 2, List.of()
+                )
+        ));
+        mockMvc.perform(get("/api/student/plans/history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].completedTasks").value(2));
+
+        when(studyPlanService.getStreak(1L)).thenReturn(
+                new com.asc.studycompanion.module.study.dto.StudentStreakResponse(4, 6, 12, LocalDate.of(2026, 11, 30))
+        );
+        mockMvc.perform(get("/api/student/streak"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.currentStreak").value(4))
+                .andExpect(jsonPath("$.data.longestStreak").value(6));
     }
 }

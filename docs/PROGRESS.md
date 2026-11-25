@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 7 In Progress (`[TASK-FEAT.1a]`–`[TASK-FEAT.1c]` Done; expanding Smart Otter production features & `850–3,000` char standard)  
+**Current Phase:** Phase 7 In Progress (`[TASK-FEAT.1a]`–`[TASK-FEAT.2a]` Done; expanding Smart Otter production features & `850–3,000` char standard)  
 **Last Updated:** 2026-11-25  
 
 ---

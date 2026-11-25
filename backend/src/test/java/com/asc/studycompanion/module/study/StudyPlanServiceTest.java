@@ -233,4 +233,47 @@ class StudyPlanServiceTest {
         assertNull(response.subjects().get(0).previewTask().currentLessonTitle());
         assertNull(response.subjects().get(0).previewTask().latestEvaluationStatus());
     }
+
+    @Test
+    void calculatesHistoryAndConsecutiveStudyStreakAcrossDays() {
+        StudentProfile student = StudentProfile.builder()
+                .id(10L)
+                .displayName("Khoi")
+                .grade(7)
+                .timezone("Asia/Ho_Chi_Minh")
+                .build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+
+        StudyTask done1 = StudyTask.builder().id(1L).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.EVALUATED).build();
+        StudyTask done2 = StudyTask.builder().id(2L).subject(math).taskType(StudyTaskType.PREVIEW).status(StudyTaskStatus.NOT_STARTED).build();
+        StudyTask done3 = StudyTask.builder().id(3L).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.EVALUATED).build();
+        StudyTask done4 = StudyTask.builder().id(4L).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.EVALUATED).build();
+        StudyTask oldDone = StudyTask.builder().id(5L).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.EVALUATED).build();
+
+        // Clock is 2026-11-29 (Sunday). Tomorrow = 2026-11-30.
+        // Consecutive completed days: 11-28, 11-29, 11-30 (streak = 3) + gap + older 4-day streak (11-20..11-23)
+        List<StudyPlan> plans = List.of(
+                StudyPlan.builder().id(1L).student(student).targetDate(LocalDate.of(2026, 11, 30)).tasks(List.of(done1, done2)).build(),
+                StudyPlan.builder().id(2L).student(student).targetDate(LocalDate.of(2026, 11, 29)).tasks(List.of(done3)).build(),
+                StudyPlan.builder().id(3L).student(student).targetDate(LocalDate.of(2026, 11, 28)).tasks(List.of(done4)).build(),
+                StudyPlan.builder().id(4L).student(student).targetDate(LocalDate.of(2026, 11, 23)).tasks(List.of(oldDone)).build(),
+                StudyPlan.builder().id(5L).student(student).targetDate(LocalDate.of(2026, 11, 22)).tasks(List.of(oldDone)).build(),
+                StudyPlan.builder().id(6L).student(student).targetDate(LocalDate.of(2026, 11, 21)).tasks(List.of(oldDone)).build(),
+                StudyPlan.builder().id(7L).student(student).targetDate(LocalDate.of(2026, 11, 20)).tasks(List.of(oldDone)).build()
+        );
+
+        when(studyAccessGuard.requireOwnedStudentProfile(1L)).thenReturn(student);
+        when(studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(10L)).thenReturn(plans);
+
+        var streak = studyPlanService.getStreak(1L);
+        assertEquals(3, streak.currentStreak());
+        assertEquals(4, streak.longestStreak());
+        assertEquals(7, streak.totalCompletedDays());
+        assertEquals(LocalDate.of(2026, 11, 30), streak.lastActiveDate());
+
+        var history = studyPlanService.getPlanHistory(1L, null, null);
+        assertEquals(7, history.size());
+        assertEquals(2, history.get(0).totalTasks());
+        assertEquals(1, history.get(0).completedTasks());
+    }
 }
