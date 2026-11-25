@@ -53,6 +53,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+        INTERNAL_API_URL: ${INTERNAL_API_URL:-http://backend:8080}
+        NEXT_PUBLIC_DATA_MODE: ${NEXT_PUBLIC_DATA_MODE:-api}
     container_name: asc-frontend
     restart: unless-stopped
     depends_on:
