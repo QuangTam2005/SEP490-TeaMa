@@ -24,12 +24,17 @@ import com.asc.studycompanion.module.timetable.entity.TimetableEntry;
 import com.asc.studycompanion.module.timetable.entity.TimetableStatus;
 import com.asc.studycompanion.module.timetable.repository.TimetableRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -59,6 +64,9 @@ public class StudyPlanService {
     @Value("${app.timezone:Asia/Ho_Chi_Minh}")
     private String appTimezone = "Asia/Ho_Chi_Minh";
 
+    @Autowired(required = false)
+    private PlatformTransactionManager transactionManager;
+
     private Clock clock = Clock.systemUTC();
 
     /**
@@ -71,7 +79,7 @@ public class StudyPlanService {
     @Transactional
     public NextDayStudyPlanResponse getNextDayPlan(Long studentUserId) {
         StudentProfile student = studyAccessGuard.requireOwnedStudentProfile(studentUserId);
-        ZoneId zoneId = ZoneId.of(resolveTimezone(student));
+        ZoneId zoneId = resolveZoneId(student);
         LocalDate targetDate = LocalDate.now(clock.withZone(zoneId)).plusDays(1);
         int targetWeekday = targetDate.getDayOfWeek().getValue();
         String weekdayLabel = WEEKDAY_LABELS.get(targetWeekday - 1);
@@ -124,15 +132,30 @@ public class StudyPlanService {
                     .build());
         }
 
-        StudyPlan savedPlan;
+        StudyPlan savedPlan = persistNewPlanSafely(newPlan, student.getId(), targetDate);
+        return toPlanResponse(savedPlan, targetDate, weekdayLabel, targetWeekday);
+    }
+
+    private StudyPlan persistNewPlanSafely(StudyPlan newPlan, Long studentId, LocalDate targetDate) {
+        if (transactionManager != null) {
+            TransactionTemplate requiresNew = new TransactionTemplate(transactionManager);
+            requiresNew.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            try {
+                StudyPlan persisted = requiresNew.execute(status -> studyPlanRepository.saveAndFlush(newPlan));
+                if (persisted != null && persisted.getId() != null) {
+                    return studyPlanRepository.findById(persisted.getId()).orElse(persisted);
+                }
+            } catch (DataIntegrityViolationException ex) {
+                return studyPlanRepository.findByStudentIdAndTargetDate(studentId, targetDate)
+                        .orElseThrow(() -> ex);
+            }
+        }
         try {
-            savedPlan = studyPlanRepository.saveAndFlush(newPlan);
+            return studyPlanRepository.saveAndFlush(newPlan);
         } catch (DataIntegrityViolationException ex) {
-            savedPlan = studyPlanRepository.findByStudentIdAndTargetDate(student.getId(), targetDate)
+            return studyPlanRepository.findByStudentIdAndTargetDate(studentId, targetDate)
                     .orElseThrow(() -> ex);
         }
-
-        return toPlanResponse(savedPlan, targetDate, weekdayLabel, targetWeekday);
     }
 
     private boolean canRefreshUnstartedPlan(StudyPlan plan, Timetable activeTimetable) {
@@ -155,14 +178,31 @@ public class StudyPlanService {
     ) {
         Map<SubjectCode, SubjectSlot> subjectSlots = extractDistinctSubjectsForWeekday(activeTimetable, targetWeekday);
         plan.setTimetable(activeTimetable);
-        plan.getTasks().clear();
 
         if (subjectSlots.isEmpty()) {
+            plan.getTasks().clear();
+            studyPlanRepository.flush();
             studyPlanRepository.delete(plan);
+            studyPlanRepository.flush();
             return new NextDayStudyPlanResponse(null, plan.getTargetDate(), weekdayLabel, false, List.of());
         }
 
+        // Flush deletions before inserting replacements so uq_study_tasks_plan_subject_type never collides
+        boolean removedAny = plan.getTasks().removeIf(
+                task -> task.getSubject() == null || !subjectSlots.containsKey(task.getSubject().getCode())
+        );
+        if (removedAny) {
+            studyPlanRepository.flush();
+        }
+
+        Set<SubjectCode> existingCodes = plan.getTasks().stream()
+                .map(task -> task.getSubject().getCode())
+                .collect(Collectors.toSet());
+
         for (SubjectSlot slot : subjectSlots.values()) {
+            if (existingCodes.contains(slot.subject().getCode())) {
+                continue;
+            }
             plan.getTasks().add(StudyTask.builder()
                     .plan(plan)
                     .subject(slot.subject())
@@ -179,7 +219,7 @@ public class StudyPlanService {
                     .build());
         }
 
-        StudyPlan saved = studyPlanRepository.save(plan);
+        StudyPlan saved = studyPlanRepository.saveAndFlush(plan);
         return toPlanResponse(saved, saved.getTargetDate(), weekdayLabel, targetWeekday);
     }
 
@@ -217,7 +257,7 @@ public class StudyPlanService {
     @Transactional(readOnly = true)
     public StudentStreakResponse getStreak(Long studentUserId) {
         StudentProfile student = studyAccessGuard.requireOwnedStudentProfile(studentUserId);
-        ZoneId zoneId = ZoneId.of(resolveTimezone(student));
+        ZoneId zoneId = resolveZoneId(student);
         LocalDate today = LocalDate.now(clock.withZone(zoneId));
         LocalDate tomorrow = today.plusDays(1);
 
@@ -444,9 +484,12 @@ public class StudyPlanService {
             Timetable timetable,
             int weekday
     ) {
+        if (timetable == null || timetable.getEntries() == null) {
+            return Map.of();
+        }
         Map<SubjectCode, SubjectSlot> slots = new LinkedHashMap<>();
         for (TimetableEntry entry : timetable.getEntries()) {
-            if (!Integer.valueOf(weekday).equals(entry.getWeekday())) {
+            if (!Integer.valueOf(weekday).equals(entry.getWeekday()) || entry.getSubject() == null) {
                 continue;
             }
             Subject subject = entry.getSubject();
@@ -474,9 +517,17 @@ public class StudyPlanService {
         return slots;
     }
 
+    private ZoneId resolveZoneId(StudentProfile student) {
+        try {
+            return ZoneId.of(resolveTimezone(student));
+        } catch (DateTimeException ex) {
+            return ZoneId.of(appTimezone);
+        }
+    }
+
     private String resolveTimezone(StudentProfile student) {
         return (student.getTimezone() != null && !student.getTimezone().isBlank())
-                ? student.getTimezone()
+                ? student.getTimezone().trim()
                 : appTimezone;
     }
 

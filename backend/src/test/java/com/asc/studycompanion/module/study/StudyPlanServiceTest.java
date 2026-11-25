@@ -23,6 +23,7 @@ import com.asc.studycompanion.module.timetable.repository.TimetableRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,6 +31,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -392,5 +395,77 @@ class StudyPlanServiceTest {
         var streak = studyPlanService.getStreak(1L);
         assertEquals(0, streak.currentStreak());
         assertEquals(2, streak.longestStreak());
+    }
+
+    @Test
+    void reconcilesUnstartedPlanSafelyAndFlushesRemovalsBeforeSaveWhenTimetableChanges() {
+        StudentProfile student = StudentProfile.builder()
+                .id(10L)
+                .displayName("Khoi")
+                .grade(7)
+                .timezone("Asia/Ho_Chi_Minh")
+                .build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        Subject lit = Subject.builder().id(2L).code(SubjectCode.LIT).name("Ngữ văn").build();
+        Subject tech = Subject.builder().id(13L).code(SubjectCode.TECH).name("Công nghệ").build();
+
+        Timetable oldTimetable = Timetable.builder().id(5L).version(1).entries(List.of()).build();
+        // Tomorrow is Monday (weekday = 1): remove LIT, keep MATH, add TECH
+        Timetable newTimetable = Timetable.builder()
+                .id(6L)
+                .version(2)
+                .entries(List.of(
+                        TimetableEntry.builder().id(10L).weekday(1).subject(math).periodNote("Tiết 1").build(),
+                        TimetableEntry.builder().id(11L).weekday(1).subject(tech).periodNote("Tiết 3").build()
+                ))
+                .build();
+
+        StudyTask existingMathReview = StudyTask.builder()
+                .id(101L).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.NOT_STARTED).revisionCount(0).build();
+        StudyTask existingMathPreview = StudyTask.builder()
+                .id(102L).subject(math).taskType(StudyTaskType.PREVIEW).status(StudyTaskStatus.BLOCKED).revisionCount(0).build();
+        StudyTask existingLitReview = StudyTask.builder()
+                .id(103L).subject(lit).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.NOT_STARTED).revisionCount(0).build();
+        StudyTask existingLitPreview = StudyTask.builder()
+                .id(104L).subject(lit).taskType(StudyTaskType.PREVIEW).status(StudyTaskStatus.BLOCKED).revisionCount(0).build();
+
+        StudyPlan existingPlan = StudyPlan.builder()
+                .id(85L)
+                .student(student)
+                .targetDate(LocalDate.of(2026, 11, 30))
+                .timetable(oldTimetable)
+                .tasks(new ArrayList<>(List.of(
+                        existingMathReview, existingMathPreview, existingLitReview, existingLitPreview
+                )))
+                .build();
+
+        when(studyAccessGuard.requireOwnedStudentProfile(1L)).thenReturn(student);
+        when(timetableRepository.findFirstByStudentIdAndStatusOrderByVersionDesc(10L, TimetableStatus.ACTIVE))
+                .thenReturn(Optional.of(newTimetable));
+        when(studyPlanRepository.findByStudentIdAndTargetDate(10L, LocalDate.of(2026, 11, 30)))
+                .thenReturn(Optional.of(existingPlan));
+        when(studyPlanRepository.saveAndFlush(any(StudyPlan.class))).thenAnswer(inv -> {
+            StudyPlan saved = inv.getArgument(0);
+            long nextId = 200L;
+            for (StudyTask t : saved.getTasks()) {
+                if (t.getId() == null) {
+                    t.setId(nextId++);
+                }
+            }
+            return saved;
+        });
+
+        NextDayStudyPlanResponse response = studyPlanService.getNextDayPlan(1L);
+
+        assertEquals(85L, response.planId());
+        assertEquals(2, response.subjects().size());
+        assertEquals(SubjectCode.MATH, response.subjects().get(0).subjectCode());
+        assertEquals(101L, response.subjects().get(0).reviewTask().id());
+        assertEquals(SubjectCode.TECH, response.subjects().get(1).subjectCode());
+        assertEquals("Tiết 3", response.subjects().get(1).periodNote());
+
+        InOrder order = inOrder(studyPlanRepository);
+        order.verify(studyPlanRepository).flush();
+        order.verify(studyPlanRepository).saveAndFlush(existingPlan);
     }
 }
