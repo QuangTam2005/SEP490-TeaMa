@@ -41,7 +41,7 @@
 ## Phase 3: Database Baseline & Auth/Link Backend (`backend/`)
 
 ### Task 4 — Khởi tạo Database Schema 14 bảng (Flyway) *(2 subtasks)*
-- [ ] `[TASK-BE.1a]` *(3 SP)* Tạo Flyway `V1__init_auth_and_curriculum_schema.sql` (`users`, `student_profiles`, `guardian_links`, `subjects` + seed 5 môn lớp 6, `timetables`, `timetable_entries`) & kiểm tra PostgreSQL migration
+- [x] `[TASK-BE.1a]` *(3 SP)* Tạo Flyway `V1__init_auth_and_curriculum_schema.sql` (`users`, `student_profiles`, `guardian_links`, `subjects` + seed 5 môn lớp 6, `timetables`, `timetable_entries`) & kiểm tra PostgreSQL migration
 - [ ] `[TASK-BE.1b]` *(3 SP)* Tạo Flyway `V2__init_study_and_ai_schema.sql` (`study_plans`, `study_tasks`, `study_submissions`, `ai_evaluations`, `source_references`, `ai_usage_logs`, `knowledge_cache`, `evaluation_jobs`) & xác nhận JPA `ddl-auto=validate`
 
 ### Task 5 — Nâng cấp Auth, Mã liên kết 8 ký tự & Anti-IDOR Guard *(3 subtasks)*

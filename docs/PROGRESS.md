@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 2 Completed (`[TASK-UI.1]`–`[TASK-UI.5]`) $\rightarrow$ Ready for Phase 3 (`Database Baseline & Auth/Link Backend`)  
+**Current Phase:** Phase 3 In Progress (`[TASK-BE.1a]` Completed — Flyway V1 Auth & Curriculum Schema)  
 **Last Updated:** 2026-11-25  
 
 ---
