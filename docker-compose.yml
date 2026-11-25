@@ -63,6 +63,7 @@ services:
       BRAVE_API_KEY: ${BRAVE_API_KEY:-}
       AI_MAX_SOURCES: ${AI_MAX_SOURCES:-3}
       AI_MAX_CONTEXT_TOKENS: ${AI_MAX_CONTEXT_TOKENS:-2048}
+      OPS_ADMIN_SECRET: ${OPS_ADMIN_SECRET:-}
       JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:+UseContainerSupport -XX:InitialRAMPercentage=25.0 -XX:MaxRAMPercentage=70.0 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/healthcheck"]

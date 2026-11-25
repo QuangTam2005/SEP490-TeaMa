@@ -1,6 +1,7 @@
 package com.asc.studycompanion.config;
 
 import com.asc.studycompanion.security.JwtAuthFilter;
+import com.asc.studycompanion.security.RateLimitFilter;
 import com.asc.studycompanion.security.RestAccessDeniedHandler;
 import com.asc.studycompanion.security.RestAuthenticationEntryPoint;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ class SecurityCorsTest {
     void corsConfigurationSplitsCommaSeparatedOriginsAndExposesContentDisposition() {
         SecurityConfig securityConfig = new SecurityConfig(
                 mock(JwtAuthFilter.class),
+                mock(RateLimitFilter.class),
                 mock(RestAuthenticationEntryPoint.class),
                 mock(RestAccessDeniedHandler.class)
         );

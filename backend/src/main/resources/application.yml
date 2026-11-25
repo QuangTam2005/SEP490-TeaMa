@@ -52,3 +52,9 @@ app:
       model: ${MIMO_MODEL_ID:mimo-v2-flash}
     brave:
       api-key: ${BRAVE_API_KEY:}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    auth-per-minute: ${RATE_LIMIT_AUTH_PER_MINUTE:15}
+    submit-per-minute: ${RATE_LIMIT_SUBMIT_PER_MINUTE:20}
+  ops:
+    admin-secret: ${OPS_ADMIN_SECRET:}

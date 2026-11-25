@@ -104,5 +104,5 @@
 - [x] `[TASK-FEAT.3c]` *(3 SP)* Đồng bộ toàn bộ `MockServices` (Account, Multi-Child, History, Streak, Acknowledge, Weekly) tương thích `1:1` với API thật
 
 ### Task 14 — Rate Limiting, Ops Telemetry & Full Verification *(2 subtasks)*
-- [ ] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
+- [x] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
 - [ ] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`

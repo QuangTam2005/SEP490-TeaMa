@@ -2,6 +2,7 @@ package com.asc.studycompanion.config;
 
 import com.asc.studycompanion.security.JwtAuthFilter;
 import com.asc.studycompanion.security.JwtProperties;
+import com.asc.studycompanion.security.RateLimitFilter;
 import com.asc.studycompanion.security.RestAccessDeniedHandler;
 import com.asc.studycompanion.security.RestAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final RateLimitFilter rateLimitFilter;
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
 
@@ -61,11 +63,13 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/healthcheck",
+                                "/api/ops/**",
                                 "/error"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitFilter, JwtAuthFilter.class);
 
         return http.build();
     }
