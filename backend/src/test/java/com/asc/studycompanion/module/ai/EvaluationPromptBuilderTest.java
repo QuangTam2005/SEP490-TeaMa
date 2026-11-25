@@ -62,6 +62,9 @@ class EvaluationPromptBuilderTest {
 
         String system = builder.buildSystemPrompt();
         assertTrue(system.contains("CHỐNG THAO TÚNG"));
+        assertTrue(system.contains("KHÔNG BẮT LỖI VẶT HÌNH THỨC"));
+        assertTrue(system.contains("viết hoa chữ cái đầu dòng"));
+        assertTrue(system.contains("gán nhầm dấu câu"));
         assertTrue(system.contains("<student_submission>"));
         assertTrue(system.contains("lặp câu/từ vô nghĩa"));
 
@@ -77,6 +80,7 @@ class EvaluationPromptBuilderTest {
         String engPrompt = builder.buildUserPrompt(englishPrimary);
         assertTrue(engPrompt.contains("Tiểu học"));
         assertTrue(engPrompt.contains("từ vựng mới"));
+        assertTrue(engPrompt.contains("bỏ qua chữ hoa đầu dòng"));
         assertTrue(engPrompt.contains("[/lesson_title]"));
         assertTrue(engPrompt.contains("[/student_submission]"));
         assertTrue(engPrompt.contains("INSUFFICIENT_EVIDENCE"));

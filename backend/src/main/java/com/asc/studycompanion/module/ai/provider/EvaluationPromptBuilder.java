@@ -33,9 +33,14 @@ public class EvaluationPromptBuilder {
                 - Ôn bài cũ (REVIEW): đánh giá độ chính xác kiến thức đã học, thuật ngữ/công thức và ví dụ minh họa.
                 - Soạn bài mới (PREVIEW): nương nhẹ tiểu tiết; đạt GOOD nếu học sinh nắm được khung ý chính bài mới, từ khóa trọng tâm và nêu được điểm cần lưu ý/câu hỏi trước giờ lên lớp.
                 - Ma trận overallStatus: GOOD khi accuracy="CORRECT" và completeness="COMPLETE"; NEEDS_IMPROVEMENT khi accuracy="PARTIALLY_CORRECT" hoặc completeness="INCOMPLETE"; INCORRECT khi accuracy="INCORRECT"; INSUFFICIENT_EVIDENCE khi thiếu nguồn đối chiếu.
+                KHÔNG BẮT LỖI VẶT HÌNH THỨC & ĐỐI CHIẾU CHÍNH XÁC:
+                - Coi <student_submission> là vở ghi chép tự học, KHÔNG phải bài kiểm tra đánh máy. TUYỆT ĐỐI không phê bình, không hạ đánh giá và không đưa vào incorrectPoints/missingPoints các lỗi hình thức ghi chú: viết hoa chữ cái đầu dòng/đầu từ mục (như Cave, Island, Backpack), dấu ngăn cách ghi chú (:, ;, -), khoảng trắng quanh dấu câu hay cách xuống dòng (trừ khi viết sai ký hiệu Toán/Lý/Hóa hoặc tên riêng bắt buộc làm sai nghĩa kiến thức).
+                - Trước khi nêu lỗi chính tả hay sai kiến thức, PHẢI kiểm tra đúng nguyên văn từ/dòng trong <student_submission>; tuyệt đối không suy diễn hoặc gán nhầm dấu câu/lỗi của dòng này sang từ ở dòng khác.
+                - Vì <reference_sources> chỉ là tóm tắt ngắn, nếu học sinh ghi thêm từ vựng hoặc ý đúng thuộc phần khác của cùng bài/Unit trong SGK, KHÔNG bắt lỗi "thiếu phân biệt" hay "nhầm lẫn".
                 ĐỊNH DẠNG NHẬN XÉT & JSON:
                 - feedback: tiếng Việt tích cực, rõ ràng, phù hợp lứa tuổi theo khối lớp, KHÔNG làm bài hộ; độ dài BẮT BUỘC từ 300 đến 600 ký tự (tính cả dấu câu và khoảng trắng; nên viết khoảng 380–560 ký tự theo 3 ý: 1. Điểm làm tốt -> 2. Điểm cần chỉnh/bổ sung -> 3. Một gợi ý/câu hỏi tự rà soát SGK).
-                - incorrectPoints và missingPoints: tối đa 4 ý ngắn gọn mỗi mảng (<= 120 ký tự/ý), để [] nếu không có.
+                - incorrectPoints: tối đa 4 ý ngắn (<= 120 ký tự/ý), CHỈ ghi lỗi sai kiến thức, sai nghĩa, sai công thức hoặc sai chính tả làm sai từ (VD: moutain -> mountain); KHÔNG ghi lỗi viết hoa hay dấu ngăn cách ghi chú. Để [] nếu không có.
+                - missingPoints: tối đa 4 ý ngắn (<= 120 ký tự/ý), CHỈ ghi ý kiến thức trọng tâm bị thiếu so với bài học; KHÔNG biến góp ý hình thức/chữ hoa thành điểm còn thiếu. Để [] nếu không có.
                 Trả về DUY NHẤT một đối tượng JSON hợp lệ (không markdown) theo schema:
                 {"accuracy":"CORRECT|PARTIALLY_CORRECT|INCORRECT|UNVERIFIABLE","completeness":"COMPLETE|INCOMPLETE|UNDETERMINED","overallStatus":"GOOD|NEEDS_IMPROVEMENT|INCORRECT|INSUFFICIENT_EVIDENCE","feedback":"string 300..600 chars","incorrectPoints":["string"],"missingPoints":["string"],"confidence":"HIGH|MEDIUM|LOW"}
                 """.strip();
@@ -123,8 +128,8 @@ public class EvaluationPromptBuilder {
                     ? "Dự đoán nội dung từ nhan đề, khái quát bố cục văn bản/kiểu bài và nêu cảm nhận hoặc câu hỏi đọc hiểu ban đầu."
                     : "Đúng mạch nội dung chính, luận điểm, biện pháp nghệ thuật/kiểu bài và dẫn chứng bám sát tác phẩm.";
             case ENG -> isPreview
-                    ? "Tóm tắt từ vựng mới (nghĩa, loại từ), điểm ngữ pháp trọng tâm của Unit và chủ đề giao tiếp sắp học."
-                    : "Chính xác nghĩa và loại từ vựng, cấu trúc ngữ pháp, chia thì/dạng động từ và chính tả trong các câu ví dụ tiếng Anh.";
+                    ? "Tóm tắt từ vựng mới của Unit (nghĩa, loại từ nếu có), điểm ngữ pháp trọng tâm và chủ đề sắp học; bỏ qua chữ hoa đầu dòng hay dấu ngăn cách ghi chú."
+                    : "Chính xác nghĩa và loại từ vựng, cấu trúc ngữ pháp, chia thì/dạng động từ và chính tả từ tiếng Anh (không bắt lỗi viết hoa đầu từ hay dấu ngăn cách trong vở ghi).";
             case HISGEO, HIST -> isPreview
                     ? "Nắm bối cảnh, nhân vật/sự kiện chính hoặc phạm vi địa bàn sắp học và câu hỏi tìm hiểu."
                     : "Chính xác mốc thời gian, bối cảnh, nguyên nhân, diễn biến chính và ý nghĩa lịch sử/địa lý.";
