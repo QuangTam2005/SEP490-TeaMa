@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 3 In Progress (`[TASK-BE.1a]` Completed — Flyway V1 Auth & Curriculum Schema)  
+**Current Phase:** Phase 3 In Progress (`[TASK-BE.1b]` Completed — All 14 Flyway Schema Tables Ready)  
 **Last Updated:** 2026-11-25  
 
 ---

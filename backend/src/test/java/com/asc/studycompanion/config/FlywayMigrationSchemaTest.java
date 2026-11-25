@@ -29,4 +29,24 @@ class FlywayMigrationSchemaTest {
         assertTrue(sql.contains("'SCI'"));
         assertTrue(sql.contains("'HISGEO'"));
     }
+
+    @Test
+    void v2MigrationContainsAllStudyAndAiTablesWithDomainConstraints() throws IOException {
+        ClassPathResource resource = new ClassPathResource("db/migration/V2__init_study_and_ai_schema.sql");
+        assertTrue(resource.exists(), "V2 migration must exist on classpath");
+
+        String sql = resource.getContentAsString(StandardCharsets.UTF_8);
+        assertTrue(sql.contains("CREATE TABLE study_plans"));
+        assertTrue(sql.contains("CREATE TABLE study_tasks"));
+        assertTrue(sql.contains("CREATE TABLE study_submissions"));
+        assertTrue(sql.contains("CREATE TABLE ai_evaluations"));
+        assertTrue(sql.contains("CREATE TABLE source_references"));
+        assertTrue(sql.contains("CREATE TABLE evaluation_jobs"));
+        assertTrue(sql.contains("CREATE TABLE ai_usage_logs"));
+        assertTrue(sql.contains("CREATE TABLE knowledge_cache"));
+
+        assertTrue(sql.contains("BETWEEN 850 AND 2000"));
+        assertTrue(sql.contains("BETWEEN 1 AND 4"));
+        assertTrue(sql.contains("feedback VARCHAR(600)"));
+    }
 }
