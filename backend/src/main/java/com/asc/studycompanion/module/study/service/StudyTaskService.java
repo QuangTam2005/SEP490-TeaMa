@@ -14,6 +14,7 @@ import com.asc.studycompanion.module.study.dto.StudyTaskDetailResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskSummaryResponse;
 import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
+import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
@@ -102,7 +103,8 @@ public class StudyTaskService {
                         task.getSubject().getId(),
                         StudyTaskType.REVIEW
                 )
-                .map(reviewTask -> studySubmissionRepository.existsByTaskId(reviewTask.getId()))
+                .map(reviewTask -> reviewTask.getStatus() == StudyTaskStatus.SKIPPED
+                        || studySubmissionRepository.existsByTaskId(reviewTask.getId()))
                 .orElse(false);
     }
 

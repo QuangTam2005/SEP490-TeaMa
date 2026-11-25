@@ -19,6 +19,8 @@ import type {
   GuardianAcknowledgeRequest,
   GuardianAcknowledgeResponse,
   GuardianDashboardResponse,
+  GuardianSkipTaskRequest,
+  GuardianSkipTaskResponse,
   GuardianSubmissionDetailResponse,
   GuardianWeeklyDaySummary,
   GuardianWeeklySummaryResponse,
@@ -123,6 +125,83 @@ export const guardianMockService: GuardianService = {
     );
   },
 
+  async skipTask(
+    taskId: number,
+    request: GuardianSkipTaskRequest
+  ): Promise<GuardianSkipTaskResponse> {
+    return runMockOperation(
+      () => {
+        const state = getMockStudyState();
+        const shouldSkip = request.skipped;
+        const normalizedNote = request.note?.trim() || null;
+
+        for (const bucket of state.buckets) {
+          for (const detail of [bucket.reviewTask, bucket.previewTask]) {
+            if (detail.task.id !== taskId) {
+              continue;
+            }
+            if (
+              detail.submissions.length > 0 ||
+              detail.task.status === 'EVALUATING' ||
+              detail.task.status === 'EVALUATED' ||
+              detail.task.status === 'EVALUATION_FAILED' ||
+              detail.task.status === 'SUBMITTED'
+            ) {
+              throw new ApiClientError({
+                status: 400,
+                errorCode: 'VAL_001',
+                message: shouldSkip
+                  ? 'Không thể bỏ qua bài học đã được học sinh nộp.'
+                  : 'Không thể khôi phục bài học đã có bài nộp.',
+              });
+            }
+
+            if (shouldSkip) {
+              detail.task.status = 'SKIPPED';
+              if (normalizedNote) {
+                detail.task.guardianNote = normalizedNote;
+              }
+              if (detail.task.taskType === 'REVIEW') {
+                bucket.previewTask.reviewCompleted = true;
+                if (bucket.previewTask.task.status === 'BLOCKED') {
+                  bucket.previewTask.task.status = 'NOT_STARTED';
+                }
+              }
+            } else {
+              detail.task.guardianNote = null;
+              if (detail.task.taskType === 'REVIEW') {
+                detail.task.status = 'NOT_STARTED';
+                if (
+                  bucket.previewTask.task.status === 'NOT_STARTED' &&
+                  bucket.previewTask.submissions.length === 0
+                ) {
+                  bucket.previewTask.reviewCompleted = false;
+                  bucket.previewTask.task.status = 'BLOCKED';
+                }
+              } else {
+                const reviewCleared =
+                  bucket.reviewTask.task.status === 'SKIPPED' ||
+                  bucket.reviewTask.submissions.length > 0;
+                detail.task.status = reviewCleared ? 'NOT_STARTED' : 'BLOCKED';
+              }
+            }
+            return {
+              taskId,
+              status: detail.task.status,
+              guardianNote: detail.task.guardianNote ?? null,
+            };
+          }
+        }
+        throw new ApiClientError({
+          status: 404,
+          errorCode: 'STUDY_001',
+          message: 'Không tìm thấy nhiệm vụ học tập.',
+        });
+      },
+      { requireRole: 'GUARDIAN' }
+    );
+  },
+
   async getWeeklySummary(
     params?: GuardianWeeklyParams
   ): Promise<GuardianWeeklySummaryResponse> {
@@ -146,7 +225,8 @@ export const guardianMockService: GuardianService = {
             const dateIso = dt.toISOString().slice(0, 10);
             const weekday: Weekday = getWeekdayFromIsoDate(dateIso);
             const matchesTarget = dateIso === state.targetDate;
-            const dayTotal = matchesTarget ? allTasks.length : 0;
+            const activeTasks = allTasks.filter((t) => t.status !== 'SKIPPED');
+            const dayTotal = matchesTarget ? activeTasks.length : 0;
             const dayCompleted = matchesTarget
               ? allTasks.filter((t) => t.status === 'EVALUATED').length
               : 0;
@@ -163,13 +243,14 @@ export const guardianMockService: GuardianService = {
           }
         );
 
+        const activeTasks = allTasks.filter((t) => t.status !== 'SKIPPED');
         return {
           studentId: meta.studentId,
           studentName: meta.name,
           grade: meta.grade,
           weekStart: days[0].date,
           weekEnd: days[6].date,
-          totalTasks: allTasks.length,
+          totalTasks: activeTasks.length,
           completedTasks: allTasks.filter((t) => t.status === 'EVALUATED').length,
           acknowledgedTasks: allTasks.filter((t) => Boolean(t.guardianAcknowledgedAt))
             .length,
@@ -179,7 +260,7 @@ export const guardianMockService: GuardianService = {
             return {
               subjectCode: b.subjectCode,
               subjectName: b.reviewTask.task.subjectName,
-              totalTasks: pair.length,
+              totalTasks: pair.filter((t) => t.status !== 'SKIPPED').length,
               completedTasks: pair.filter((t) => t.status === 'EVALUATED').length,
             };
           }),

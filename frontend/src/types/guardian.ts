@@ -75,6 +75,17 @@ export interface GuardianAcknowledgeResponse {
   note: string | null;
 }
 
+export interface GuardianSkipTaskRequest {
+  skipped: boolean;
+  note?: string | null;
+}
+
+export interface GuardianSkipTaskResponse {
+  taskId: number;
+  status: StudyTaskStatus;
+  guardianNote: string | null;
+}
+
 export interface GuardianWeeklyDaySummary {
   date: string;
   weekdayLabel: string;

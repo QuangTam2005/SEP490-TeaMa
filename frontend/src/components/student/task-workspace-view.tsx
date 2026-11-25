@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Send,
   ShieldAlert,
+  SkipForward,
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -456,6 +457,40 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
             submissions[0] ??
             null;
 
+          if (task.status === 'SKIPPED') {
+            return (
+              <Card className="mx-auto max-w-xl">
+                <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <SkipForward className="h-6 w-6" strokeWidth={1.75} />
+                  </div>
+                  <div className="space-y-1">
+                    <h1 className="text-lg font-bold text-foreground">
+                      Nhiệm vụ đã được phụ huynh bỏ qua ({task.subjectName})
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      Phụ huynh đã đánh dấu con không cần làm bài{' '}
+                      <strong>
+                        {task.taskType === 'REVIEW'
+                          ? 'Ôn bài cũ'
+                          : 'Soạn bài mới'}
+                      </strong>{' '}
+                      này trong ngày học {formatViDate(detail.targetDate)}.
+                    </p>
+                    {task.guardianNote ? (
+                      <p className="mt-2 rounded-lg border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                        Ghi chú phụ huynh: &ldquo;{task.guardianNote}&rdquo;
+                      </p>
+                    ) : null}
+                  </div>
+                  <Button asChild className="h-11 gap-2">
+                    <Link href="/student/today">Về danh sách bài học</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          }
+
           if (isPreviewLocked) {
             return (
               <Card className="mx-auto max-w-xl">
@@ -673,7 +708,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                               setContent(nextValue);
                             }}
                             rows={14}
-                            placeholder="Con tự gõ các ý chính đã học hoặc tóm tắt bài mới bằng lời hiểu của mình (850–3.000 ký tự, không hỗ trợ dán văn bản)..."
+                            placeholder="Con tự gõ các ý chính đã học hoặc tóm tắt bài mới bằng lời hiểu của mình (400–3.000 ký tự, không hỗ trợ dán văn bản)..."
                             className="min-h-[300px] w-full rounded-lg border bg-background p-3.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:min-h-[420px]"
                           />
 

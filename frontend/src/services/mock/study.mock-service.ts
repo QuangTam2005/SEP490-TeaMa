@@ -499,7 +499,7 @@ export const studyMockService: StudyService = {
             planId: 1,
             targetDate: planState.targetDate,
             weekdayLabel: planState.weekdayLabel,
-            totalTasks: allTasks.length,
+            totalTasks: allTasks.filter((t) => t.status !== 'SKIPPED').length,
             completedTasks: allTasks.filter((t) => t.status === 'EVALUATED').length,
             subjects,
           },

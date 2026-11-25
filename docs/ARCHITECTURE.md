@@ -122,7 +122,7 @@ flowchart TB
 ## 4. Key Architectural Flows
 
 ### 4.1 Immutable Submission & Async AI Evaluation Pipeline (`BR-13`, `BR-14`, `FR-OPS-01..05`)
-1. Client validates `title` non-blank and `countNormalizedChars(content)` in `[850, 3000]` before enabling `Submit` (**zero AI calls while typing**; `localStorage` draft optional).
+1. Client validates `title` non-blank and `countNormalizedChars(content)` in `[400, 3000]` before enabling `Submit` (**zero AI calls while typing**; `localStorage` draft optional).
 2. Student sends `POST /api/study/tasks/{taskId}/submissions` with `Idempotency-Key` header.
 3. `StudyService` validates task ownership, `REVIEW` completion lock (if `PREVIEW`), revision quota (`max 3 updates after AI feedback` $\rightarrow$ max `4` versions, and blocks while `EVALUATING`), normalizes/counts characters identically to frontend, and **persists `StudySubmission` + `EvaluationJob` (`PENDING`) atomically in PostgreSQL before any external HTTP call**.
 4. Async Worker picks up `EvaluationJob`:

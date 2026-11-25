@@ -275,49 +275,49 @@ class AcceptanceCoreFlowsTest {
         long previewTaskId = pair.get("previewTask").get("id").asLong();
 
         // AC-08: Attempting PREVIEW before REVIEW returns 400 STUDY_003
-        String valid850Content = "A".repeat(850);
+        String valid400Content = "A".repeat(400);
         h.mockMvc.perform(post("/api/student/tasks/" + previewTaskId + "/submissions")
                         .header("Authorization", "Bearer " + studentJwt)
                         .header("Idempotency-Key", "idem-preview-blocked")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(h.objectMapper.writeValueAsString(Map.of(
                                 "lessonTitle", "Bài 3: Phép cộng số tự nhiên",
-                                "content", valid850Content,
+                                "content", valid400Content,
                                 "idempotencyKey", "idem-preview-blocked"
                         ))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("STUDY_003"));
 
-        // AC-09: Content with CRLF + trailing spaces summing to 849 chars fails BR-12 (STUDY_004)
-        String short849 = "   " + "B".repeat(848) + "\r\n   ";
-        // "B"*848 + "\n"? Let's verify exact normalized length = 849: 847 + "\r\n" + "C" -> 847 + 1 + 1 = 849
-        String exact849 = "   " + "B".repeat(847) + "\r\nC   ";
+        // AC-09: Content with CRLF + trailing spaces summing to 399 chars fails BR-12 (STUDY_004)
+        String short399 = "   " + "B".repeat(398) + "\r\n   ";
+        // Exact normalized length = 399: 397 + "\n" + "C" = 399
+        String exact399 = "   " + "B".repeat(397) + "\r\nC   ";
         h.mockMvc.perform(post("/api/student/tasks/" + reviewTaskId + "/submissions")
                         .header("Authorization", "Bearer " + studentJwt)
-                        .header("Idempotency-Key", "idem-short-849")
+                        .header("Idempotency-Key", "idem-short-399")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(h.objectMapper.writeValueAsString(Map.of(
                                 "lessonTitle", "Bài 2: Tập hợp các số tự nhiên",
-                                "content", exact849,
-                                "idempotencyKey", "idem-short-849"
+                                "content", exact399,
+                                "idempotencyKey", "idem-short-399"
                         ))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("STUDY_004"));
 
-        // AC-09: 850 normalized chars succeeds -> v1 EVALUATING, PREVIEW unlocked to NOT_STARTED
-        String exact850WithCrlf = "  " + "X".repeat(848) + "\r\nY  ";
+        // AC-09: 400 normalized chars succeeds -> v1 EVALUATING, PREVIEW unlocked to NOT_STARTED
+        String exact400WithCrlf = "  " + "X".repeat(398) + "\r\nY  ";
         MvcResult v1Res = h.mockMvc.perform(post("/api/student/tasks/" + reviewTaskId + "/submissions")
                         .header("Authorization", "Bearer " + studentJwt)
                         .header("Idempotency-Key", "idem-v1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(h.objectMapper.writeValueAsString(Map.of(
                                 "lessonTitle", "Bài 2: Tập hợp các số tự nhiên",
-                                "content", exact850WithCrlf,
+                                "content", exact400WithCrlf,
                                 "idempotencyKey", "idem-v1"
                         ))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.version").value(1))
-                .andExpect(jsonPath("$.data.charCount").value(850))
+                .andExpect(jsonPath("$.data.charCount").value(400))
                 .andReturn();
         long v1SubId = readData(h, v1Res).get("id").asLong();
 
@@ -336,7 +336,7 @@ class AcceptanceCoreFlowsTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(h.objectMapper.writeValueAsString(Map.of(
                                 "lessonTitle", "Bài 2: Tập hợp các số tự nhiên",
-                                "content", exact850WithCrlf,
+                                "content", exact400WithCrlf,
                                 "idempotencyKey", "idem-v1"
                         ))))
                 .andExpect(status().isCreated())
@@ -350,7 +350,7 @@ class AcceptanceCoreFlowsTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(h.objectMapper.writeValueAsString(Map.of(
                                 "lessonTitle", "Bài 2: Bản sửa v2",
-                                "content", valid850Content,
+                                "content", valid400Content,
                                 "idempotencyKey", "idem-while-eval"
                         ))))
                 .andExpect(status().isConflict())
@@ -408,7 +408,7 @@ class AcceptanceCoreFlowsTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(h.objectMapper.writeValueAsString(Map.of(
                                 "lessonTitle", "Bài 2: Bản v4 bị chặn",
-                                "content", valid850Content,
+                                "content", valid400Content,
                                 "idempotencyKey", "idem-v4-blocked"
                         ))))
                 .andExpect(status().isBadRequest())
@@ -453,14 +453,14 @@ class AcceptanceCoreFlowsTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(h.objectMapper.writeValueAsString(Map.of(
                                 "lessonTitle", "Bài 3: Phép cộng và phép nhân",
-                                "content", valid850Content,
+                                "content", valid400Content,
                                 "idempotencyKey", "idem-preview-v1"
                         ))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.version").value(1));
 
-        // Also assert short849 helper was not accidentally used over exact849
-        assertFalse(short849.trim().length() == 850);
+        // Also assert short399 helper was not accidentally used over exact399
+        assertFalse(short399.trim().length() == 400);
         assertTrue(h.plans.size() == 1);
     }
 

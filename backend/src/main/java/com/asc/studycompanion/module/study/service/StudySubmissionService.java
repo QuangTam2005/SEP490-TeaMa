@@ -60,6 +60,10 @@ public class StudySubmissionService {
                 .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
         studyAccessGuard.assertStudentOwner(studentUserId, task.getPlan().getStudent().getId());
 
+        if (task.getStatus() == StudyTaskStatus.SKIPPED) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Nhiệm vụ này đã được phụ huynh đánh dấu bỏ qua");
+        }
+
         if (task.getTaskType() == StudyTaskType.PREVIEW) {
             ensureReviewSubmittedFirst(task);
         }
@@ -155,7 +159,8 @@ public class StudySubmissionService {
                         previewTask.getSubject().getId(),
                         StudyTaskType.REVIEW
                 )
-                .map(review -> studySubmissionRepository.existsByTaskId(review.getId()))
+                .map(review -> review.getStatus() == StudyTaskStatus.SKIPPED
+                        || studySubmissionRepository.existsByTaskId(review.getId()))
                 .orElse(false);
 
         if (!reviewExists) {

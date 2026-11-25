@@ -468,4 +468,49 @@ class StudyPlanServiceTest {
         order.verify(studyPlanRepository).flush();
         order.verify(studyPlanRepository).saveAndFlush(existingPlan);
     }
+
+    @Test
+    void preservesStreakWhenEntireDayIsMarkedSkippedByGuardian() {
+        StudentProfile student = StudentProfile.builder()
+                .id(10L)
+                .displayName("Khoi")
+                .grade(7)
+                .timezone("Asia/Ho_Chi_Minh")
+                .build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+
+        Timetable monToFriTimetable = Timetable.builder()
+                .id(50L)
+                .student(student)
+                .status(TimetableStatus.ACTIVE)
+                .entries(List.of(
+                        TimetableEntry.builder().weekday(1).subject(math).build(),
+                        TimetableEntry.builder().weekday(2).subject(math).build(),
+                        TimetableEntry.builder().weekday(3).subject(math).build(),
+                        TimetableEntry.builder().weekday(4).subject(math).build(),
+                        TimetableEntry.builder().weekday(5).subject(math).build()
+                ))
+                .build();
+
+        StudyTask evalTask = StudyTask.builder().id(1L).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.EVALUATED).build();
+        StudyTask skippedTask = StudyTask.builder().id(2L).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.SKIPPED).build();
+
+        // Thu 2026-11-26 evaluated, Fri 2026-11-27 all SKIPPED, Mon 2026-11-30 evaluated -> streak = 2 (not broken by skipped Friday)
+        List<StudyPlan> plans = List.of(
+                StudyPlan.builder().id(3L).student(student).targetDate(LocalDate.of(2026, 11, 30)).tasks(List.of(evalTask)).build(),
+                StudyPlan.builder().id(2L).student(student).targetDate(LocalDate.of(2026, 11, 27)).tasks(List.of(skippedTask)).build(),
+                StudyPlan.builder().id(1L).student(student).targetDate(LocalDate.of(2026, 11, 26)).tasks(List.of(evalTask)).build()
+        );
+
+        when(studyAccessGuard.requireOwnedStudentProfile(1L)).thenReturn(student);
+        when(timetableRepository.findFirstByStudentIdAndStatusOrderByVersionDesc(10L, TimetableStatus.ACTIVE))
+                .thenReturn(Optional.of(monToFriTimetable));
+        when(studyPlanRepository.findAllByStudentIdOrderByTargetDateDesc(10L)).thenReturn(plans);
+
+        studyPlanService.setClock(Clock.fixed(Instant.parse("2026-11-29T15:00:00Z"), ZoneOffset.UTC));
+        var streak = studyPlanService.getStreak(1L);
+        assertEquals(2, streak.currentStreak());
+        assertEquals(2, streak.longestStreak());
+        assertEquals(2, streak.totalCompletedDays());
+    }
 }

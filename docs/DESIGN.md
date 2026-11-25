@@ -19,11 +19,11 @@
   - `NEEDS_IMPROVEMENT` / `PARTIALLY_CORRECT` / `INCOMPLETE` / `EVALUATING`: Amber (`#B45309` trên `#FFFBEB`)
   - `INCORRECT` / `EVALUATION_FAILED`: Rose (`#B91C1C` trên `#FEF2F2`)
   - `SUBMITTED` / `IN_PROGRESS`: Blue (`#1D4ED8` trên `#EFF6FF`)
-  - `NOT_STARTED` / `BLOCKED` / `INSUFFICIENT_EVIDENCE` / `UNVERIFIABLE` / `UNDETERMINED`: Slate (`#475569` trên `#F1F5F9`)
+  - `NOT_STARTED` / `BLOCKED` / `SKIPPED` / `INSUFFICIENT_EVIDENCE` / `UNVERIFIABLE` / `UNDETERMINED`: Slate (`#475569` trên `#F1F5F9`)
 
 ## 2. Typography & Iconography
 - **Primary Font:** `Be Vietnam Pro` (`subsets: ['vietnamese', 'latin']`).
-- **Monospace Font:** `JetBrains Mono` (`tabular-nums`) cho bộ đếm ký tự (`850 / 3,000`), mã môn (`MATH`, `LIT`, `ENG`, ...), phiên bản (`v1`..`v3`), mã liên kết (`8` ký tự) và ngày mục tiêu.
+- **Monospace Font:** `JetBrains Mono` (`tabular-nums`) cho bộ đếm ký tự (`400 / 3,000`), mã môn (`MATH`, `LIT`, `ENG`, ...), phiên bản (`v1`..`v3`), mã liên kết (`8` ký tự) và ngày mục tiêu.
 - **Icons:** Duy nhất `lucide-react` (`strokeWidth={1.75}`), kèm `Shadcn Tooltip`.
 
 ## 3. Application Shell & Screens (`SRS §8.1`)
@@ -35,7 +35,7 @@
    - `/student/today`: Ngày mục tiêu là ngày mai (`Asia/Ho_Chi_Minh`) để chuẩn bị trước cho lịch học ngày mai (VD: thứ Hai học Toán $\rightarrow$ Chủ nhật làm bài Toán), mỗi môn gồm 2 nhiệm vụ tuần tự **`Ôn bài cũ (Review)`** và **`Soạn bài mới (Preview)`**.
    - `/student/timetable`: Cho phép chọn/cập nhật khối lớp của bé + Lưới **7 ngày (`T2`–`CN`) × 5 môn cố định**, lưu phiên bản lịch hiện hành.
    - `/student/tasks/[taskId]`:
-     - Nhập **Tựa bài** + **Nội dung** kèm bộ đếm ký tự realtime `850–3,000` (chuẩn hóa newline + trim), tự động lưu nháp trình duyệt (`localStorage`), **chống dán/kéo-thả văn bản ngoài (`Anti-Paste` trên ô nội dung)**, chặn Submit ngoài biên, không gọi AI khi đang gõ.
+     - Nhập **Tựa bài** + **Nội dung** kèm bộ đếm ký tự realtime `400–3,000` (chuẩn hóa newline + trim), tự động lưu nháp trình duyệt (`localStorage`), **chống dán/kéo-thả văn bản ngoài (`Anti-Paste` trên ô nội dung)**, chặn Submit ngoài biên, không gọi AI khi đang gõ.
      - Trạng thái bất đồng bộ: `Đang AI đánh giá`, `Đã có kết quả` (bao gồm fallback nếu AI lỗi sau 3 lần thử tự động để phụ huynh tự xem bài).
      - Hiển thị kết quả AI (`Accuracy`, `Completeness`, `overall_status`, nhận xét ngắn `<= 600` ký tự, nguồn URL) và nút **`Viết bản mới (Revision)`** (hiển thị bộ đếm `Phiên bản X/3` — tối đa `v1..v3`).
 3. **Guardian Portal (`/guardian/*`):**
@@ -55,7 +55,7 @@
 5. **`timetables`**: `id`, `student_id REFERENCES student_profiles(id)`, `effective_date DATE`, `version INT`, `status` (`ACTIVE` | `ARCHIVED`), `updated_by_user_id REFERENCES users(id)`, `created_at`, `updated_at`.
 6. **`timetable_entries`**: `id`, `timetable_id REFERENCES timetables(id)`, `weekday INT` (`1..7`, Mon–Sun), `subject_id REFERENCES subjects(id)`, `period_note VARCHAR(120)`.
 7. **`study_plans`**: `id`, `student_id REFERENCES student_profiles(id)`, `target_date DATE`, `timetable_id REFERENCES timetables(id)`, `created_at`, `UNIQUE (student_id, target_date)`.
-8. **`study_tasks`**: `id`, `plan_id REFERENCES study_plans(id)`, `subject_id REFERENCES subjects(id)`, `task_type VARCHAR(20)` (`REVIEW` | `PREVIEW`), `status VARCHAR(30)` (`NOT_STARTED` | `IN_PROGRESS` | `SUBMITTED` | `EVALUATING` | `EVALUATED` | `EVALUATION_FAILED` | `BLOCKED`), `revision_count INT DEFAULT 0 CHECK (revision_count BETWEEN 0 AND 2)`, `created_at`, `updated_at`, `UNIQUE (plan_id, subject_id, task_type)`.
+8. **`study_tasks`**: `id`, `plan_id REFERENCES study_plans(id)`, `subject_id REFERENCES subjects(id)`, `task_type VARCHAR(20)` (`REVIEW` | `PREVIEW`), `status VARCHAR(30)` (`NOT_STARTED` | `IN_PROGRESS` | `SUBMITTED` | `EVALUATING` | `EVALUATED` | `EVALUATION_FAILED` | `BLOCKED` | `SKIPPED`), `revision_count INT DEFAULT 0 CHECK (revision_count BETWEEN 0 AND 2)`, `created_at`, `updated_at`, `UNIQUE (plan_id, subject_id, task_type)`.
 9. **`study_submissions`**: `id`, `task_id REFERENCES study_tasks(id)`, `version INT NOT NULL CHECK (version BETWEEN 1 AND 3)`, `is_current BOOLEAN NOT NULL DEFAULT TRUE`, `lesson_title VARCHAR(255) NOT NULL`, `content TEXT NOT NULL`, `char_count INT NOT NULL`, `idempotency_key VARCHAR(64) UNIQUE`, `submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 10. **`ai_evaluations`**: `id`, `submission_id UNIQUE REFERENCES study_submissions(id)`, `accuracy VARCHAR(30)`, `completeness VARCHAR(30)`, `overall_status VARCHAR(30)`, `feedback VARCHAR(600)`, `incorrect_points JSONB`, `missing_points JSONB`, `confidence VARCHAR(20)`, `raw_sanitized_response JSONB`, `evaluated_at TIMESTAMPTZ`.
 11. **`source_references`**: `id`, `evaluation_id REFERENCES ai_evaluations(id)`, `title VARCHAR(255)`, `url VARCHAR(1000)`, `snippet TEXT`, `retrieved_at TIMESTAMPTZ`.
@@ -84,11 +84,12 @@
 | `GET / PUT` | `/api/student/timetable` | Lấy / lưu phiên bản thời khóa biểu tuần hiện hành | `STUDENT` (Owner) hoặc `GUARDIAN` (Linked) |
 | `GET` | `/api/student/plans/next-day` | Lấy (hoặc tự tạo) kế hoạch ngày học kế tiếp theo `Asia/Ho_Chi_Minh` (học hôm trước để chuẩn bị cho ngày mai) | `STUDENT` |
 | `GET` | `/api/student/tasks/{taskId}` | Chi tiết nhiệm vụ, các phiên bản Submission (`v1..v3`) & Evaluation hiện hành | `STUDENT` (Owner) |
-| `POST` | `/api/student/tasks/{taskId}/submissions` | Submit bài (`850–3,000` chars, kiểm tra `REVIEW` trước `PREVIEW`, tối đa 3 phiên bản `v1..v3`, `Idempotency-Key`) | `STUDENT` (Owner) |
+| `POST` | `/api/student/tasks/{taskId}/submissions` | Submit bài (`400–3,000` chars, kiểm tra `REVIEW` trước `PREVIEW`, tối đa 3 phiên bản `v1..v3`, `Idempotency-Key`) | `STUDENT` (Owner) |
 | `POST` | `/api/student/submissions/{submissionId}/retry-evaluation` | Thử đánh giá lại khi job bị `EVALUATION_FAILED` | `STUDENT` (Owner) |
 
 ### 3. Guardian Read-Only Dashboard (`GUARDIAN`)
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/guardian/dashboard` | Tổng quan theo ngày/tuần, lọc theo `date` & `subjectCode` (chỉ Student đã liên kết) | `GUARDIAN` |
+| `POST` | `/api/guardian/tasks/{taskId}/skip` | Phụ huynh đánh dấu bỏ qua (`SKIPPED`) hoặc khôi phục bài chưa nộp (`REVIEW` skipped tự mở khóa `PREVIEW`) | `GUARDIAN` (Linked) |
 | `GET` | `/api/guardian/submissions/{submissionId}` | Chi tiết bài viết gốc bất biến, lịch sử phiên bản, kết quả AI & nguồn tham khảo | `GUARDIAN` (Linked) |

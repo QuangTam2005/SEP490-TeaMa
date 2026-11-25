@@ -11,6 +11,7 @@ import {
   Flame,
   History,
   Lock,
+  SkipForward,
   Sparkles,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +35,7 @@ function TaskActionButton({
   stepNumber: 1 | 2;
 }) {
   const isBlocked = task.status === 'BLOCKED';
+  const isSkipped = task.status === 'SKIPPED';
   const isDone = task.status === 'EVALUATED';
   const isEvaluating = task.status === 'EVALUATING';
 
@@ -41,7 +43,7 @@ function TaskActionButton({
     <div
       className={cn(
         'flex flex-col justify-between gap-3 rounded-xl border p-4 transition-colors',
-        isBlocked
+        isBlocked || isSkipped
           ? 'border-dashed bg-muted/40'
           : isDone
             ? 'border-emerald-200 bg-emerald-50/40 dark:border-emerald-900/70 dark:bg-emerald-950/20'
@@ -63,12 +65,20 @@ function TaskActionButton({
 
         <p className="text-sm font-medium text-foreground">
           {task.currentLessonTitle ??
-            (isBlocked
-              ? 'Mở khóa sau khi con nộp Bước 1 (Ôn bài cũ)'
-              : stepNumber === 1
-                ? 'Tóm tắt lại bài đã học trên lớp'
-                : 'Đọc trước và ghi ý chính bài học mới')}
+            (isSkipped
+              ? 'Phụ huynh đã đánh dấu bỏ qua bài này hôm nay'
+              : isBlocked
+                ? 'Mở khóa sau khi con nộp Bước 1 (Ôn bài cũ)'
+                : stepNumber === 1
+                  ? 'Tóm tắt lại bài đã học trên lớp'
+                  : 'Đọc trước và ghi ý chính bài học mới')}
         </p>
+
+        {isSkipped && task.guardianNote ? (
+          <p className="rounded-lg border bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+            Ghi chú phụ huynh: &ldquo;{task.guardianNote}&rdquo;
+          </p>
+        ) : null}
 
         {task.revisionCount > 0 ? (
           <p className="text-xs text-muted-foreground">
@@ -77,7 +87,7 @@ function TaskActionButton({
           </p>
         ) : null}
 
-        {task.guardianAcknowledgedAt ? (
+        {!isSkipped && task.guardianAcknowledgedAt ? (
           <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-2.5 py-1.5 text-xs text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200">
             <p className="font-semibold">Phụ huynh đã xem bài</p>
             {task.guardianNote ? (
@@ -89,7 +99,17 @@ function TaskActionButton({
         ) : null}
       </div>
 
-      {isBlocked ? (
+      {isSkipped ? (
+        <Button
+          type="button"
+          variant="outline"
+          disabled
+          className="h-11 w-full justify-center gap-2"
+        >
+          <SkipForward className="h-4 w-4" strokeWidth={1.75} />
+          Không cần làm hôm nay
+        </Button>
+      ) : isBlocked ? (
         <Button
           type="button"
           variant="outline"

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowRight,
   BookOpenCheck,
@@ -17,7 +17,9 @@ import {
   Eye,
   HeartHandshake,
   Loader2,
+  RotateCcw,
   ShieldCheck,
+  SkipForward,
   Sparkles,
   Users,
 } from 'lucide-react';
@@ -42,7 +44,7 @@ import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
 import { guardianService, linkService } from '@/services';
 import { useGuardianStore } from '@/store/guardian-store';
-import type { GuardianTaskItem, SubjectCode } from '@/types';
+import type { GuardianTaskItem, StudyTaskStatus, SubjectCode } from '@/types';
 
 function shiftIsoDate(isoDate: string, days: number): string {
   const [y, m, d] = isoDate.split('-').map(Number);
@@ -62,6 +64,7 @@ function getMondayIso(isoDate: string): string {
 
 export function GuardianDashboardView() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const runtime = useMockRuntime();
   const selectedStudentId = useGuardianStore((state) => state.selectedStudentId);
   const setSelectedStudentId = useGuardianStore(
@@ -137,6 +140,32 @@ export function GuardianDashboardView() {
         studentId: selectedStudentId ?? undefined,
       }),
   });
+
+  const skipMutation = useMutation({
+    mutationFn: ({ taskId, skipped }: { taskId: number; skipped: boolean }) =>
+      guardianService.skipTask(taskId, { skipped }),
+    onSuccess: (res) => {
+      void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+      void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-task'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
+      toast.success(
+        res.status === 'SKIPPED'
+          ? 'Đã đánh dấu bỏ qua bài học cho con'
+          : 'Đã khôi phục bài học cho con'
+      );
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
+
+  const canToggleSkip = (status: StudyTaskStatus) =>
+    status === 'NOT_STARTED' ||
+    status === 'IN_PROGRESS' ||
+    status === 'BLOCKED' ||
+    status === 'SKIPPED';
 
   const handleExportExcel = async () => {
     setIsExporting(true);
@@ -235,19 +264,52 @@ export function GuardianDashboardView() {
     },
     {
       key: 'action',
-      header: 'Chi tiết',
+      header: 'Thao tác',
       align: 'right',
-      render: (row) =>
-        row.currentSubmissionId ? (
-          <Button asChild size="sm" variant="outline" className="h-9 gap-1.5">
-            <Link href={`/guardian/submissions/${row.currentSubmissionId}`}>
-              <Eye className="h-3.5 w-3.5" strokeWidth={1.75} />
-              Xem bài gốc
-            </Link>
-          </Button>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        ),
+      render: (row) => {
+        if (row.currentSubmissionId) {
+          return (
+            <Button asChild size="sm" variant="outline" className="h-9 gap-1.5">
+              <Link href={`/guardian/submissions/${row.currentSubmissionId}`}>
+                <Eye className="h-3.5 w-3.5" strokeWidth={1.75} />
+                Xem bài gốc
+              </Link>
+            </Button>
+          );
+        }
+        if (canToggleSkip(row.status)) {
+          const isSkipped = row.status === 'SKIPPED';
+          const isBusy =
+            skipMutation.isPending &&
+            skipMutation.variables?.taskId === row.taskId;
+          return (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={isBusy}
+              className="h-9 gap-1.5"
+              onClick={(e) => {
+                e.stopPropagation();
+                skipMutation.mutate({
+                  taskId: row.taskId,
+                  skipped: !isSkipped,
+                });
+              }}
+            >
+              {isBusy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : isSkipped ? (
+                <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.75} />
+              ) : (
+                <SkipForward className="h-3.5 w-3.5" strokeWidth={1.75} />
+              )}
+              <span>{isSkipped ? 'Khôi phục' : 'Bỏ qua'}</span>
+            </Button>
+          );
+        }
+        return <span className="text-xs text-muted-foreground">—</span>;
+      },
     },
   ];
 
@@ -548,6 +610,34 @@ export function GuardianDashboardView() {
                           <span>Xem bài gốc &amp; nhận xét</span>
                           <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
                         </Link>
+                      </Button>
+                    ) : canToggleSkip(item.status) ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={
+                          skipMutation.isPending &&
+                          skipMutation.variables?.taskId === item.taskId
+                        }
+                        className="h-11 w-full justify-center gap-2"
+                        onClick={() =>
+                          skipMutation.mutate({
+                            taskId: item.taskId,
+                            skipped: item.status !== 'SKIPPED',
+                          })
+                        }
+                      >
+                        {item.status === 'SKIPPED' ? (
+                          <>
+                            <RotateCcw className="h-4 w-4" strokeWidth={1.75} />
+                            <span>Khôi phục bài học</span>
+                          </>
+                        ) : (
+                          <>
+                            <SkipForward className="h-4 w-4" strokeWidth={1.75} />
+                            <span>Đánh dấu bỏ qua hôm nay</span>
+                          </>
+                        )}
                       </Button>
                     ) : null}
                   </CardContent>

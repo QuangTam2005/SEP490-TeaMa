@@ -16,9 +16,9 @@
 ---
 
 ## 2. Domain & AI Pipeline Red Lines (`SRS BR-01..BR-24`)
-1. **Identical Character Counter & Anti-Paste (`BR-12`):** Cả Frontend và Backend phải dùng cùng quy tắc chuẩn hóa `\r\n` $\rightarrow$ `\n`, `.trim()` hai đầu, sau đó đếm toàn bộ ký tự (gồm khoảng trắng và dấu câu bên trong) và khóa chặt trong `[850, 3000]` cho cả `REVIEW` và `PREVIEW`. Ô nhập nội dung bài làm trên Frontend bắt buộc chặn dán (`onPaste`/`beforeinput`), kéo-thả (`onDrop`), menu chuột phải (`onContextMenu`) và chèn hàng loạt bất thường (`delta > 30` ký tự/lần) nhằm buộc học sinh tự gõ bài (vẫn cho phép bộ gõ Tiếng Việt Telex/VNI và khôi phục nháp/sửa bản nộp).
+1. **Identical Character Counter & Anti-Paste (`BR-12`):** Cả Frontend và Backend phải dùng cùng quy tắc chuẩn hóa `\r\n` $\rightarrow$ `\n`, `.trim()` hai đầu, sau đó đếm toàn bộ ký tự (gồm khoảng trắng và dấu câu bên trong) và khóa chặt trong `[400, 3000]` cho cả `REVIEW` và `PREVIEW`. Ô nhập nội dung bài làm trên Frontend bắt buộc chặn dán (`onPaste`/`beforeinput`), kéo-thả (`onDrop`), menu chuột phải (`onContextMenu`) và chèn hàng loạt bất thường (`delta > 30` ký tự/lần) nhằm buộc học sinh tự gõ bài (vẫn cho phép bộ gõ Tiếng Việt Telex/VNI và khôi phục nháp/sửa bản nộp).
 2. **Strict Task Sequencing & Version Cap (`BR-08`, `v1..v3`):**
-   - `PREVIEW` chỉ được mở khóa sau khi `REVIEW` cùng môn/ngày đã được Submit và lưu thành công.
+   - `PREVIEW` chỉ được mở khóa sau khi `REVIEW` cùng môn/ngày đã được Submit và lưu thành công (hoặc được phụ huynh đánh dấu `SKIPPED`).
    - Sau khi `EVALUATED`, Student được phép nộp bản cập nhật mới (**Revision**), **tối đa 3 phiên bản tổng cộng (`v1`, `v2`, `v3` $\rightarrow$ `revisionCount <= 2`)** cho mỗi nhiệm vụ; cấm sửa trong lúc đang `EVALUATING`; mọi phiên bản đã Submit đều bất biến (`BR-21`).
    - Student tự chọn khối lớp của mình (`1–12`), không hard-code khối 6; cả Student và Guardian đã liên kết đều có thể cập nhật Thời khóa biểu tuần.
 3. **Save Before AI & No AI While Typing (`BR-13`, `BR-14`):** Tuyệt đối không gọi Brave Search hoặc MiMo khi đang nhập liệu. Backend bắt buộc lưu `StudySubmission` và `EvaluationJob` vào PostgreSQL trước khi gọi API ngoài; sử dụng `Idempotency-Key` chống trùng job.

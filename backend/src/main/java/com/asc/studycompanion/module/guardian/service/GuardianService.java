@@ -12,6 +12,8 @@ import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianDashboardResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianEvaluationSummary;
+import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest;
+import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianSubmissionDetailResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianTaskItem;
 import com.asc.studycompanion.module.guardian.dto.GuardianWeeklyDaySummary;
@@ -122,10 +124,14 @@ public class GuardianService {
                 .toList();
 
         List<GuardianTaskItem> items = new ArrayList<>();
+        int activeTotalCount = 0;
         int completedCount = 0;
         int evaluatingCount = 0;
 
         for (StudyTask task : filteredTasks) {
+            if (task.getStatus() != StudyTaskStatus.SKIPPED) {
+                activeTotalCount++;
+            }
             if (task.getStatus() == StudyTaskStatus.EVALUATED) {
                 completedCount++;
             } else if (task.getStatus() == StudyTaskStatus.EVALUATING || task.getStatus() == StudyTaskStatus.SUBMITTED) {
@@ -168,7 +174,7 @@ public class GuardianService {
                 student.getGrade(),
                 selectedDate,
                 selectedSubjectLabel,
-                items.size(),
+                activeTotalCount,
                 completedCount,
                 evaluatingCount,
                 items
@@ -249,6 +255,89 @@ public class GuardianService {
         return new GuardianAcknowledgeResponse(task.getId(), acknowledgedAt, normalizedNote);
     }
 
+    @Transactional
+    public GuardianSkipTaskResponse skipTask(
+            Long guardianUserId,
+            Long taskId,
+            GuardianSkipTaskRequest request
+    ) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
+        studyAccessGuard.assertGuardianCanReadStudent(guardianUserId, task.getPlan().getStudent().getId());
+
+        boolean shouldSkip = request == null || request.skipped();
+        boolean hasSubmission = studySubmissionRepository.existsByTaskId(taskId)
+                || task.getStatus() == StudyTaskStatus.SUBMITTED
+                || task.getStatus() == StudyTaskStatus.EVALUATING
+                || task.getStatus() == StudyTaskStatus.EVALUATED
+                || task.getStatus() == StudyTaskStatus.EVALUATION_FAILED;
+
+        if (hasSubmission) {
+            throw new AppException(
+                    ErrorCode.VALIDATION_FAILED,
+                    shouldSkip
+                            ? "Không thể bỏ qua bài học đã được học sinh nộp"
+                            : "Không thể khôi phục bài học đã có bài nộp"
+            );
+        }
+
+        if (shouldSkip) {
+            task.setStatus(StudyTaskStatus.SKIPPED);
+            if (request != null && request.note() != null) {
+                task.setGuardianNote(request.note().isBlank() ? null : request.note().trim());
+            }
+            studyTaskRepository.save(task);
+
+            if (task.getTaskType() == StudyTaskType.REVIEW) {
+                studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
+                                task.getPlan().getId(),
+                                task.getSubject().getId(),
+                                StudyTaskType.PREVIEW
+                        )
+                        .ifPresent(preview -> {
+                            if (preview.getStatus() == StudyTaskStatus.BLOCKED) {
+                                preview.setStatus(StudyTaskStatus.NOT_STARTED);
+                                studyTaskRepository.save(preview);
+                            }
+                        });
+            }
+        } else {
+            if (task.getTaskType() == StudyTaskType.REVIEW) {
+                task.setStatus(StudyTaskStatus.NOT_STARTED);
+                task.setGuardianNote(null);
+                studyTaskRepository.save(task);
+
+                studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
+                                task.getPlan().getId(),
+                                task.getSubject().getId(),
+                                StudyTaskType.PREVIEW
+                        )
+                        .ifPresent(preview -> {
+                            if (preview.getStatus() == StudyTaskStatus.NOT_STARTED
+                                    && !studySubmissionRepository.existsByTaskId(preview.getId())) {
+                                preview.setStatus(StudyTaskStatus.BLOCKED);
+                                studyTaskRepository.save(preview);
+                            }
+                        });
+            } else {
+                boolean reviewCleared = studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
+                                task.getPlan().getId(),
+                                task.getSubject().getId(),
+                                StudyTaskType.REVIEW
+                        )
+                        .map(review -> review.getStatus() == StudyTaskStatus.SKIPPED
+                                || studySubmissionRepository.existsByTaskId(review.getId()))
+                        .orElse(true);
+
+                task.setStatus(reviewCleared ? StudyTaskStatus.NOT_STARTED : StudyTaskStatus.BLOCKED);
+                task.setGuardianNote(null);
+                studyTaskRepository.save(task);
+            }
+        }
+
+        return new GuardianSkipTaskResponse(task.getId(), task.getStatus(), task.getGuardianNote());
+    }
+
     @Transactional(readOnly = true)
     public GuardianWeeklySummaryResponse getWeeklySummary(
             Long guardianUserId,
@@ -285,8 +374,11 @@ public class GuardianService {
             int dayAcknowledged = 0;
             if (plan != null) {
                 for (StudyTask task : plan.getTasks()) {
-                    dayTotal++;
+                    boolean isSkipped = task.getStatus() == StudyTaskStatus.SKIPPED;
                     boolean isDone = task.getStatus() == StudyTaskStatus.EVALUATED;
+                    if (!isSkipped) {
+                        dayTotal++;
+                    }
                     if (isDone) {
                         dayCompleted++;
                     }
@@ -296,7 +388,9 @@ public class GuardianService {
                     SubjectCode code = task.getSubject().getCode();
                     subjectNames.putIfAbsent(code, task.getSubject().getName());
                     int[] counts = subjectCounts.computeIfAbsent(code, k -> new int[2]);
-                    counts[0]++;
+                    if (!isSkipped) {
+                        counts[0]++;
+                    }
                     if (isDone) {
                         counts[1]++;
                     }
@@ -392,7 +486,11 @@ public class GuardianService {
                     row.createCell(0).setCellValue(plan.getTargetDate().toString());
                     row.createCell(1).setCellValue(task.getSubject().getName());
                     row.createCell(2).setCellValue(task.getTaskType() == StudyTaskType.REVIEW ? "Ôn bài cũ" : "Soạn bài mới");
-                    row.createCell(3).setCellValue(task.getStatus().name());
+                    row.createCell(3).setCellValue(
+                            task.getStatus() == StudyTaskStatus.SKIPPED
+                                    ? "Đã bỏ qua (PH)"
+                                    : task.getStatus().name()
+                    );
                     row.createCell(4).setCellValue(currentSub != null ? currentSub.getLessonTitle() : "Chưa nộp");
                     row.createCell(5).setCellValue(eval != null ? eval.getOverallStatus().name() : "-");
                     row.createCell(6).setCellValue(task.getRevisionCount() != null ? task.getRevisionCount() : 0);

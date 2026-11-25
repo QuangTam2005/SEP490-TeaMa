@@ -455,7 +455,7 @@ export function buildGuardianDashboardFromBuckets(
     grade: 6,
     selectedDate: targetDate,
     selectedSubject,
-    totalTasks: items.length,
+    totalTasks: items.filter((i) => i.status !== 'SKIPPED').length,
     completedTasks: items.filter((i) => i.status === 'EVALUATED').length,
     evaluatingTasks: items.filter((i) => i.status === 'EVALUATING').length,
     items,

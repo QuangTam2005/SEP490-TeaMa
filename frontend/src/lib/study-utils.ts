@@ -1,6 +1,6 @@
 import type { SubjectCode, Weekday } from '@/types';
 
-export const MIN_SUBMISSION_CHARS = 850;
+export const MIN_SUBMISSION_CHARS = 400;
 export const MAX_SUBMISSION_CHARS = 3000;
 export const MAX_FEEDBACK_CHARS = 600;
 /**

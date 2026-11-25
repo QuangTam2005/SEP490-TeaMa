@@ -149,5 +149,17 @@ class GuardianControllerTest {
         mockMvc.perform(get("/api/guardian/export"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", containsString("bao-cao-hoc-tap.xlsx")));
+
+        when(guardianService.skipTask(eq(2L), eq(101L), any())).thenReturn(
+                new com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskResponse(
+                        101L, StudyTaskStatus.SKIPPED, "Không cần ôn"
+                )
+        );
+        mockMvc.perform(post("/api/guardian/tasks/101/skip")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"skipped\":true,\"note\":\"Không cần ôn\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.taskId").value(101))
+                .andExpect(jsonPath("$.data.status").value("SKIPPED"));
     }
 }

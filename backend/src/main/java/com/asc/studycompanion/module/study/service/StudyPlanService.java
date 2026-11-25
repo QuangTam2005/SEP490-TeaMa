@@ -238,7 +238,9 @@ public class StudyPlanService {
                     int weekday = plan.getTargetDate().getDayOfWeek().getValue();
                     String weekdayLabel = WEEKDAY_LABELS.get(weekday - 1);
                     NextDayStudyPlanResponse planDto = toPlanResponse(plan, plan.getTargetDate(), weekdayLabel, weekday);
-                    int totalTasks = plan.getTasks().size();
+                    int totalTasks = (int) plan.getTasks().stream()
+                            .filter(t -> t.getStatus() != StudyTaskStatus.SKIPPED)
+                            .count();
                     int completedTasks = (int) plan.getTasks().stream()
                             .filter(t -> t.getStatus() == StudyTaskStatus.EVALUATED)
                             .count();
@@ -275,9 +277,15 @@ public class StudyPlanService {
         }
 
         Set<Integer> scheduledWeekdays = resolveScheduledWeekdays(student.getId());
+        Set<LocalDate> fullySkippedDates = allPlans.stream()
+                .filter(plan -> !plan.getTasks().isEmpty()
+                        && plan.getTasks().stream().allMatch(task -> task.getStatus() == StudyTaskStatus.SKIPPED))
+                .map(StudyPlan::getTargetDate)
+                .collect(Collectors.toSet());
         Set<LocalDate> incompletePlannedDates = allPlans.stream()
                 .filter(plan -> !plan.getTasks().isEmpty()
-                        && plan.getTasks().stream().noneMatch(task -> task.getStatus() == StudyTaskStatus.EVALUATED))
+                        && plan.getTasks().stream().noneMatch(task -> task.getStatus() == StudyTaskStatus.EVALUATED)
+                        && plan.getTasks().stream().anyMatch(task -> task.getStatus() != StudyTaskStatus.SKIPPED))
                 .map(StudyPlan::getTargetDate)
                 .collect(Collectors.toSet());
 
@@ -288,7 +296,8 @@ public class StudyPlanService {
                     completedDates.get(i - 1),
                     completedDates.get(i),
                     scheduledWeekdays,
-                    incompletePlannedDates)) {
+                    incompletePlannedDates,
+                    fullySkippedDates)) {
                 running++;
                 if (running > longestStreak) {
                     longestStreak = running;
@@ -306,7 +315,8 @@ public class StudyPlanService {
                 earliestCompleted,
                 completedDateSet,
                 scheduledWeekdays,
-                incompletePlannedDates
+                incompletePlannedDates,
+                fullySkippedDates
         );
 
         int currentStreak = 0;
@@ -315,7 +325,7 @@ public class StudyPlanService {
             while (!cursor.isBefore(earliestCompleted)) {
                 if (completedDateSet.contains(cursor)) {
                     currentStreak++;
-                } else if (!isRestDay(cursor, scheduledWeekdays, incompletePlannedDates)) {
+                } else if (!isRestDay(cursor, scheduledWeekdays, incompletePlannedDates, fullySkippedDates)) {
                     break;
                 }
                 cursor = cursor.minusDays(1);
@@ -344,11 +354,12 @@ public class StudyPlanService {
             LocalDate previous,
             LocalDate next,
             Set<Integer> scheduledWeekdays,
-            Set<LocalDate> incompletePlannedDates
+            Set<LocalDate> incompletePlannedDates,
+            Set<LocalDate> fullySkippedDates
     ) {
         LocalDate cursor = previous.plusDays(1);
         while (cursor.isBefore(next)) {
-            if (!isRestDay(cursor, scheduledWeekdays, incompletePlannedDates)) {
+            if (!isRestDay(cursor, scheduledWeekdays, incompletePlannedDates, fullySkippedDates)) {
                 return false;
             }
             cursor = cursor.plusDays(1);
@@ -362,7 +373,8 @@ public class StudyPlanService {
             LocalDate earliestCompleted,
             Set<LocalDate> completedDateSet,
             Set<Integer> scheduledWeekdays,
-            Set<LocalDate> incompletePlannedDates
+            Set<LocalDate> incompletePlannedDates,
+            Set<LocalDate> fullySkippedDates
     ) {
         if (completedDateSet.contains(tomorrow)) {
             return tomorrow;
@@ -372,7 +384,7 @@ public class StudyPlanService {
             if (completedDateSet.contains(cursor)) {
                 return cursor;
             }
-            if (!isRestDay(cursor, scheduledWeekdays, incompletePlannedDates)) {
+            if (!isRestDay(cursor, scheduledWeekdays, incompletePlannedDates, fullySkippedDates)) {
                 return null;
             }
             cursor = cursor.minusDays(1);
@@ -382,13 +394,17 @@ public class StudyPlanService {
 
     /**
      * Off-schedule weekdays (e.g., Saturday/Sunday with no classes on the active timetable)
-     * do not break the student's study streak unless a plan with tasks existed and was missed.
+     * or dates where Guardian marked all tasks SKIPPED preserve the streak without incrementing it.
      */
     private boolean isRestDay(
             LocalDate date,
             Set<Integer> scheduledWeekdays,
-            Set<LocalDate> incompletePlannedDates
+            Set<LocalDate> incompletePlannedDates,
+            Set<LocalDate> fullySkippedDates
     ) {
+        if (fullySkippedDates.contains(date)) {
+            return true;
+        }
         if (scheduledWeekdays.isEmpty() || incompletePlannedDates.contains(date)) {
             return false;
         }

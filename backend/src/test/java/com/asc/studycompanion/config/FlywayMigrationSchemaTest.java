@@ -82,4 +82,15 @@ class FlywayMigrationSchemaTest {
         assertTrue(sql.contains("'TECH'"));
         assertTrue(sql.contains("'Công nghệ'"));
     }
+
+    @Test
+    void v5MigrationLowersMinCharsTo400AndAddsSkippedTaskStatus() throws IOException {
+        ClassPathResource resource = new ClassPathResource("db/migration/V5__min_chars_400_and_task_skipped.sql");
+        assertTrue(resource.exists(), "V5 migration must exist on classpath");
+
+        String sql = resource.getContentAsString(StandardCharsets.UTF_8);
+        assertTrue(sql.contains("BETWEEN 400 AND 3000"));
+        assertTrue(sql.contains("'SKIPPED'"));
+        assertTrue(sql.contains("study_tasks_status_check"));
+    }
 }

@@ -7,5 +7,6 @@ public enum StudyTaskStatus {
     EVALUATING,
     EVALUATED,
     EVALUATION_FAILED,
-    BLOCKED
+    BLOCKED,
+    SKIPPED
 }

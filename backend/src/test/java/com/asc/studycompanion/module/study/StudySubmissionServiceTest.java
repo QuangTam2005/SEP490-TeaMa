@@ -151,7 +151,7 @@ class StudySubmissionServiceTest {
     }
 
     @Test
-    void rejectsSubmissionOutOf850To2000Range() {
+    void rejectsSubmissionOutOf400To3000RangeAndBlocksSkippedTasks() {
         StudyTask reviewTask = StudyTask.builder().id(101L).plan(plan).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.NOT_STARTED).revisionCount(0).build();
         when(studySubmissionRepository.findByIdempotencyKey("idem-short")).thenReturn(Optional.empty());
         when(studyTaskRepository.findById(101L)).thenReturn(Optional.of(reviewTask));
@@ -159,9 +159,18 @@ class StudySubmissionServiceTest {
 
         AppException ex = assertThrows(
                 AppException.class,
-                () -> submissionService.submitTask(1L, 101L, new SubmitStudyRequest("Bài ngắn", "a".repeat(849), "idem-short"), null)
+                () -> submissionService.submitTask(1L, 101L, new SubmitStudyRequest("Bài ngắn", "a".repeat(399), "idem-short"), null)
         );
         assertEquals(ErrorCode.CONTENT_LENGTH_OUT_OF_RANGE, ex.getErrorCode());
+
+        StudyTask skippedTask = StudyTask.builder().id(109L).plan(plan).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.SKIPPED).revisionCount(0).build();
+        when(studySubmissionRepository.findByIdempotencyKey("idem-skip")).thenReturn(Optional.empty());
+        when(studyTaskRepository.findById(109L)).thenReturn(Optional.of(skippedTask));
+        AppException skippedEx = assertThrows(
+                AppException.class,
+                () -> submissionService.submitTask(1L, 109L, new SubmitStudyRequest("Bài bỏ qua", "a".repeat(450), "idem-skip"), null)
+        );
+        assertEquals(ErrorCode.VALIDATION_FAILED, skippedEx.getErrorCode());
     }
 
     @Test

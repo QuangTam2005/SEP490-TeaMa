@@ -9,6 +9,7 @@ import {
   Lock,
   Send,
   ShieldCheck,
+  SkipForward,
   Sparkles,
   User,
   XCircle,
@@ -52,6 +53,7 @@ const STATUS_MAP: Record<StudyBadgeStatus, StatusStyleConfig> = {
     icon: XCircle,
   },
   BLOCKED: { label: 'Làm Ôn bài trước', variant: 'secondary', icon: Lock },
+  SKIPPED: { label: 'Phụ huynh bỏ qua', variant: 'secondary', icon: SkipForward },
 
   CORRECT: { label: 'Chính xác', variant: 'success', icon: CheckCircle2 },
   PARTIALLY_CORRECT: {

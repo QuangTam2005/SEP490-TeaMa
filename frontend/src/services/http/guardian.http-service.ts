@@ -9,6 +9,8 @@ import type {
   GuardianAcknowledgeRequest,
   GuardianAcknowledgeResponse,
   GuardianDashboardResponse,
+  GuardianSkipTaskRequest,
+  GuardianSkipTaskResponse,
   GuardianSubmissionDetailResponse,
   GuardianWeeklySummaryResponse,
 } from '@/types';
@@ -40,6 +42,12 @@ export const guardianHttpService: GuardianService = {
     apiPost<GuardianAcknowledgeResponse>(
       `/api/guardian/tasks/${taskId}/acknowledge`,
       request ?? {}
+    ),
+
+  skipTask: (taskId: number, request: GuardianSkipTaskRequest) =>
+    apiPost<GuardianSkipTaskResponse>(
+      `/api/guardian/tasks/${taskId}/skip`,
+      request
     ),
 
   getWeeklySummary: (params?: GuardianWeeklyParams) => {

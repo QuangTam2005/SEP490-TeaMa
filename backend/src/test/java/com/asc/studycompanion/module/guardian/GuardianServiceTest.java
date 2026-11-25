@@ -207,4 +207,41 @@ class GuardianServiceTest {
         assertEquals((byte) 'P', xlsx[0]);
         assertEquals((byte) 'K', xlsx[1]);
     }
+
+    @Test
+    void skipAndRestoreReviewTaskUnlocksAndRelocksPreviewSafely() {
+        StudentProfile student = StudentProfile.builder().id(10L).displayName("Khoi").grade(7).build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        StudyPlan plan = StudyPlan.builder().id(20L).student(student).targetDate(LocalDate.of(2026, 11, 25)).build();
+        StudyTask review = StudyTask.builder().id(101L).plan(plan).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.NOT_STARTED).build();
+        StudyTask preview = StudyTask.builder().id(102L).plan(plan).subject(math).taskType(StudyTaskType.PREVIEW).status(StudyTaskStatus.BLOCKED).build();
+
+        when(studyTaskRepository.findById(101L)).thenReturn(Optional.of(review));
+        when(studySubmissionRepository.existsByTaskId(101L)).thenReturn(false);
+        when(studySubmissionRepository.existsByTaskId(102L)).thenReturn(false);
+        when(studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(20L, 1L, StudyTaskType.PREVIEW))
+                .thenReturn(Optional.of(preview));
+
+        var skippedRes = guardianService.skipTask(
+                2L, 101L, new com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest(true, "  Đã thuộc trên lớp ")
+        );
+        assertEquals(StudyTaskStatus.SKIPPED, skippedRes.status());
+        assertEquals("Đã thuộc trên lớp", skippedRes.guardianNote());
+        assertEquals(StudyTaskStatus.NOT_STARTED, preview.getStatus());
+
+        var restoredRes = guardianService.skipTask(
+                2L, 101L, new com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest(false, null)
+        );
+        assertEquals(StudyTaskStatus.NOT_STARTED, restoredRes.status());
+        assertEquals(StudyTaskStatus.BLOCKED, preview.getStatus());
+
+        // Cannot skip an already evaluated task
+        StudyTask evaluated = StudyTask.builder().id(103L).plan(plan).subject(math).taskType(StudyTaskType.REVIEW).status(StudyTaskStatus.EVALUATED).build();
+        when(studyTaskRepository.findById(103L)).thenReturn(Optional.of(evaluated));
+        when(studySubmissionRepository.existsByTaskId(103L)).thenReturn(true);
+        AppException rejectEx = assertThrows(AppException.class, () -> guardianService.skipTask(
+                2L, 103L, new com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest(true, null)
+        ));
+        assertEquals(ErrorCode.VALIDATION_FAILED, rejectEx.getErrorCode());
+    }
 }

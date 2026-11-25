@@ -10,7 +10,8 @@ export type StudyTaskStatus =
   | 'EVALUATING'
   | 'EVALUATED'
   | 'EVALUATION_FAILED'
-  | 'BLOCKED';
+  | 'BLOCKED'
+  | 'SKIPPED';
 
 export interface StudySubmissionResponse {
   id: number;
