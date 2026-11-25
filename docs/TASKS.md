@@ -54,7 +54,7 @@
 ## Phase 4: Timetable, Study Plan & Submission Backend (`backend/`)
 
 ### Task 6 — Thời khóa biểu phiên bản & Kế hoạch ngày kế tiếp *(2 subtasks)*
-- [ ] `[TASK-BE.3]` *(3 SP)* Xây dựng module `timetable` (`Timetable`, `TimetableEntry`, `GET/PUT /api/student/timetable` cho phép cả `STUDENT` owner & `GUARDIAN` linked cập nhật phiên bản mới, lưu trữ bản cũ `BR-20`) & `PUT /api/student/profile` (chọn/đổi khối lớp)
+- [x] `[TASK-BE.3]` *(3 SP)* Xây dựng module `timetable` (`Timetable`, `TimetableEntry`, `GET/PUT /api/student/timetable` cho phép cả `STUDENT` owner & `GUARDIAN` linked cập nhật phiên bản mới, lưu trữ bản cũ `BR-20`) & `PUT /api/student/profile` (chọn/đổi khối lớp)
 - [ ] `[TASK-BE.4a]` *(3 SP)* Xây dựng phần đọc kế hoạch học (`StudyPlan`, `StudyTask`, `GET /api/student/plans/next-day` theo `Asia/Ho_Chi_Minh`: hôm nay chuẩn bị cho lịch học ngày mai, mỗi môn 1 cặp `REVIEW` + `PREVIEW` & xử lý ngày trống `BR-04..BR-07`) & tests
 
 ### Task 7 — Nộp bài Review/Preview, Chuẩn độ dài & `v1..v3` *(3 subtasks)*

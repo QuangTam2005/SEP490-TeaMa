@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 3 Completed (`[TASK-BE.1a]`–`[TASK-BE.2c]`) $\rightarrow$ Ready for Phase 4 (`Timetable, Study Plan & Submission Backend`)  
+**Current Phase:** Phase 4 In Progress (`[TASK-BE.3]` Completed — Versioned Timetable CRUD)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -37,7 +37,8 @@
 - **[DONE] `[TASK-BE.2a]` (`786409a`):** Upgraded `auth` module with `UserRole` (`STUDENT`/`GUARDIAN`), `UserStatus`, `StudentProfile`, `GuardianLink`, `ROLE_*` `UserPrincipal`, auto-provisioning `StudentProfile` on Student registration, open email validation, active `GuardianLink` lookup in `GET /api/auth/me` & `login`, and CORS `"Idempotency-Key"` header. Verified `.\mvnw.cmd clean test` (`Tests run: 31, Failures: 0`).
 - **[DONE] `[TASK-BE.2b]` (`35b6f45`):** Implemented `LinkService` & `LinkController` (`GET /api/links/current`, `POST /api/links/code`, `POST /api/links/accept`) with 8-character unambiguous one-time code generation (`24h` expiry, auto-revoke stale pending codes, `AUTH_007`/`AUTH_008` guards) and `LinkServiceTest` + `LinkControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 36, Failures: 0`).
 - **[DONE] `[TASK-BE.2c]` (`74de111`):** Implemented `StudyAccessGuard` (anti-IDOR enforcement for Student ownership and active Guardian links, returning `AUTH_004` / `GRD_001`) and `Subject` + `SubjectRepository` + `SubjectController` (`GET /api/subjects` for the 5 fixed Grade 6 subjects), backed by `StudyAccessGuardTest` & `SubjectControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 40, Failures: 0`).
-- **[DONE] Domain Rule Sync (`v1.1` / `v1.2`):** Synced all 6 stakeholder adjustments across `docs/`, `backend/` (`V1`–`V2` grade `1–12` + `v1..v3`, `PUT /api/student/profile`, `StudyAccessGuard.resolveStudentProfileForTimetable`), and `frontend/` (Student grade selector in `/register` & `/student/timetable`, `/guardian/timetable` edit page, KNTT + Wikipedia sources, AI 3-retry fallback forwarding to Guardian, `v1..v3` max cap). Verified `.\mvnw.cmd clean test` (`Tests run: 42, Failures: 0`) and `npm run typecheck && npm run lint && npm run build` (`11` routes compiled).
+- **[DONE] Domain Rule Sync (`v1.1` / `v1.2`, `c4eb11b`):** Synced all 6 stakeholder adjustments across `docs/`, `backend/` (`V1`–`V2` grade `1–12` + `v1..v3`, `PUT /api/student/profile`, `StudyAccessGuard.resolveStudentProfileForTimetable`), and `frontend/` (Student grade selector in `/register` & `/student/timetable`, `/guardian/timetable` edit page, KNTT + Wikipedia sources, AI 3-retry fallback forwarding to Guardian, `v1..v3` max cap). Verified `.\mvnw.cmd clean test` (`Tests run: 42, Failures: 0`) and `npm run typecheck && npm run lint && npm run build` (`11` routes compiled).
+- **[DONE] `[TASK-BE.3]`:** Implemented versioned `timetable` module (`Timetable`, `TimetableEntry`, `TimetableStatus`, `TimetableRepository`, `TimetableService`, `TimetableController` at `GET/PUT /api/student/timetable`), preserving historical versions while archiving superseded active timetables and permitting both owning `STUDENT` and linked `GUARDIAN` edits, backed by `TimetableServiceTest` & `TimetableControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 46, Failures: 0`).
 
 ---
 
