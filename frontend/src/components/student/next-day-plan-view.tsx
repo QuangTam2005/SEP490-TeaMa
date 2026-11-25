@@ -197,9 +197,6 @@ export function NextDayPlanView() {
                         <CardTitle className="text-lg font-bold text-foreground">
                           Môn {pair.subjectName}
                         </CardTitle>
-                        {pair.periodNote ? (
-                          <Badge variant="outline">{pair.periodNote}</Badge>
-                        ) : null}
                       </div>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">

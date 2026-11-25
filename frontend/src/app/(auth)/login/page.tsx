@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { LoginForm } from '@/components/auth/login-form';
 
 export const metadata: Metadata = {
-  title: 'Đăng nhập | AI Study Companion — Lớp 6',
-  description: 'Đăng nhập hệ thống tự học AI Study Companion lớp 6.',
+  title: 'Đăng nhập',
+  description: 'Đăng nhập hệ thống học tập Smart Otter.',
 };
 
 function AuthFormFallback() {

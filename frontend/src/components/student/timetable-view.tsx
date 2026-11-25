@@ -13,7 +13,6 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
 import {
@@ -102,35 +101,21 @@ export function TimetableView() {
       if (next.has(key)) {
         next.delete(key);
       } else {
-        next.set(key, { weekday, subjectCode, periodNote: '' });
+        next.set(key, { weekday, subjectCode, periodNote: null });
       }
-      return next;
-    });
-    setHasUnsavedChanges(true);
-  };
-
-  const updatePeriodNote = (
-    weekday: Weekday,
-    subjectCode: SubjectCode,
-    periodNote: string
-  ) => {
-    const key = makeCellKey(weekday, subjectCode);
-    setDraftMap((prev) => {
-      const existing = prev.get(key);
-      if (!existing) {
-        return prev;
-      }
-      const next = new Map(prev);
-      next.set(key, { ...existing, periodNote });
       return next;
     });
     setHasUnsavedChanges(true);
   };
 
   const handleSave = () => {
-    const entries = Array.from(draftMap.values()).sort(
-      (a, b) => a.weekday - b.weekday
-    );
+    const entries = Array.from(draftMap.values())
+      .map((entry) => ({
+        weekday: entry.weekday,
+        subjectCode: entry.subjectCode,
+        periodNote: null,
+      }))
+      .sort((a, b) => a.weekday - b.weekday);
     saveMutation.mutate(entries);
   };
 
@@ -233,56 +218,36 @@ export function TimetableView() {
                             {subject.name}
                           </td>
                           {WEEKDAYS.map((day) => {
-                            const entry = draftMap.get(
+                            const selected = draftMap.has(
                               makeCellKey(day.value, subject.code)
                             );
-                            const selected = Boolean(entry);
                             return (
                               <td
                                 key={day.value}
-                                className="p-2 align-top"
+                                className="p-2 align-middle"
                               >
-                                <div className="space-y-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      toggleSubjectCell(day.value, subject.code)
-                                    }
-                                    aria-pressed={selected}
-                                    className={cn(
-                                      'flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold transition-colors',
-                                      selected
-                                        ? 'border-brand-strong bg-brand-soft text-brand-strong dark:border-sky-500 dark:text-sky-200'
-                                        : 'border-dashed border-border bg-background text-muted-foreground hover:border-brand/50 hover:bg-brand-soft/30'
-                                    )}
-                                  >
-                                    {selected ? (
-                                      <>
-                                        <Check className="h-4 w-4" strokeWidth={2} />
-                                        <span>Có học</span>
-                                      </>
-                                    ) : (
-                                      <span>+ Chọn</span>
-                                    )}
-                                  </button>
-
-                                  {selected && entry ? (
-                                    <Input
-                                      value={entry.periodNote ?? ''}
-                                      onChange={(e) =>
-                                        updatePeriodNote(
-                                          day.value,
-                                          subject.code,
-                                          e.target.value
-                                        )
-                                      }
-                                      maxLength={30}
-                                      placeholder="Tiết..."
-                                      aria-label={`Ghi chú tiết ${subject.name} ${day.label}`}
-                                      className="h-8 text-center text-xs"
-                                    />
-                                  ) : null}
-                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    toggleSubjectCell(day.value, subject.code)
+                                  }
+                                  aria-pressed={selected}
+                                  className={cn(
+                                    'flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold transition-colors',
+                                    selected
+                                      ? 'border-brand-strong bg-brand-soft text-brand-strong dark:border-sky-500 dark:text-sky-200'
+                                      : 'border-dashed border-border bg-background text-muted-foreground hover:border-brand/50 hover:bg-brand-soft/30'
+                                  )}
+                                >
+                                  {selected ? (
+                                    <>
+                                      <Check className="h-4 w-4" strokeWidth={2} />
+                                      <span>Có học</span>
+                                    </>
+                                  ) : (
+                                    <span>+ Chọn</span>
+                                  )}
+                                </button>
                               </td>
                             );
                           })}
@@ -303,51 +268,33 @@ export function TimetableView() {
                   </CardHeader>
                   <CardContent className="space-y-2.5">
                     {GRADE_6_SUBJECTS.map((subject) => {
-                      const entry = draftMap.get(
+                      const selected = draftMap.has(
                         makeCellKey(day.value, subject.code)
                       );
-                      const selected = Boolean(entry);
                       return (
-                        <div key={subject.code} className="space-y-1.5">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              toggleSubjectCell(day.value, subject.code)
-                            }
-                            aria-pressed={selected}
-                            className={cn(
-                              'flex h-11 w-full items-center justify-between rounded-lg border px-3.5 text-sm font-semibold transition-colors',
-                              selected
-                                ? 'border-brand-strong bg-brand-soft text-brand-strong dark:border-sky-500 dark:text-sky-200'
-                                : 'bg-background text-foreground hover:bg-muted'
-                            )}
-                          >
-                            <span>{subject.name}</span>
-                            {selected ? (
-                              <Check className="h-4 w-4" strokeWidth={2} />
-                            ) : (
-                              <span className="text-xs font-normal text-muted-foreground">
-                                Chạm để thêm
-                              </span>
-                            )}
-                          </button>
-
-                          {selected && entry ? (
-                            <Input
-                              value={entry.periodNote ?? ''}
-                              onChange={(e) =>
-                                updatePeriodNote(
-                                  day.value,
-                                  subject.code,
-                                  e.target.value
-                                )
-                              }
-                              maxLength={30}
-                              placeholder="Ghi chú tiết học (VD: Tiết 1-2)"
-                              className="h-10 text-sm"
-                            />
-                          ) : null}
-                        </div>
+                        <button
+                          key={subject.code}
+                          type="button"
+                          onClick={() =>
+                            toggleSubjectCell(day.value, subject.code)
+                          }
+                          aria-pressed={selected}
+                          className={cn(
+                            'flex h-11 w-full items-center justify-between rounded-lg border px-3.5 text-sm font-semibold transition-colors',
+                            selected
+                              ? 'border-brand-strong bg-brand-soft text-brand-strong dark:border-sky-500 dark:text-sky-200'
+                              : 'bg-background text-foreground hover:bg-muted'
+                          )}
+                        >
+                          <span>{subject.name}</span>
+                          {selected ? (
+                            <Check className="h-4 w-4" strokeWidth={2} />
+                          ) : (
+                            <span className="text-xs font-normal text-muted-foreground">
+                              Chạm để thêm
+                            </span>
+                          )}
+                        </button>
                       );
                     })}
                   </CardContent>

@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { RegisterForm } from '@/components/auth/register-form';
 
 export const metadata: Metadata = {
-  title: 'Đăng ký | AI Study Companion — Lớp 6',
-  description: 'Tạo tài khoản Học sinh lớp 6 hoặc Phụ huynh trên AI Study Companion.',
+  title: 'Đăng ký',
+  description: 'Tạo tài khoản Học sinh hoặc Phụ huynh trên Smart Otter.',
 };
 
 function RegisterFormFallback() {

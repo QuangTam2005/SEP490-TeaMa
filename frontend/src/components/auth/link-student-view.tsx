@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
-  BookOpen,
   Check,
   CheckCircle2,
   Copy,
@@ -21,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { BrandLogo } from '@/components/shared/brand-logo';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
@@ -111,12 +111,7 @@ export function LinkStudentView() {
               <span>Quay lại</span>
             </Link>
             <div className="hidden items-center gap-2 sm:flex">
-              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-strong text-white">
-                <BookOpen className="h-4 w-4" strokeWidth={1.75} />
-              </span>
-              <span className="text-sm font-semibold text-foreground">
-                Liên kết Học sinh &amp; Phụ huynh
-              </span>
+              <BrandLogo title="Smart Otter · Liên kết gia đình" size="sm" />
             </div>
           </div>
 

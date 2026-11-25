@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { BookOpen } from 'lucide-react';
+import { BrandLogo } from '@/components/shared/brand-logo';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 
 interface AuthLayoutProps {
@@ -14,14 +14,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-10">
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-strong text-white">
-              <BookOpen className="h-4 w-4" strokeWidth={1.75} />
-            </span>
-            <span className="text-base font-semibold tracking-tight text-foreground">
-              Study Companion
-            </span>
+            <BrandLogo />
           </Link>
 
           <ThemeToggle />

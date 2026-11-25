@@ -4,7 +4,6 @@ import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  BookOpen,
   CalendarDays,
   LayoutDashboard,
   Link2,
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/shared/brand-logo';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { useAuthStore } from '@/store/auth-store';
 import { cn } from '@/lib/utils';
@@ -59,14 +59,9 @@ export function GuardianShell({ children }: GuardianShellProps) {
           <div className="flex items-center gap-3">
             <Link
               href="/guardian/dashboard"
-              className="inline-flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-strong text-white">
-                <BookOpen className="h-4 w-4" strokeWidth={1.75} />
-              </span>
-              <span className="text-base font-bold tracking-tight text-foreground">
-                Study Companion
-              </span>
+              <BrandLogo />
             </Link>
             <Badge variant="info" className="hidden sm:inline-flex">
               <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />

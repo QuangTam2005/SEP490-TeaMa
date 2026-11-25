@@ -24,9 +24,17 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'AI Study Companion',
+  title: {
+    default: 'Smart Otter',
+    template: '%s | Smart Otter',
+  },
   description:
-    'Nền tảng web AI hỗ trợ học sinh ôn bài cũ, soạn bài mới và theo dõi tiến độ học tập.',
+    'Smart Otter — Nền tảng web AI hỗ trợ học sinh ôn bài cũ, soạn bài mới và theo dõi tiến độ học tập.',
+  icons: {
+    icon: '/fav.png',
+    shortcut: '/fav.png',
+    apple: '/fav.png',
+  },
 };
 
 interface RootLayoutProps {
