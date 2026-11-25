@@ -268,7 +268,8 @@ final class InMemoryStudyHarness {
                 Subject.builder().id(9L).code(SubjectCode.HIST).name("Lịch sử").minGrade(10).maxGrade(12).isActive(true).build(),
                 Subject.builder().id(10L).code(SubjectCode.GEO).name("Địa lý").minGrade(10).maxGrade(12).isActive(true).build(),
                 Subject.builder().id(11L).code(SubjectCode.INFO).name("Tin học").minGrade(3).maxGrade(12).isActive(true).build(),
-                Subject.builder().id(12L).code(SubjectCode.CIVICS).name("Giáo dục công dân").minGrade(6).maxGrade(12).isActive(true).build()
+                Subject.builder().id(12L).code(SubjectCode.CIVICS).name("Giáo dục công dân").minGrade(6).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(13L).code(SubjectCode.TECH).name("Công nghệ").minGrade(3).maxGrade(12).isActive(true).build()
         ));
     }
 

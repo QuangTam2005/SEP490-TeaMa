@@ -22,7 +22,7 @@ Xây dựng nền tảng web responsive **AI Study Companion** với định hư
 ## 2. Target Users & Roles (RBAC)
 1. **Student (Học sinh):**
    - **Tự thiết lập khối lớp của mình (`1–12`)** khi đăng ký hoặc cập nhật hồ sơ học tập (không mặc định cứng khối 6).
-   - Nhập và cập nhật **Thời khóa biểu tuần** theo danh mục môn phù hợp khối lớp (`Toán`, `Ngữ văn`, `Tiếng Anh`, `Khoa học tự nhiên`, `Lịch sử – Địa lý`, và các môn THCS/THPT `Vật lí`, `Hóa học`, `Sinh học`, `Lịch sử`, `Địa lí`, `Tin học`, `GDCD`).
+   - Nhập và cập nhật **Thời khóa biểu tuần** theo danh mục môn phù hợp khối lớp (`Toán`, `Ngữ văn`, `Tiếng Anh`, `Khoa học tự nhiên`, `Lịch sử – Địa lý`, và các môn THCS/THPT `Vật lí`, `Hóa học`, `Sinh học`, `Lịch sử`, `Địa lí`, `Tin học`, `Công nghệ`, `GDCD`).
    - Chuẩn bị bài vào **ngày hôm trước** của ngày có lịch học môn (theo múi giờ `Asia/Ho_Chi_Minh`: ví dụ thứ Hai có môn Toán $\rightarrow$ Chủ nhật làm bài ôn/soạn môn Toán).
    - Thực hiện tuần tự cặp nhiệm vụ **Review (Ôn bài cũ)** trước $\rightarrow$ **Preview (Soạn bài mới)** sau, tự viết kiến thức từ `850` đến `3.000` ký tự (kèm lưu nháp cục bộ trên trình duyệt).
    - Xem kết quả AI đánh giá (`Accuracy`, `Completeness`, `overall_status`, nhận xét `<= 600` ký tự, nguồn tham khảo) và có thể nộp tối đa **3 phiên bản tổng cộng (`v1`, `v2`, `v3`)** cho mỗi nhiệm vụ.

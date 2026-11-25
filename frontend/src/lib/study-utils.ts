@@ -34,6 +34,7 @@ export const ALL_SUBJECTS: SubjectCatalogItem[] = [
   { code: 'HIST', name: 'Lịch sử', shortLabel: 'Sử', minGrade: 10, maxGrade: 12 },
   { code: 'GEO', name: 'Địa lý', shortLabel: 'Địa', minGrade: 10, maxGrade: 12 },
   { code: 'INFO', name: 'Tin học', shortLabel: 'Tin', minGrade: 3, maxGrade: 12 },
+  { code: 'TECH', name: 'Công nghệ', shortLabel: 'Công nghệ', minGrade: 3, maxGrade: 12 },
   { code: 'CIVICS', name: 'Giáo dục công dân', shortLabel: 'GDCD', minGrade: 6, maxGrade: 12 },
 ];
 

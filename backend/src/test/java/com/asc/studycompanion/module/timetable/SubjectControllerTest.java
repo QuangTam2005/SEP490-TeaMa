@@ -41,28 +41,32 @@ class SubjectControllerTest {
                 Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").minGrade(1).maxGrade(12).isActive(true).build(),
                 Subject.builder().id(4L).code(SubjectCode.SCI).name("Khoa học tự nhiên").minGrade(1).maxGrade(9).isActive(true).build(),
                 Subject.builder().id(6L).code(SubjectCode.PHY).name("Vật lý").minGrade(10).maxGrade(12).isActive(true).build(),
-                Subject.builder().id(11L).code(SubjectCode.INFO).name("Tin học").minGrade(3).maxGrade(12).isActive(true).build()
+                Subject.builder().id(11L).code(SubjectCode.INFO).name("Tin học").minGrade(3).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(13L).code(SubjectCode.TECH).name("Công nghệ").minGrade(3).maxGrade(12).isActive(true).build()
         );
         when(subjectRepository.findAllByIsActiveTrueOrderByIdAsc()).thenReturn(seeded);
 
         mockMvc.perform(get("/api/subjects"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data.length()").value(5))
                 .andExpect(jsonPath("$.data[0].code").value("MATH"))
                 .andExpect(jsonPath("$.data[0].minGrade").value(1))
                 .andExpect(jsonPath("$.data[0].maxGrade").value(12))
-                .andExpect(jsonPath("$.data[2].code").value("PHY"));
+                .andExpect(jsonPath("$.data[2].code").value("PHY"))
+                .andExpect(jsonPath("$.data[4].code").value("TECH"));
 
         mockMvc.perform(get("/api/subjects").param("grade", "6"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(3))
-                .andExpect(jsonPath("$.data[1].code").value("SCI"));
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[1].code").value("SCI"))
+                .andExpect(jsonPath("$.data[3].code").value("TECH"));
 
         mockMvc.perform(get("/api/subjects").param("grade", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(3))
-                .andExpect(jsonPath("$.data[1].code").value("PHY"));
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[1].code").value("PHY"))
+                .andExpect(jsonPath("$.data[3].code").value("TECH"));
 
         mockMvc.perform(get("/api/subjects").param("grade", "13"))
                 .andExpect(status().isBadRequest())

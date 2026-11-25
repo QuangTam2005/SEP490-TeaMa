@@ -12,5 +12,6 @@ public enum SubjectCode {
     HIST,
     GEO,
     INFO,
+    TECH,
     CIVICS
 }

@@ -71,4 +71,15 @@ class FlywayMigrationSchemaTest {
         assertTrue(sql.contains("guardian_note"));
         assertTrue(sql.contains("guardian_acknowledged_by_user_id"));
     }
+
+    @Test
+    void v4MigrationAddsTechSubject() throws IOException {
+        ClassPathResource resource = new ClassPathResource("db/migration/V4__add_tech_subject.sql");
+        assertTrue(resource.exists(), "V4 migration must exist on classpath");
+
+        String sql = resource.getContentAsString(StandardCharsets.UTF_8);
+        assertTrue(sql.contains("subjects_code_check"));
+        assertTrue(sql.contains("'TECH'"));
+        assertTrue(sql.contains("'Công nghệ'"));
+    }
 }

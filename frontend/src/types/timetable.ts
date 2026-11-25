@@ -10,6 +10,7 @@ export type SubjectCode =
   | 'HIST'
   | 'GEO'
   | 'INFO'
+  | 'TECH'
   | 'CIVICS';
 
 /**
