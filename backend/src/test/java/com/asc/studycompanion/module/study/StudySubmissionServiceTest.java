@@ -208,4 +208,49 @@ class StudySubmissionServiceTest {
         assertEquals(501L, deduped.id());
         assertFalse(deduped.isCurrent());
     }
+
+    @Test
+    void retryEvaluationResetsFailedJobAndRejectsSucceededJob() {
+        StudyTask task = StudyTask.builder()
+                .id(101L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.EVALUATION_FAILED)
+                .build();
+        StudySubmission submission = StudySubmission.builder()
+                .id(601L)
+                .task(task)
+                .version(1)
+                .isCurrent(true)
+                .lessonTitle("Bài ôn")
+                .content("a".repeat(900))
+                .charCount(900)
+                .submittedAt(Instant.now())
+                .build();
+        EvaluationJob failedJob = EvaluationJob.builder()
+                .id(801L)
+                .submissionId(601L)
+                .status(EvaluationJobStatus.FAILED)
+                .attempts(3)
+                .lastError("Timeout")
+                .build();
+
+        when(studySubmissionRepository.findById(601L)).thenReturn(Optional.of(submission));
+        when(evaluationJobRepository.findBySubmissionId(601L)).thenReturn(Optional.of(failedJob));
+
+        StudySubmissionResponse retried = submissionService.retryEvaluation(1L, 601L);
+        assertEquals(601L, retried.id());
+        assertEquals(EvaluationJobStatus.PENDING, failedJob.getStatus());
+        assertEquals(0, failedJob.getAttempts());
+        assertEquals(StudyTaskStatus.EVALUATING, task.getStatus());
+
+        task.setStatus(StudyTaskStatus.EVALUATED);
+        failedJob.setStatus(EvaluationJobStatus.SUCCEEDED);
+        AppException rejectEx = assertThrows(
+                AppException.class,
+                () -> submissionService.retryEvaluation(1L, 601L)
+        );
+        assertEquals(ErrorCode.AI_RETRY_NOT_ALLOWED, rejectEx.getErrorCode());
+    }
 }

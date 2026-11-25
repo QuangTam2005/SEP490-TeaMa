@@ -60,7 +60,7 @@
 ### Task 7 — Nộp bài Review/Preview, Chuẩn độ dài & `v1..v3` *(3 subtasks)*
 - [x] `[TASK-BE.4b]` *(2 SP)* Xây dựng `GET /api/student/tasks/{taskId}` + `StudyTextUtils` (`\r\n` $\rightarrow$ `\n`, `.trim()`, kiểm tra `850–2,000` ký tự `BR-12`) & unit tests
 - [x] `[TASK-BE.4c]` *(5 SP)* Xây dựng `POST /api/student/tasks/{taskId}/submissions` (cổng `REVIEW` trước `PREVIEW` `BR-08`, tối đa 3 phiên bản `v1..v3` / `revisionCount <= 2`, khóa khi `EVALUATING`, chống trùng `Idempotency-Key` `BR-14`, lưu atomic `StudySubmission` + `PENDING` `EvaluationJob`) & tests
-- [ ] `[TASK-BE.4d]` *(2 SP)* Xây dựng `POST /api/student/submissions/{submissionId}/retry-evaluation` (hỗ trợ debug/re-trigger trước khi fallback hoàn tất) & tests
+- [x] `[TASK-BE.4d]` *(2 SP)* Xây dựng `POST /api/student/submissions/{submissionId}/retry-evaluation` (hỗ trợ debug/re-trigger trước khi fallback hoàn tất) & tests
 
 ---
 

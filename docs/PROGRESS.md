@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 4 In Progress (`[TASK-BE.4c]` Completed — Immutable `v1..v3` Submission & Job Queue Persistence)  
+**Current Phase:** Phase 4 Completed (`[TASK-BE.3]`–`[TASK-BE.4d]`) $\rightarrow$ Ready for Phase 5 (`Brave Search + CKEY/MiMo AI Pipeline & Guardian Backend`)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -41,10 +41,11 @@
 - **[DONE] `[TASK-BE.3]` (`63f08df`):** Implemented versioned `timetable` module (`Timetable`, `TimetableEntry`, `TimetableStatus`, `TimetableRepository`, `TimetableService`, `TimetableController` at `GET/PUT /api/student/timetable`), preserving historical versions while archiving superseded active timetables and permitting both owning `STUDENT` and linked `GUARDIAN` edits, backed by `TimetableServiceTest` & `TimetableControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 46, Failures: 0`).
 - **[DONE] `[TASK-BE.4a]` (`47a850c`):** Implemented `StudyPlan`, `StudyTask`, `StudyTaskType`, `StudyTaskStatus`, `OverallEvaluationStatus`, `StudyPlanService` (`Asia/Ho_Chi_Minh` next-day planning: single `REVIEW` + `PREVIEW` pair per distinct subject, empty schedule handling, preserving submitted plans across timetable updates), and `GET /api/student/plans/next-day`, backed by `StudyPlanServiceTest` & `StudyPlanControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 50, Failures: 0`).
 - **[DONE] `[TASK-BE.4b]` (`b1cdb80`):** Implemented `StudyTextUtils` (`\r\n` $\rightarrow$ `\n`, `.trim()`, strict `[850, 2000]` `BR-12` bounds), AI read-models (`AIEvaluation`, `SourceReference`, `AccuracyLevel`, `CompletenessLevel`, `ConfidenceLevel`), `StudySubmission` + `StudySubmissionRepository`, and `StudyTaskService`/`StudyTaskController` (`GET /api/student/tasks/{taskId}`), backed by `StudyTextUtilsTest` & `StudyTaskControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 53, Failures: 0`).
-- **[DONE] `[TASK-BE.4c]`:** Implemented `EvaluationJob` (`EvaluationJobStatus`, `EvaluationJobRepository`), `SubmitStudyRequest`, `StudySubmissionService`, and `POST /api/student/tasks/{taskId}/submissions` enforcing `REVIEW`-before-`PREVIEW` (`BR-08`), `[850, 2000]` (`BR-12`), `EVALUATING` lock (`STUDY_006`), `v1..v3` max versions (`STUDY_005`), `Idempotency-Key` dedup (`BR-14`), and atomic `StudySubmission` + `PENDING` `EvaluationJob` creation, backed by `StudySubmissionServiceTest` & `StudyTaskControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 57, Failures: 0`).
+- **[DONE] `[TASK-BE.4c]` (`f442a56`):** Implemented `EvaluationJob` (`EvaluationJobStatus`, `EvaluationJobRepository`), `SubmitStudyRequest`, `StudySubmissionService`, and `POST /api/student/tasks/{taskId}/submissions` enforcing `REVIEW`-before-`PREVIEW` (`BR-08`), `[850, 2000]` (`BR-12`), `EVALUATING` lock (`STUDY_006`), `v1..v3` max versions (`STUDY_005`), `Idempotency-Key` dedup (`BR-14`), and atomic `StudySubmission` + `PENDING` `EvaluationJob` creation, backed by `StudySubmissionServiceTest` & `StudyTaskControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 57, Failures: 0`).
+- **[DONE] `[TASK-BE.4d]`:** Implemented `StudySubmissionService.retryEvaluation` and `StudySubmissionController` (`POST /api/student/submissions/{submissionId}/retry-evaluation`) with `AI_004` state guarding and Student ownership checks, backed by `StudySubmissionServiceTest` & `StudySubmissionControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 59, Failures: 0`).
 
 ---
 
-## 3. Next Steps Queue (Phase 4 — Timetable, Study Plan & Submission Backend)
-1. **Task 6:** `[TASK-BE.3]` *(3 SP)* Versioned Timetable CRUD (`STUDENT` + linked `GUARDIAN`) & `PUT /api/student/profile` + `[TASK-BE.4a]` *(3 SP)* Next-Day `StudyPlan`/`StudyTask` Generator (`Asia/Ho_Chi_Minh`).
-2. **Task 7:** `[TASK-BE.4b]` *(2 SP)* Task detail & `BR-12` text utils + `[TASK-BE.4c]` *(5 SP)* `POST /api/student/tasks/{taskId}/submissions` (`REVIEW`-before-`PREVIEW`, max `v1..v3`, `Idempotency-Key`, atomic `EvaluationJob`) + `[TASK-BE.4d]` *(2 SP)* Retry evaluation endpoint.
+## 3. Next Steps Queue (Phase 5 — Brave Search + CKEY/MiMo AI Pipeline & Guardian Backend)
+1. **Task 8:** `[TASK-BE.5a]` *(3 SP)* Brave Search Adapter (`Kết nối tri thức với cuộc sống` + `Wikipedia`, max 2–3 sources) + `[TASK-BE.5b]` *(5 SP)* PII-free Prompt Builder & CKEY/MiMo Adapter + `[TASK-BE.6a]` *(2 SP)* `KnowledgeCache`.
+2. **Task 9:** `[TASK-BE.6b]` *(5 SP)* Async `EvaluationJob` Worker (3-retry fallback forwarding to Guardian + `AIUsageLog`) + `[TASK-BE.6c]` *(3 SP)* Guardian Read-Only Dashboard & Submission Inspector APIs.

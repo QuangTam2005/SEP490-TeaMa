@@ -121,6 +121,34 @@ public class StudySubmissionService {
         return studyTaskService.toSubmissionResponse(savedSubmission, null, null);
     }
 
+    @Transactional
+    public StudySubmissionResponse retryEvaluation(Long studentUserId, Long submissionId) {
+        StudySubmission submission = studySubmissionRepository.findById(submissionId)
+                .orElseThrow(() -> new AppException(ErrorCode.SUBMISSION_NOT_FOUND));
+
+        StudyTask task = submission.getTask();
+        studyAccessGuard.assertStudentOwner(studentUserId, task.getPlan().getStudent().getId());
+
+        EvaluationJob job = evaluationJobRepository.findBySubmissionId(submissionId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVALUATION_JOB_NOT_FOUND));
+
+        if (job.getStatus() != EvaluationJobStatus.FAILED
+                && task.getStatus() != StudyTaskStatus.EVALUATION_FAILED) {
+            throw new AppException(ErrorCode.AI_RETRY_NOT_ALLOWED);
+        }
+
+        job.setStatus(EvaluationJobStatus.PENDING);
+        job.setAttempts(0);
+        job.setLastError(null);
+        job.setNextRetryAt(Instant.now());
+        evaluationJobRepository.save(job);
+
+        task.setStatus(StudyTaskStatus.EVALUATING);
+        studyTaskRepository.save(task);
+
+        return studyTaskService.toSubmissionResponse(submission, null, null);
+    }
+
     private void ensureReviewSubmittedFirst(StudyTask previewTask) {
         boolean reviewExists = studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
                         previewTask.getPlan().getId(),
