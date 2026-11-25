@@ -107,7 +107,7 @@
 - [x] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
 - [x] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`
 
-### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(22 subtasks)*
+### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(23 subtasks)*
 - [x] `[TASK-FEAT.5a]` *(2 SP)* Xây dựng hệ thống chống copy/dán vào ô nội dung bài làm (`anti-paste.ts`, `TaskWorkspaceView`: chặn `paste`/`drop`/`contextmenu`/`Ctrl+V`/`beforeinput` & bulk-insert `delta > 30` giữ nguyên bộ gõ Telex/VNI) & đồng bộ `docs/`
 - [x] `[TASK-FEAT.5b]` *(2 SP)* Tối ưu layout responsive màn hình rộng 24 inch (`max-w-[1600px]` cho `StudentShell`/`GuardianShell`/`AuthLayout`/`LinkStudentView`, `lg:` nav breakpoint chống dồn header, `2xl:grid-cols-2`/`8:4` cho `NextDayPlanView`/`StudyHistoryView`/`TaskWorkspaceView`/`SubmissionDetailView`/`ProfileView`)
 - [x] `[TASK-FEAT.5c]` *(2 SP)* Cập nhật logic tính chuỗi học (`StudyPlanService.getStreak`) bỏ qua các ngày nghỉ không có môn trên thời khóa biểu `ACTIVE` (ví dụ T7, CN trống lịch) mà vẫn ngắt chuỗi khi bỏ lỡ ngày có lịch học & bổ sung unit tests (`StudyPlanServiceTest`)
@@ -130,6 +130,7 @@
 - [x] `[TASK-FEAT.5t]` *(1 SP)* Loại bỏ hoàn toàn các trang chặn Cloudflare/anti-bot/timeout (`olm.vn`, `hoc247.net`, `haylamdo.com`, `thuvienhoclieu.com`, `hocmai.vn`, `baitap123.com`) khỏi kết quả chọn nguồn của `BraveSearchAdapter` + tests (`99/99` BE)
 - [x] `[TASK-FEAT.5u]` *(1 SP)* Nâng giới hạn trích nguồn lên **`2.000` ký tự/nguồn** (`BraveSearchAdapter.MAX_SNIPPET_CHARS = 2000`), nâng tổng vùng nguồn **`MAX_SOURCES_CHARS = 4.500`** ký tự, nâng **`maxContextTokens = 2.700`** (`8.100` ký tự để không cắt bài làm `3.000` ký tự), nâng `KnowledgeCache` `v5`, đồng bộ docs (`RULES.md`, `PRD.md`, `ARCHITECTURE.md`) & tests (`99/99` BE)
 - [x] `[TASK-FEAT.5v]` *(1 SP)* Rà soát cuối cùng toàn web: vá lỗi `UriComponentsBuilder` trong `BraveSearchAdapter` khi tên bài chứa ký tự `{...}` (`queryParam("q", "{q}").encode().buildAndExpand(searchText)`), kiểm chứng `100/100` BE tests & `typecheck`/`lint`/`build` Frontend (`14` routes)
+- [x] `[TASK-FEAT.5w]` *(2 SP)* Tối ưu trải nghiệm di động (`360–640px`): chống iOS zoom `text-base md:text-sm` + `h-10`/`h-11` cho `Input`/textarea/nút phiên bản, hiện tên/lớp trong drawer mobile (`StudentShell`/`GuardianShell`), ưu tiên hiển thị `Đánh giá AI` lên trên khi xem kết quả trên mobile (`TaskWorkspaceView`/`SubmissionDetailView`), thanh lọc môn cuộn ngang gọn trên `GuardianDashboardView` & tối ưu chiều cao editor khi bật bàn phím ảo (`tsc`, `lint`, `next build` `14/14` routes)
 
 ---
 

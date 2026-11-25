@@ -630,7 +630,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                               setSelectedVersionId(sub.id);
                             }}
                             className={cn(
-                              'h-9 rounded-lg border px-3 text-xs font-semibold transition-colors',
+                              'h-11 rounded-lg border px-3.5 text-xs font-semibold transition-colors md:h-9 md:px-3',
                               !isComposing && activeSubmission?.id === sub.id
                                 ? 'border-brand-strong bg-brand-soft text-brand-strong dark:text-sky-200'
                                 : 'bg-background text-muted-foreground hover:text-foreground'
@@ -674,7 +674,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                             onChange={(e) => setLessonTitle(e.target.value)}
                             maxLength={200}
                             placeholder="VD: Bài 11: Ước chung và Ước chung lớn nhất"
-                            className="h-11 text-sm"
+                            className="h-11 text-base md:text-sm"
                           />
                         </div>
 
@@ -752,9 +752,9 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                               }
                               setContent(nextValue);
                             }}
-                            rows={14}
+                            rows={12}
                             placeholder="Con tự gõ các ý chính đã học hoặc tóm tắt bài mới bằng lời hiểu của mình (400–3.000 ký tự, không hỗ trợ dán văn bản)..."
-                            className="min-h-[300px] w-full rounded-lg border bg-background p-3.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:min-h-[420px]"
+                            className="min-h-[210px] w-full rounded-lg border bg-background p-3.5 text-base leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-[300px] md:text-sm xl:min-h-[420px]"
                           />
 
                           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -826,12 +826,12 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                             )}
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-2.5">
+                          <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-2.5">
                             {submissions.length > 0 ? (
                             <Button
                               type="button"
                               variant="outline"
-                              className="h-11"
+                              className="h-11 w-full sm:w-auto"
                               onClick={() => setIsComposing(false)}
                             >
                               Hủy viết bản mới
@@ -840,7 +840,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
 
                           <Button
                             type="button"
-                            className="h-11 gap-2 px-6 text-sm font-semibold"
+                            className="h-11 w-full gap-2 px-6 text-sm font-semibold sm:w-auto"
                             disabled={
                               !lengthValid ||
                               !lessonTitle.trim() ||
@@ -889,8 +889,13 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                   ) : null}
                 </div>
 
-                {/* Right / AI evaluation panel */}
-                <div className="min-w-0 lg:sticky lg:top-24 lg:col-span-5 lg:self-start 2xl:col-span-4">
+                {/* Right / AI evaluation panel (prioritized at top on mobile when reading evaluation) */}
+                <div
+                  className={cn(
+                    'min-w-0 lg:sticky lg:top-24 lg:col-span-5 lg:self-start 2xl:col-span-4',
+                    !isComposing && 'order-first lg:order-last'
+                  )}
+                >
                   <EvaluationPanel
                     submission={activeSubmission}
                     isEvaluating={isEvaluating}

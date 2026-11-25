@@ -164,6 +164,16 @@ export function StudentShell({ children }: StudentShellProps) {
         {mobileMenuOpen ? (
           <div className="border-t bg-card px-4 py-3 lg:hidden">
             <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-lg bg-brand-soft/60 px-3.5 py-2 text-xs font-semibold text-brand-strong dark:text-sky-200 sm:hidden">
+                <span className="truncate">
+                  {user?.fullName ?? 'Học sinh'}
+                </span>
+                {user?.grade ? (
+                  <span className="ml-2 shrink-0 font-mono">
+                    Lớp {user.grade}
+                  </span>
+                ) : null}
+              </div>
               {STUDENT_NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = pathname.startsWith(item.href);

@@ -151,7 +151,7 @@ export function SubmissionDetailView({
                       type="button"
                       onClick={() => setSelectedVersionId(ver.id)}
                       className={cn(
-                        'h-9 rounded-lg border px-3 text-xs font-semibold transition-colors',
+                        'h-11 rounded-lg border px-3.5 text-xs font-semibold transition-colors md:h-9 md:px-3',
                         activeVersion?.id === ver.id
                           ? 'border-brand-strong bg-brand-soft text-brand-strong dark:text-sky-200'
                           : 'bg-background text-muted-foreground hover:text-foreground'
@@ -167,7 +167,7 @@ export function SubmissionDetailView({
               {activeVersion ? (
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 xl:gap-8">
                   {/* Immutable student submission */}
-                  <Card className="min-w-0 overflow-hidden lg:col-span-7 2xl:col-span-8">
+                  <Card className="order-2 min-w-0 overflow-hidden lg:order-1 lg:col-span-7 2xl:col-span-8">
                     <CardHeader className="border-b pb-3.5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <CardTitle className="text-base">
@@ -194,8 +194,8 @@ export function SubmissionDetailView({
                     </CardContent>
                   </Card>
 
-                  {/* Read-only AI Evaluation + Sources (Zero cost/token leak) */}
-                  <Card className="min-w-0 overflow-hidden border-brand/25 lg:sticky lg:top-24 lg:col-span-5 lg:self-start 2xl:col-span-4">
+                  {/* Read-only AI Evaluation + Sources (Zero cost/token leak; prioritized on mobile) */}
+                  <Card className="order-1 min-w-0 overflow-hidden border-brand/25 lg:sticky lg:top-24 lg:order-2 lg:col-span-5 lg:self-start 2xl:col-span-4">
                     <CardHeader className="border-b bg-brand-soft/35 pb-3.5 dark:bg-sky-950/30">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -346,7 +346,7 @@ export function SubmissionDetailView({
                   />
                   <Button
                     type="button"
-                    className="h-11 gap-2 px-5 font-semibold"
+                    className="h-11 w-full gap-2 px-5 font-semibold sm:w-auto"
                     disabled={
                       !detail.taskId || acknowledgeMutation.isPending
                     }

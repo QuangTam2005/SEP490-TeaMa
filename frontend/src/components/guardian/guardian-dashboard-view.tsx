@@ -334,10 +334,10 @@ export function GuardianDashboardView() {
           ) : null}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           {childrenQuery.data && childrenQuery.data.length > 1 ? (
-            <div className="flex items-center gap-1.5">
-              <Users className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+            <div className="flex w-full items-center gap-1.5 sm:w-auto">
+              <Users className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
               <select
                 aria-label="Chọn học sinh đang theo dõi"
                 value={selectedStudentId ?? ''}
@@ -346,7 +346,7 @@ export function GuardianDashboardView() {
                   setSelectedStudentId(Number.isFinite(id) ? id : null);
                   setSelectedSubject('ALL');
                 }}
-                className="h-10 rounded-lg border bg-background px-3 text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-11 w-full rounded-lg border bg-background px-3 text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:w-auto sm:text-sm"
               >
                 {childrenQuery.data.map((child) => (
                   <option key={child.studentId} value={child.studentId}>
@@ -357,9 +357,9 @@ export function GuardianDashboardView() {
             </div>
           ) : null}
 
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <CalendarDays
-              className="h-4 w-4 text-muted-foreground"
+              className="h-4 w-4 shrink-0 text-muted-foreground"
               strokeWidth={1.75}
             />
             <Input
@@ -367,14 +367,14 @@ export function GuardianDashboardView() {
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               aria-label="Chọn ngày theo dõi"
-              className="h-10 w-44"
+              className="h-11 w-full sm:h-10 sm:w-44"
             />
           </div>
 
           <Button
             type="button"
             variant="outline"
-            className="h-10 gap-1.5"
+            className="h-11 w-full gap-1.5 sm:h-10 sm:w-auto"
             disabled={isExporting || !dashboardQuery.data?.linkedStudentName}
             onClick={() => void handleExportExcel()}
           >
@@ -454,15 +454,15 @@ export function GuardianDashboardView() {
         </Card>
       ) : null}
 
-      {/* Subject filter pills */}
-      <div className="flex flex-wrap gap-2">
+      {/* Subject filter pills (horizontally scrollable single row on mobile) */}
+      <div className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
         {subjectFilters.map((filter) => (
           <button
             key={filter.code}
             type="button"
             onClick={() => setSelectedSubject(filter.code)}
             className={cn(
-              'h-10 rounded-lg border px-3.5 text-xs font-semibold transition-colors',
+              'h-11 shrink-0 whitespace-nowrap rounded-lg border px-3.5 text-xs font-semibold transition-colors sm:h-10',
               selectedSubject === filter.code
                 ? 'border-brand-strong bg-brand-soft text-brand-strong dark:text-sky-200'
                 : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground'

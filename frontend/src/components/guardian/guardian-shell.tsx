@@ -162,6 +162,12 @@ export function GuardianShell({ children }: GuardianShellProps) {
         {mobileMenuOpen ? (
           <div className="border-t bg-card px-4 py-3 lg:hidden">
             <div className="space-y-2">
+              <div className="flex items-center gap-2 rounded-lg bg-brand-soft/60 px-3.5 py-2 text-xs font-semibold text-brand-strong dark:text-sky-200 sm:hidden">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                <span className="truncate">
+                  Phụ huynh · {user?.fullName ?? 'Giám sát'}
+                </span>
+              </div>
               {GUARDIAN_NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = pathname.startsWith(item.href);
