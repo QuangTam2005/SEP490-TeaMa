@@ -109,3 +109,10 @@
 
 ### Task 15 — Editor Integrity & Anti-Paste Protection *(1 subtask)*
 - [x] `[TASK-FEAT.5a]` *(2 SP)* Xây dựng hệ thống chống copy/dán vào ô nội dung bài làm (`anti-paste.ts`, `TaskWorkspaceView`: chặn `paste`/`drop`/`contextmenu`/`Ctrl+V`/`beforeinput` & bulk-insert `delta > 30` giữ nguyên bộ gõ Telex/VNI) & đồng bộ `docs/`
+
+---
+
+## Phase 8: Production Ubuntu VPS Deployment (5-Phase Rollout, Zero Impact on `skillswap-*`)
+
+### Task 16 — VPS Pre-Flight Audit & Preparation *(Phase 1)*
+- [x] `[TASK-OPS.1]` *(2 SP)* Tạo kế hoạch 5 Phase & tài liệu thực thi chi tiết Phase 1 ([`PHASE_1_PREFLIGHT.md`](./deployment/PHASE_1_PREFLIGHT.md)) + read-only pre-flight script ([`phase1-preflight-check.sh`](./deployment/scripts/phase1-preflight-check.sh)) & `.gitattributes` (LF cho `.sh`)
