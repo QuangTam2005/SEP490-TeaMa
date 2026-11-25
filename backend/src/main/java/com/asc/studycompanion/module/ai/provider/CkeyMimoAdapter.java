@@ -21,7 +21,9 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -30,6 +32,9 @@ import java.util.Map;
 @Slf4j
 @Service
 public class CkeyMimoAdapter implements AiEvaluationProvider {
+
+    private static final int MAX_POINT_ITEMS = 4;
+    private static final int MAX_POINT_CHARS = 140;
 
     private final RestClient restClient;
     private final AiProperties aiProperties;
@@ -62,7 +67,7 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
         Map<String, Object> payload = Map.of(
                 "model", model,
                 "temperature", 0.2,
-                "max_tokens", 700,
+                "max_tokens", 950,
                 "response_format", Map.of("type", "json_object"),
                 "messages", List.of(
                         Map.of("role", "system", "content", promptBuilder.buildSystemPrompt()),
@@ -119,11 +124,37 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
                 throw new AppException(ErrorCode.AI_RESPONSE_INVALID, "AI feedback missing");
             }
 
-            List<String> incorrectPoints = readStringList(root.get("incorrectPoints"));
-            List<String> missingPoints = readStringList(root.get("missingPoints"));
+            List<String> incorrectPoints = normalizePointList(readStringList(root.get("incorrectPoints")));
+            List<String> missingPoints = normalizePointList(readStringList(root.get("missingPoints")));
+
+            // Enforce cross-field evaluation policy consistency
+            if (overallStatus == OverallEvaluationStatus.INSUFFICIENT_EVIDENCE
+                    || accuracy == AccuracyLevel.UNVERIFIABLE) {
+                overallStatus = OverallEvaluationStatus.INSUFFICIENT_EVIDENCE;
+                accuracy = AccuracyLevel.UNVERIFIABLE;
+                completeness = CompletenessLevel.UNDETERMINED;
+            } else if (accuracy == AccuracyLevel.INCORRECT) {
+                if (overallStatus == OverallEvaluationStatus.GOOD
+                        || overallStatus == OverallEvaluationStatus.NEEDS_IMPROVEMENT) {
+                    overallStatus = OverallEvaluationStatus.INCORRECT;
+                }
+            } else if (overallStatus == OverallEvaluationStatus.GOOD
+                    && (completeness == CompletenessLevel.INCOMPLETE
+                    || accuracy == AccuracyLevel.PARTIALLY_CORRECT)) {
+                overallStatus = OverallEvaluationStatus.NEEDS_IMPROVEMENT;
+            }
+
             String feedback = ensureFeedbackBounds(feedbackNode.asText().trim(), incorrectPoints, missingPoints);
 
-            String canonicalJson = objectMapper.writeValueAsString(root);
+            Map<String, Object> canonicalMap = new LinkedHashMap<>();
+            canonicalMap.put("accuracy", accuracy.name());
+            canonicalMap.put("completeness", completeness.name());
+            canonicalMap.put("overallStatus", overallStatus.name());
+            canonicalMap.put("feedback", feedback);
+            canonicalMap.put("incorrectPoints", incorrectPoints);
+            canonicalMap.put("missingPoints", missingPoints);
+            canonicalMap.put("confidence", confidence.name());
+            String canonicalJson = objectMapper.writeValueAsString(canonicalMap);
             return new AiEvaluationResult(
                     accuracy,
                     completeness,
@@ -211,6 +242,33 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
             throw new IllegalArgumentException("Missing enum field: " + field);
         }
         return Enum.valueOf(enumType, node.asText().trim());
+    }
+
+    private static List<String> normalizePointList(List<String> raw) {
+        if (raw == null || raw.isEmpty()) {
+            return List.of();
+        }
+        List<String> normalized = new ArrayList<>();
+        List<String> seenLower = new ArrayList<>();
+        for (String item : raw) {
+            if (item == null || item.isBlank()) {
+                continue;
+            }
+            String cleaned = item.replaceAll("\\s+", " ").trim();
+            if (cleaned.length() > MAX_POINT_CHARS) {
+                int spaceIdx = cleaned.lastIndexOf(' ', MAX_POINT_CHARS - 3);
+                cleaned = (spaceIdx > 60 ? cleaned.substring(0, spaceIdx) : cleaned.substring(0, MAX_POINT_CHARS - 3)).trim() + "...";
+            }
+            String key = cleaned.toLowerCase(Locale.ROOT);
+            if (!seenLower.contains(key)) {
+                seenLower.add(key);
+                normalized.add(cleaned);
+                if (normalized.size() >= MAX_POINT_ITEMS) {
+                    break;
+                }
+            }
+        }
+        return normalized;
     }
 
     private static List<String> readStringList(JsonNode arrayNode) {

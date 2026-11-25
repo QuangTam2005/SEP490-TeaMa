@@ -156,4 +156,15 @@ class BraveSearchAdapterTest {
         );
         assertEquals(ErrorCode.AI_PROVIDER_UNAVAILABLE, missingKeyEx.getErrorCode());
     }
+
+    @Test
+    void buildsSubjectSpecificQueriesForEnglishAndTechnology() {
+        SearchQuery english = new SearchQuery(7, SubjectCode.ENG, "Tiếng Anh", "Unit 3: Teenagers Present Simple");
+        assertTrue(adapter.buildLessonWebQuery(english).contains("Global Success"));
+        assertEquals("site:vi.wikipedia.org Teenagers Present Simple", adapter.buildWikipediaQuery(english));
+
+        SearchQuery tech = new SearchQuery(8, SubjectCode.TECH, "Công nghệ", "Bài 4: Vật liệu cơ khí");
+        assertTrue(adapter.buildLessonWebQuery(tech).contains("Lớp 8 Công nghệ Bài 4: Vật liệu cơ khí Kết nối tri thức"));
+        assertEquals("site:vi.wikipedia.org Vật liệu cơ khí", adapter.buildWikipediaQuery(tech));
+    }
 }

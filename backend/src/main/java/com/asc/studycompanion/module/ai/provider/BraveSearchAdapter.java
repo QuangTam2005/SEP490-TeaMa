@@ -3,6 +3,7 @@ package com.asc.studycompanion.module.ai.provider;
 import com.asc.studycompanion.common.exception.AppException;
 import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.module.ai.config.AiProperties;
+import com.asc.studycompanion.module.timetable.entity.SubjectCode;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.extern.slf4j.Slf4j;
@@ -135,7 +136,10 @@ public class BraveSearchAdapter implements SearchProvider {
         if (lesson.isBlank()) {
             return "";
         }
-        return String.format("Lớp %d %s %s", query.grade(), subject, lesson).replaceAll("\\s+", " ").trim();
+        String hint = subjectSearchHint(query.subjectCode());
+        return String.format("Lớp %d %s %s %s", query.grade(), subject, lesson, hint)
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     public String buildWikipediaQuery(SearchQuery query) {
@@ -149,12 +153,24 @@ public class BraveSearchAdapter implements SearchProvider {
         return ("site:vi.wikipedia.org " + lesson).replaceAll("\\s+", " ").trim();
     }
 
+    private static String subjectSearchHint(SubjectCode subjectCode) {
+        if (subjectCode == null) {
+            return "Kết nối tri thức";
+        }
+        return switch (subjectCode) {
+            case ENG -> "Global Success";
+            case LIT -> "Kết nối tri thức soạn bài";
+            case MATH, PHY, CHEM -> "Kết nối tri thức lý thuyết";
+            case SCI, BIO, TECH, INFO, HISGEO, HIST, GEO, CIVICS -> "Kết nối tri thức";
+        };
+    }
+
     private static String stripLessonNumberPrefix(String rawTitle) {
         if (rawTitle == null || rawTitle.isBlank()) {
             return "";
         }
         String stripped = rawTitle.trim()
-                .replaceFirst("^(?iu)(bài|chương|chủ đề|tiết|phần)\\s+\\d+\\s*[:.\\-–]?\\s*", "");
+                .replaceFirst("^(?iu)(bài|chương|chủ đề|tiết|phần|unit|lesson)\\s+\\d+\\s*[:.\\-–]?\\s*", "");
         return stripped.isBlank() ? rawTitle.trim() : stripped.trim();
     }
 
@@ -302,11 +318,13 @@ public class BraveSearchAdapter implements SearchProvider {
         if (url.contains("vi.wikipedia.org") || url.contains("wikipedia.org")) {
             score += 4;
         }
-        if (combined.contains("kết nối tri thức") || combined.contains("ket-noi-tri-thuc")) {
+        if (combined.contains("kết nối tri thức") || combined.contains("ket-noi-tri-thuc")
+                || combined.contains("global success") || combined.contains("global-success")) {
             score += 3;
         }
         if (url.contains("vietjack") || url.contains("loigiaihay") || url.contains("olm.vn")
-                || url.contains("hoc247") || url.contains("tech12h") || url.contains("vuihoc")) {
+                || url.contains("hoc247") || url.contains("tech12h") || url.contains("vuihoc")
+                || url.contains("haylamdo") || url.contains("vndoc")) {
             score += 2;
         }
         return score;

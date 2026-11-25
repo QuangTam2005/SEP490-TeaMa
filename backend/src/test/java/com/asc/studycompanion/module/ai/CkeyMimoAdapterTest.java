@@ -152,4 +152,51 @@ class CkeyMimoAdapterTest {
         );
         assertEquals(ErrorCode.AI_RESPONSE_INVALID, invalid.getErrorCode());
     }
+
+    @Test
+    void enforcesCrossFieldPolicyConsistencyAndCapsPointsList() {
+        String inconsistentIncorrect = """
+                {
+                  "accuracy": "INCORRECT",
+                  "completeness": "COMPLETE",
+                  "overallStatus": "GOOD",
+                  "feedback": "Bài làm hiện đang sai khái niệm trọng tâm về hằng đẳng thức nên chưa đạt yêu cầu, con cần xem kỹ lại công thức trong sách giáo khoa Kết nối tri thức trước khi nộp bản chỉnh sửa tiếp theo nhé.",
+                  "incorrectPoints": ["Lỗi 1", "Lỗi 2", "Lỗi 2", "Lỗi 3", "Lỗi 4", "Lỗi 5"],
+                  "missingPoints": [],
+                  "confidence": "HIGH"
+                }
+                """;
+        AiEvaluationResult downgraded = adapter.parseAndValidateJson(inconsistentIncorrect, 120, 90, "mimo-v2-flash");
+        assertEquals(OverallEvaluationStatus.INCORRECT, downgraded.overallStatus());
+        assertEquals(4, downgraded.incorrectPoints().size());
+
+        String incompleteMarkedGood = """
+                {
+                  "accuracy": "CORRECT",
+                  "completeness": "INCOMPLETE",
+                  "overallStatus": "GOOD",
+                  "feedback": "Con làm đúng phần định nghĩa nhưng vẫn còn thiếu ví dụ minh họa quan trọng trong bài học, hãy bổ sung thêm để bài chuẩn bị đầy đủ hơn.",
+                  "incorrectPoints": [],
+                  "missingPoints": ["Thiếu ví dụ minh họa"],
+                  "confidence": "MEDIUM"
+                }
+                """;
+        AiEvaluationResult normalized = adapter.parseAndValidateJson(incompleteMarkedGood, 100, 80, "mimo-v2-flash");
+        assertEquals(OverallEvaluationStatus.NEEDS_IMPROVEMENT, normalized.overallStatus());
+
+        String unverifiableMarkedGood = """
+                {
+                  "accuracy": "UNVERIFIABLE",
+                  "completeness": "COMPLETE",
+                  "overallStatus": "GOOD",
+                  "feedback": "Chưa có nguồn đối chiếu xác thực cho chủ đề này nên không thể xác nhận độ chính xác.",
+                  "incorrectPoints": [],
+                  "missingPoints": [],
+                  "confidence": "LOW"
+                }
+                """;
+        AiEvaluationResult insufficient = adapter.parseAndValidateJson(unverifiableMarkedGood, 100, 80, "mimo-v2-flash");
+        assertEquals(OverallEvaluationStatus.INSUFFICIENT_EVIDENCE, insufficient.overallStatus());
+        assertEquals(CompletenessLevel.UNDETERMINED, insufficient.completeness());
+    }
 }
