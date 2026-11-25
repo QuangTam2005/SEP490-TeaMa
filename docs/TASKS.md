@@ -107,7 +107,7 @@
 - [x] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
 - [x] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`
 
-### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(18 subtasks)*
+### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(19 subtasks)*
 - [x] `[TASK-FEAT.5a]` *(2 SP)* Xây dựng hệ thống chống copy/dán vào ô nội dung bài làm (`anti-paste.ts`, `TaskWorkspaceView`: chặn `paste`/`drop`/`contextmenu`/`Ctrl+V`/`beforeinput` & bulk-insert `delta > 30` giữ nguyên bộ gõ Telex/VNI) & đồng bộ `docs/`
 - [x] `[TASK-FEAT.5b]` *(2 SP)* Tối ưu layout responsive màn hình rộng 24 inch (`max-w-[1600px]` cho `StudentShell`/`GuardianShell`/`AuthLayout`/`LinkStudentView`, `lg:` nav breakpoint chống dồn header, `2xl:grid-cols-2`/`8:4` cho `NextDayPlanView`/`StudyHistoryView`/`TaskWorkspaceView`/`SubmissionDetailView`/`ProfileView`)
 - [x] `[TASK-FEAT.5c]` *(2 SP)* Cập nhật logic tính chuỗi học (`StudyPlanService.getStreak`) bỏ qua các ngày nghỉ không có môn trên thời khóa biểu `ACTIVE` (ví dụ T7, CN trống lịch) mà vẫn ngắt chuỗi khi bỏ lỡ ngày có lịch học & bổ sung unit tests (`StudyPlanServiceTest`)
@@ -126,6 +126,7 @@
 - [x] `[TASK-FEAT.5p]` *(1 SP)* Chống AI bịa chi tiết/thuật ngữ ảo (`CkeyMimoAdapter`: hạ `temperature` `0.2 -> 0.0`; `EvaluationPromptBuilder`: quy tắc mọi trích dẫn/thuật ngữ khen chê phải tồn tại nguyên văn trong `<student_submission>` và không lặp máy móc cụm từ từ tiêu chí trọng tâm + `EvaluationPromptBuilderTest`)
 - [x] `[TASK-FEAT.5q]` *(1 SP)* Cô đọng `buildSystemPrompt()` trong `EvaluationPromptBuilder` theo mẫu Mentor 5 mục (`5.781 -> 4.176` ký tự, tiết kiệm `~535` token/lượt gọi AI mà giữ nguyên đủ luật chống bịa, bảo mật, tiêu chí chấm & JSON <= 1.000 ký tự) và đồng bộ tests (`99/99` BE)
 - [x] `[TASK-FEAT.5r]` *(1 SP)* Thu gọn tối đa **2 nguồn** tham khảo và tăng độ sâu mỗi nguồn lên **`1.000` ký tự**, nâng trần `<reference_sources>` `MAX_SOURCES_CHARS = 2.500` ký tự (tỉa đều cuối từ để không rớt nguồn thứ 2), nâng `KnowledgeCache` `v4` (`AiProperties`, `application.yml`, `BraveSearchAdapter`, `EvaluationPromptBuilder`, tests & docs)
+- [x] `[TASK-FEAT.5s]` *(2 SP)* Kiểm định thực tế khả năng crawl của Brave trên 5 trang chính thống & các cổng K12: loại bỏ `hanhtrangso.nxbgd.vn` (SPA rỗng), `hoc10.vn` (SPA), `moet.gov.vn` (tin hành chính), bỏ ưu tiên `nxbgd.vn`/`gdpt.vn` & các trang chặn bot Cloudflare (`olm.vn`, `hoc247.net`, `haylamdo.com`), bổ sung & nâng điểm các cổng K12 HTML server-render giàu nội dung (`vietjack.com`, `khoahoc.vietjack.com`, `loigiaihay.com`, `vndoc.com`, `tech12h.com`, `vuihoc.vn`, `doctailieu.com`, `vi.wikipedia.org`, `tailieumoi.vn`, `quantrimang.com`, `toanmath.com`, `monkey.edu.vn`, `colearn.vn`, `hocgioi.vn`, `vi.wikibooks.org`, `vi.wiktionary.org`, `taphuan.nxbgd.vn`) trong `BraveSearchAdapter` + tests
 
 ---
 

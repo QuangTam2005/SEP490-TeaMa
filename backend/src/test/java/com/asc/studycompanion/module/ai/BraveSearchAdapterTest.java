@@ -56,6 +56,8 @@ class BraveSearchAdapterTest {
                   "web": {
                     "results": [
                       { "title": "Video Facebook giải nhanh", "url": "https://www.facebook.com/groups/math7", "description": "Không dùng nguồn mạng xã hội" },
+                      { "title": "Hành trang số SGK", "url": "https://hanhtrangso.nxbgd.vn/sach-dien-tu/toan-7", "description": "Vue SPA không có nội dung văn bản" },
+                      { "title": "Cổng Bộ GD", "url": "https://moet.gov.vn/tintuc/Pages/thong-bao.aspx", "description": "Thông tư hành chính" },
                       { "title": "Blog chung", "url": "https://example.com/1", "description": "Mô tả chung" },
                       { "title": "Toán 7 Kết nối tri thức - Bài 11", "url": "https://loigiaihay.com/ket-noi-tri-thuc-bai-11", "description": "Lý thuyết trọng tâm Toán 7.", "extra_snippets": ["%s", "%s"] },
                       { "title": "VietJack Toán 7 - Ước chung lớn nhất", "url": "https://vietjack.com/toan-7/ucln", "description": "Tóm tắt bài học chuẩn SGK" }
@@ -105,6 +107,8 @@ class BraveSearchAdapterTest {
         assertEquals(2, adapter.consumeLastRequestCount());
         assertEquals(2, results.size());
         assertFalse(results.stream().anyMatch(s -> s.url().contains("facebook.com")));
+        assertFalse(results.stream().anyMatch(s -> s.url().contains("hanhtrangso.nxbgd.vn")));
+        assertFalse(results.stream().anyMatch(s -> s.url().contains("moet.gov.vn")));
         assertTrue(results.get(0).title().contains("Kết nối tri thức"));
         assertTrue(results.get(0).snippet().contains("thừa số nguyên tố"));
         assertTrue(results.get(0).snippet().length() > 600 && results.get(0).snippet().length() <= 1000,

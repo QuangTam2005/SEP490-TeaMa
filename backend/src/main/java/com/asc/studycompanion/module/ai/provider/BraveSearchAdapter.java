@@ -52,27 +52,35 @@ public class BraveSearchAdapter implements SearchProvider {
             "twitter.com",
             "x.com",
             "wattpad.com",
-            "scribd.com"
-    );
-
-    private static final List<String> OFFICIAL_EDU_HOSTS = List.of(
-            "nxbgd.vn",
+            "scribd.com",
+            // Un-crawlable JS SPAs / admin circulars lacking server-rendered lesson text
             "hanhtrangso.nxbgd.vn",
-            "moet.gov.vn",
-            "gdpt.vn",
-            "taphuan.nxbgd.vn"
+            "hoc10.vn",
+            "moet.gov.vn"
     );
 
-    private static final List<String> TRUSTED_K12_PORTALS = List.of(
-            "vietjack",
-            "loigiaihay",
-            "olm.vn",
-            "hoc247",
-            "tech12h",
-            "vuihoc",
-            "haylamdo",
-            "vndoc",
-            "tailieumoi"
+    // Server-rendered Vietnamese K12 curriculum portals verified crawlable (HTTP 200, no Cloudflare JS wall, no SPA shell)
+    private static final List<String> HIGH_CRAWL_CURRICULUM_PORTALS = List.of(
+            "vietjack.com",
+            "khoahoc.vietjack.com",
+            "loigiaihay.com",
+            "vndoc.com",
+            "tech12h.com",
+            "vuihoc.vn",
+            "doctailieu.com"
+    );
+
+    // Secondary verified crawlable Vietnamese subject portals & Wikimedia educational references
+    private static final List<String> SECONDARY_EDU_PORTALS = List.of(
+            "tailieumoi.vn",
+            "quantrimang.com",
+            "toanmath.com",
+            "monkey.edu.vn",
+            "colearn.vn",
+            "hocgioi.vn",
+            "vi.wikibooks.org",
+            "vi.wiktionary.org",
+            "taphuan.nxbgd.vn"
     );
 
     private final RestClient restClient;
@@ -449,15 +457,15 @@ public class BraveSearchAdapter implements SearchProvider {
         String combined = safeLower(result.title()) + " " + url + " " + safeLower(result.description());
         int score = 0;
 
-        for (String official : OFFICIAL_EDU_HOSTS) {
-            if (url.contains(official)) {
+        for (String portal : HIGH_CRAWL_CURRICULUM_PORTALS) {
+            if (url.contains(portal)) {
                 score += 6;
                 break;
             }
         }
 
-        if (url.contains("vi.wikipedia.org") || url.contains("wikipedia.org")) {
-            score += (query != null && query.subjectCode() == SubjectCode.ENG) ? 1 : 4;
+        if (url.contains("vi.wikipedia.org")) {
+            score += (query != null && query.subjectCode() == SubjectCode.ENG) ? 1 : 5;
         }
 
         if (combined.contains("kết nối tri thức") || combined.contains("ket-noi-tri-thuc")
@@ -465,8 +473,8 @@ public class BraveSearchAdapter implements SearchProvider {
             score += 4;
         }
 
-        for (String portal : TRUSTED_K12_PORTALS) {
-            if (url.contains(portal)) {
+        for (String secondary : SECONDARY_EDU_PORTALS) {
+            if (url.contains(secondary)) {
                 score += 3;
                 break;
             }
