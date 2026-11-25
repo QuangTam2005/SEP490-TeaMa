@@ -1,16 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
-import {
-  CheckCircle2,
-  Circle,
-  Clock,
-  Lock,
-  Send,
-  ShieldCheck,
-  SkipForward,
-  Sparkles,
-  User,
-  XCircle,
-} from 'lucide-react';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type {
@@ -33,25 +20,23 @@ export type StudyBadgeStatus =
 interface StatusStyleConfig {
   label: string;
   variant: NonNullable<BadgeProps['variant']>;
-  icon?: LucideIcon;
 }
 
 const STATUS_MAP: Record<StudyBadgeStatus, StatusStyleConfig> = {
-  STUDENT: { label: 'Học sinh', variant: 'brand', icon: User },
-  GUARDIAN: { label: 'Phụ huynh', variant: 'info', icon: ShieldCheck },
+  STUDENT: { label: 'Học sinh', variant: 'brand' },
+  GUARDIAN: { label: 'Phụ huynh', variant: 'info' },
 
-  NOT_STARTED: { label: 'Chưa làm', variant: 'secondary', icon: Circle },
-  IN_PROGRESS: { label: 'Đang viết', variant: 'brand', icon: Clock },
-  SUBMITTED: { label: 'Đã nộp', variant: 'info', icon: Send },
-  EVALUATING: { label: 'AI đang xem', variant: 'warning', icon: Sparkles },
-  EVALUATED: { label: 'Đã xem xong', variant: 'success', icon: CheckCircle2 },
+  NOT_STARTED: { label: 'Chưa làm', variant: 'secondary' },
+  IN_PROGRESS: { label: 'Đang viết', variant: 'brand' },
+  SUBMITTED: { label: 'Đã nộp', variant: 'info' },
+  EVALUATING: { label: 'AI đang xem', variant: 'warning' },
+  EVALUATED: { label: 'Đã xem xong', variant: 'success' },
   EVALUATION_FAILED: {
     label: 'Chưa xem được',
     variant: 'danger',
-    icon: XCircle,
   },
-  BLOCKED: { label: 'Chưa mở', variant: 'secondary', icon: Lock },
-  SKIPPED: { label: 'Bỏ qua', variant: 'secondary', icon: SkipForward },
+  BLOCKED: { label: 'Chưa mở', variant: 'secondary' },
+  SKIPPED: { label: 'Bỏ qua', variant: 'secondary' },
 
   CORRECT: { label: 'Chính xác', variant: 'success' },
   PARTIALLY_CORRECT: { label: 'Đúng một phần', variant: 'warning' },
@@ -86,10 +71,8 @@ export function StatusBadge({
     label: status,
     variant: 'secondary' as const,
   };
-  const Icon = config.icon;
   return (
     <Badge variant={config.variant} className={cn('whitespace-nowrap', className)}>
-      {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> : null}
       <span>{labelOverride ?? config.label}</span>
     </Badge>
   );

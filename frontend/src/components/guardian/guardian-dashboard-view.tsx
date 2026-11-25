@@ -5,21 +5,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowRight,
-  BookOpenCheck,
   CalendarDays,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  Compass,
   Download,
-  Eye,
   Link2,
   Loader2,
-  RotateCcw,
   ShieldCheck,
-  SkipForward,
   Sparkles,
   Users,
 } from 'lucide-react';
@@ -227,18 +221,8 @@ export function GuardianDashboardView() {
       render: (row) => (
         <div className="space-y-0.5">
           <p className="font-semibold text-foreground">{row.subjectName}</p>
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            {row.taskType === 'REVIEW' ? (
-              <>
-                <BookOpenCheck className="h-3.5 w-3.5" />
-                Ôn bài cũ
-              </>
-            ) : (
-              <>
-                <Compass className="h-3.5 w-3.5" />
-                Soạn bài mới
-              </>
-            )}
+          <span className="block text-xs text-muted-foreground">
+            {row.taskType === 'REVIEW' ? 'Ôn bài cũ' : 'Soạn bài mới'}
           </span>
         </div>
       ),
@@ -290,9 +274,8 @@ export function GuardianDashboardView() {
       render: (row) => {
         if (row.currentSubmissionId) {
           return (
-            <Button asChild size="sm" variant="outline" className="h-9 gap-1.5">
+            <Button asChild size="sm" variant="outline" className="h-9 whitespace-nowrap">
               <Link href={`/guardian/submissions/${row.currentSubmissionId}`}>
-                <Eye className="h-3.5 w-3.5" strokeWidth={1.75} />
                 Xem bài gốc
               </Link>
             </Button>
@@ -309,7 +292,7 @@ export function GuardianDashboardView() {
               size="sm"
               variant="outline"
               disabled={isBusy}
-              className="h-9 gap-1.5"
+              className="h-9 whitespace-nowrap"
               onClick={(e) => {
                 e.stopPropagation();
                 skipMutation.mutate({
@@ -318,14 +301,7 @@ export function GuardianDashboardView() {
                 });
               }}
             >
-              {isBusy ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : isSkipped ? (
-                <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.75} />
-              ) : (
-                <SkipForward className="h-3.5 w-3.5" strokeWidth={1.75} />
-              )}
-              <span>{isSkipped ? 'Khôi phục' : 'Bỏ qua'}</span>
+              {isBusy ? 'Đang xử lý...' : isSkipped ? 'Khôi phục' : 'Bỏ qua'}
             </Button>
           );
         }
@@ -650,13 +626,12 @@ export function GuardianDashboardView() {
                       <Button
                         asChild
                         variant="outline"
-                        className="h-11 w-full justify-between"
+                        className="h-11 w-full justify-center"
                       >
                         <Link
                           href={`/guardian/submissions/${item.currentSubmissionId}`}
                         >
-                          <span>Xem bài gốc &amp; nhận xét</span>
-                          <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+                          Xem bài gốc &amp; nhận xét
                         </Link>
                       </Button>
                     ) : canToggleSkip(item.status) ? (
@@ -667,7 +642,7 @@ export function GuardianDashboardView() {
                           skipMutation.isPending &&
                           skipMutation.variables?.taskId === item.taskId
                         }
-                        className="h-11 w-full justify-center gap-2"
+                        className="h-11 w-full justify-center"
                         onClick={() =>
                           skipMutation.mutate({
                             taskId: item.taskId,
@@ -675,17 +650,9 @@ export function GuardianDashboardView() {
                           })
                         }
                       >
-                        {item.status === 'SKIPPED' ? (
-                          <>
-                            <RotateCcw className="h-4 w-4" strokeWidth={1.75} />
-                            <span>Khôi phục bài học</span>
-                          </>
-                        ) : (
-                          <>
-                            <SkipForward className="h-4 w-4" strokeWidth={1.75} />
-                            <span>Đánh dấu bỏ qua hôm nay</span>
-                          </>
-                        )}
+                        {item.status === 'SKIPPED'
+                          ? 'Khôi phục bài học'
+                          : 'Đánh dấu bỏ qua hôm nay'}
                       </Button>
                     ) : null}
                   </CardContent>
