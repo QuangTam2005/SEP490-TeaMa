@@ -40,9 +40,9 @@ class KnowledgeCacheServiceTest {
     @Test
     void lookupHitsValidCacheAndRejectsExpiredOrDisallowedEntries() {
         String expectedKey = cacheService.buildCacheKey(7, SubjectCode.MATH, "  Ước   Chung Lớn Nhất ");
-        assertEquals("v3:kntt:gdpt-2018:7:MATH:ước chung lớn nhất", expectedKey);
+        assertEquals("v4:kntt:gdpt-2018:7:MATH:ước chung lớn nhất", expectedKey);
         assertEquals(
-                "v3:global-success:gdpt-2018:6:ENG:unit 5: natural wonders",
+                "v4:global-success:gdpt-2018:6:ENG:unit 5: natural wonders",
                 cacheService.buildCacheKey(
                         6,
                         SubjectCode.ENG,
@@ -80,7 +80,7 @@ class KnowledgeCacheServiceTest {
         cacheService.store(8, SubjectCode.SCI, "Áp suất", List.of(snippet), false);
         verify(repository, never()).save(any());
 
-        when(repository.findByCacheKey("v3:kntt:gdpt-2018:8:SCI:áp suất")).thenReturn(Optional.empty());
+        when(repository.findByCacheKey("v4:kntt:gdpt-2018:8:SCI:áp suất")).thenReturn(Optional.empty());
         cacheService.store(8, SubjectCode.SCI, "Áp suất", List.of(snippet), true);
 
         ArgumentCaptor<KnowledgeCache> captor = ArgumentCaptor.forClass(KnowledgeCache.class);

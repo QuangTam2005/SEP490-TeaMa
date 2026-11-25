@@ -38,7 +38,7 @@ class BraveSearchAdapterTest {
     @BeforeEach
     void setUp() {
         properties = new AiProperties();
-        properties.setMaxSources(3);
+        properties.setMaxSources(2);
         properties.getBrave().setBaseUrl("https://api.search.brave.com/res/v1/web/search");
         properties.getBrave().setApiKey("test-brave-key");
 
@@ -48,9 +48,9 @@ class BraveSearchAdapterTest {
     }
 
     @Test
-    void searchesWithExtraSnippetsFiltersNonEduAndCapsRequestsAndSourcesToThree() {
-        String extra1 = "Phần 1: Khái niệm Ước chung lớn nhất (ƯCLN) của hai hay nhiều số tự nhiên là số lớn nhất trong tập hợp các ước chung của các số đó.";
-        String extra2 = "Phần 2: Để tìm ƯCLN bằng cách phân tích các số ra thừa số nguyên tố, ta chọn các thừa số nguyên tố chung với số mũ nhỏ nhất.";
+    void searchesWithExtraSnippetsFiltersNonEduAndCapsRequestsAndSourcesToTwo() {
+        String extra1 = "Phần 1: Khái niệm Ước chung lớn nhất (ƯCLN) của hai hay nhiều số tự nhiên là số lớn nhất trong tập hợp các ước chung của các số đó. ".repeat(3).trim();
+        String extra2 = "Phần 2: Để tìm ƯCLN bằng cách phân tích các số ra thừa số nguyên tố, ta chọn các thừa số nguyên tố chung với số mũ nhỏ nhất rồi nhân lại. ".repeat(3).trim();
         String webJson = """
                 {
                   "web": {
@@ -83,7 +83,7 @@ class BraveSearchAdapterTest {
                 .andExpect(header("X-Subscription-Token", "test-brave-key"))
                 .andRespond(withSuccess(webJson, MediaType.APPLICATION_JSON));
 
-        // Request 2: Wikipedia directly for conceptual MATH topic (Request 3 skipped since 2+1 = 3 sources collected)
+        // Request 2: Wikipedia directly for conceptual MATH topic (1 web + 1 wiki = 2 sources max)
         server.expect(requestTo(containsString("vi.wikipedia.org")))
                 .andExpect(requestTo(containsString("extra_snippets=true")))
                 .andExpect(method(HttpMethod.GET))
@@ -103,12 +103,13 @@ class BraveSearchAdapterTest {
         server.verify();
 
         assertEquals(2, adapter.consumeLastRequestCount());
-        assertEquals(3, results.size());
+        assertEquals(2, results.size());
         assertFalse(results.stream().anyMatch(s -> s.url().contains("facebook.com")));
         assertTrue(results.get(0).title().contains("Kết nối tri thức"));
         assertTrue(results.get(0).snippet().contains("thừa số nguyên tố"));
-        assertTrue(results.get(0).snippet().length() <= 600);
-        assertTrue(results.get(2).url().contains("vi.wikipedia.org"));
+        assertTrue(results.get(0).snippet().length() > 600 && results.get(0).snippet().length() <= 1000,
+                "Expected snippet > 600 and <= 1000 chars but got " + results.get(0).snippet().length());
+        assertTrue(results.get(1).url().contains("vi.wikipedia.org"));
     }
 
     @Test

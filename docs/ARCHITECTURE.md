@@ -60,7 +60,7 @@ flowchart TB
     end
 
     subgraph External ["External Providers (Server-to-Server HTTPS)"]
-        Brave["Brave Search API (Max 3 sources, extra_snippets=true / <= 2,250 ctx tokens)"]
+        Brave["Brave Search API (Max 2 sources x 1,000 chars, extra_snippets=true / <= 2,500 source chars)"]
         CKEY["MiMo v2.6 Flash via CKEY (JSON Schema <= 1,000 chars feedback)"]
     end
 
@@ -127,6 +127,6 @@ flowchart TB
 3. `StudyService` validates task ownership, `REVIEW` completion lock (if `PREVIEW`), revision quota (`max 3 updates after AI feedback` $\rightarrow$ max `4` versions, and blocks while `EVALUATING`), normalizes/counts characters identically to frontend, and **persists `StudySubmission` + `EvaluationJob` (`PENDING`) atomically in PostgreSQL before any external HTTP call**.
 4. Async Worker picks up `EvaluationJob`:
    - Checks `KnowledgeCache` (by `policyVersion + textbookSeries + textbookEdition + grade + subject + lessonTitle`).
-   - On cache miss, calls **Brave Search API** (`extra_snippets=true`, subject-routed to `Global Success` for `ENG`, literature curriculum portals for `LIT`, and KNTT + Wikipedia for other subjects; up to 3 official/educational sources, `<= 2,250` tokens budget).
+   - On cache miss, calls **Brave Search API** (`extra_snippets=true`, subject-routed to `Global Success` for `ENG`, literature curriculum portals for `LIT`, and KNTT + Wikipedia for other subjects; up to 2 official/educational sources up to `1,000` chars each inside `<= 2,500`-char `<reference_sources>` budget).
    - Builds PII-free prompt (`grade`, `subject`, `textbookSeries`, `textbookEdition`, `taskType`, `lessonTitle`, `studentText`, `sourcesContext`) and calls **MiMo v2.6 Flash via CKEY** once.
    - Validates JSON enum contract (`accuracy`, `completeness`, `overall_status`, `confidence`, valid `sources`, structured Vietnamese mentor feedback `<= 1,000` chars without minimum floor). Retries transient `timeout`/`429`/`5xx` with exponential backoff + jitter; caps formatting retry at 1; transitions cleanly to `EVALUATION_FAILED` when retries exhaust without ever losing `StudySubmission`.

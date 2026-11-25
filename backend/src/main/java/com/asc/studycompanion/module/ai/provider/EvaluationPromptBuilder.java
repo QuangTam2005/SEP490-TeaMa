@@ -17,7 +17,7 @@ import java.util.List;
 public class EvaluationPromptBuilder {
 
     private static final int CHARS_PER_TOKEN_ESTIMATE = 3;
-    private static final int MAX_SOURCES_CHARS = 2000;
+    private static final int MAX_SOURCES_CHARS = 2500;
 
     private final AiProperties aiProperties;
 
@@ -67,17 +67,20 @@ public class EvaluationPromptBuilder {
         } else {
             for (int i = 0; i < sources.size(); i++) {
                 SearchSnippet s = sources.get(i);
-                String block = String.format(
-                        "[%d] %s (%s): %s%n",
-                        i + 1,
-                        safe(s.title()),
-                        safe(s.url()),
-                        safe(s.snippet())
-                );
-                if (sourcesSection.length() + block.length() > MAX_SOURCES_CHARS) {
+                String header = String.format("[%d] %s (%s): ", i + 1, safe(s.title()), safe(s.url()));
+                String snippet = safe(s.snippet());
+                int remainingBudget = MAX_SOURCES_CHARS - sourcesSection.length() - header.length() - 1;
+                if (remainingBudget <= 0) {
                     break;
                 }
-                sourcesSection.append(block);
+                if (snippet.length() > remainingBudget) {
+                    if (remainingBudget < 80) {
+                        break;
+                    }
+                    int cut = snippet.lastIndexOf(' ', remainingBudget - 3);
+                    snippet = (cut > 40 ? snippet.substring(0, cut) : snippet.substring(0, remainingBudget - 3)).trim() + "...";
+                }
+                sourcesSection.append(header).append(snippet).append('\n');
             }
         }
 

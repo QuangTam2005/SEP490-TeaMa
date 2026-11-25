@@ -57,7 +57,7 @@ class AcceptanceAiAndGuardianTest {
 
     private static AiProperties createAiProperties() {
         AiProperties props = new AiProperties();
-        props.setMaxSources(3);
+        props.setMaxSources(2);
         props.setMaxContextTokens(2250);
         props.getBrave().setBaseUrl("https://api.search.brave.com/res/v1/web/search");
         props.getBrave().setApiKey("test-brave-api-key");
@@ -215,13 +215,13 @@ class AcceptanceAiAndGuardianTest {
         braveServer.verify();
         ckeyServer.verify();
 
-        // All 5 REVIEW tasks evaluated, capped at <= 3 sources and <= 1000 char mentor feedback (no min floor)
+        // All 5 REVIEW tasks evaluated, capped at <= 2 sources (1,000 chars/source) and <= 1000 char mentor feedback
         assertEquals(5, h.evaluations.size());
         assertEquals(5, h.usageLogs.size());
         h.evaluations.forEach(ev -> {
             assertTrue(!ev.getFeedback().isBlank() && ev.getFeedback().length() <= 1000,
                     "Expected non-blank feedback <= 1000 chars but got " + ev.getFeedback().length());
-            assertTrue(ev.getSources().size() <= 3 && !ev.getSources().isEmpty());
+            assertTrue(ev.getSources().size() <= 2 && !ev.getSources().isEmpty());
             assertEquals(OverallEvaluationStatus.GOOD, ev.getOverallStatus());
         });
 
@@ -495,7 +495,7 @@ class AcceptanceAiAndGuardianTest {
                 .andExpect(jsonPath("$.data.versions.length()").value(2))
                 .andExpect(jsonPath("$.data.versions[0].version").value(2))
                 .andExpect(jsonPath("$.data.versions[1].version").value(1))
-                .andExpect(jsonPath("$.data.versions[1].evaluation.sources.length()").value(3))
+                .andExpect(jsonPath("$.data.versions[1].evaluation.sources.length()").value(2))
                 .andReturn();
 
         String rawDetailBody = detailRes.getResponse().getContentAsString();

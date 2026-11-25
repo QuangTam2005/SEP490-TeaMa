@@ -39,12 +39,20 @@ class EvaluationPromptBuilderTest {
                 StudyTaskType.REVIEW,
                 "Hằng đẳng thức đáng nhớ",
                 "a".repeat(900),
-                List.of(new SearchSnippet(
-                        "Toán 8 Kết nối tri thức - Bài 6",
-                        "https://loigiaihay.com/ket-noi-tri-thuc",
-                        "Hiệu hai bình phương: a^2 - b^2 = (a - b)(a + b).",
-                        Instant.now()
-                ))
+                List.of(
+                        new SearchSnippet(
+                                "Toán 8 Kết nối tri thức - Bài 6",
+                                "https://loigiaihay.com/ket-noi-tri-thuc-bai-6-hang-dang-thuc",
+                                "Hiệu hai bình phương: a^2 - b^2 = (a - b)(a + b). " + "Kiến thức SGK chi tiết. ".repeat(38),
+                                Instant.now()
+                        ),
+                        new SearchSnippet(
+                                "VietJack Toán 8 - Hằng đẳng thức",
+                                "https://vietjack.com/toan-8-kntt-bai-6",
+                                "Bình phương của một tổng và một hiệu. " + "Ví dụ minh họa cụ thể. ".repeat(38),
+                                Instant.now()
+                        )
+                )
         );
 
         String userPrompt = builder.buildUserPrompt(input);
@@ -53,6 +61,8 @@ class EvaluationPromptBuilderTest {
         assertTrue(userPrompt.contains("Kết nối tri thức với cuộc sống (GDPT 2018)"));
         assertTrue(userPrompt.contains("<lesson_title>Hằng đẳng thức đáng nhớ</lesson_title>"));
         assertTrue(userPrompt.contains("<reference_sources>"));
+        assertTrue(userPrompt.contains("[1] Toán 8 Kết nối tri thức - Bài 6"));
+        assertTrue(userPrompt.contains("[2] VietJack Toán 8 - Hằng đẳng thức"));
         assertTrue(userPrompt.contains("<student_submission>"));
         assertFalse(userPrompt.contains("@gmail.com"));
         assertTrue(userPrompt.length() <= 2250 * 3 + 50);

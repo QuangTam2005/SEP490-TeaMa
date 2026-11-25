@@ -51,7 +51,7 @@ Xây dựng nền tảng web responsive **AI Study Companion** với định hư
 ### Module 4: AI Verification Pipeline & Cost Control (`FR-AI`, `FR-OPS`)
 - **FR-AI-01..15 (Brave Search + MiMo v2.6 Flash via CKEY):**
   - Chỉ kích hoạt khi Student bấm Submit hợp lệ (tuyệt đối **không** gọi AI khi đang gõ; **không** gửi PII/tên/email/ID).
-  - Nguồn chuẩn hóa: định danh `textbookSeries` (`Kết nối tri thức với cuộc sống` / `Global Success` cho `ENG`) & `textbookEdition` (`GDPT 2018`) trong `SearchQuery` và `KnowledgeCache` (`v3`), bật `extra_snippets=true` trên Brave Search (tối đa **3 request** & tối đa **3 nguồn**, định tuyến `ENG` sang `Global Success`, `LIT` sang nguồn Ngữ văn phù hợp, lọc bỏ nguồn không liên quan), ngân sách ngữ cảnh **tối đa `2.250` tokens**.
+  - Nguồn chuẩn hóa: định danh `textbookSeries` (`Kết nối tri thức với cuộc sống` / `Global Success` cho `ENG`) & `textbookEdition` (`GDPT 2018`) trong `SearchQuery` và `KnowledgeCache` (`v4`), bật `extra_snippets=true` trên Brave Search (tối đa **3 request**, giữ tối đa **2 nguồn** chất lượng cao tới `1.000` ký tự/nguồn với tổng vùng nguồn `<= 2.500` ký tự; định tuyến `ENG` sang `Global Success`, `LIT` sang nguồn Ngữ văn phù hợp, lọc bỏ nguồn không liên quan), ngân sách ngữ cảnh `userPrompt` **tối đa `2.250` tokens**.
   - Đánh giá công tâm chuẩn mentor theo từng nhiệm vụ với `accuracy`, `completeness`, `overall_status`, `confidence`, nhận xét Tiếng Việt **không ép tối thiểu, tối đa 1.000 ký tự** (gồm `Nhận xét tổng quan` và `Cần khắc phục`), `incorrect_points`, `missing_points`, `sources`.
 - **FR-OPS-01..07 (3-Attempt Retry & Fallback to Guardian):**
   - Xử lý bất đồng bộ qua `EvaluationJob` + `Idempotency-Key`.
