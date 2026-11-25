@@ -5,7 +5,9 @@ import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.module.ai.dto.AIEvaluationResponse;
 import com.asc.studycompanion.module.ai.dto.SourceReferenceResponse;
 import com.asc.studycompanion.module.ai.entity.AIEvaluation;
+import com.asc.studycompanion.module.ai.entity.EvaluationJob;
 import com.asc.studycompanion.module.ai.repository.AIEvaluationRepository;
+import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskDetailResponse;
@@ -32,6 +34,7 @@ public class StudyTaskService {
     private final StudyTaskRepository studyTaskRepository;
     private final StudySubmissionRepository studySubmissionRepository;
     private final AIEvaluationRepository aiEvaluationRepository;
+    private final EvaluationJobRepository evaluationJobRepository;
 
     @Transactional(readOnly = true)
     public StudyTaskDetailResponse getTaskDetail(Long studentUserId, Long taskId) {
@@ -47,9 +50,19 @@ public class StudyTaskService {
                 : aiEvaluationRepository.findBySubmissionIdIn(subIds)
                         .stream()
                         .collect(Collectors.toMap(AIEvaluation::getSubmissionId, Function.identity()));
+        Map<Long, String> errorsBySubId = subIds.isEmpty()
+                ? Map.of()
+                : evaluationJobRepository.findBySubmissionIdIn(subIds)
+                        .stream()
+                        .filter(job -> job.getLastError() != null)
+                        .collect(Collectors.toMap(EvaluationJob::getSubmissionId, EvaluationJob::getLastError));
 
         List<StudySubmissionResponse> submissionResponses = submissions.stream()
-                .map(sub -> toSubmissionResponse(sub, evaluationsBySubId.get(sub.getId()), null))
+                .map(sub -> toSubmissionResponse(
+                        sub,
+                        evaluationsBySubId.get(sub.getId()),
+                        errorsBySubId.get(sub.getId())
+                ))
                 .toList();
 
         boolean reviewCompleted = isReviewCompleted(task, submissions);
