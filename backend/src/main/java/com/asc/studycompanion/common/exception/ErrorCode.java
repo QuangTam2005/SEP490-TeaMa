@@ -16,6 +16,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR("SYS_500", HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống không mong muốn, vui lòng thử lại sau"),
     BAD_REQUEST("SYS_400", HttpStatus.BAD_REQUEST, "Yêu cầu không hợp lệ"),
     RESOURCE_NOT_FOUND("SYS_404", HttpStatus.NOT_FOUND, "Không tìm thấy tài nguyên yêu cầu"),
+    RATE_LIMIT_EXCEEDED("SYS_429", HttpStatus.TOO_MANY_REQUESTS, "Thao tác quá nhanh, vui lòng thử lại sau ít phút"),
 
     // Validation Errors
     VALIDATION_FAILED("VAL_001", HttpStatus.BAD_REQUEST, "Dữ liệu đầu vào không hợp lệ"),
@@ -41,7 +42,7 @@ public enum ErrorCode {
     STUDY_TASK_NOT_FOUND("STUDY_001", HttpStatus.NOT_FOUND, "Không tìm thấy nhiệm vụ học tập"),
     SUBMISSION_NOT_FOUND("STUDY_002", HttpStatus.NOT_FOUND, "Không tìm thấy bài nộp"),
     REVIEW_REQUIRED_BEFORE_PREVIEW("STUDY_003", HttpStatus.BAD_REQUEST, "Em cần nộp bài Ôn bài cũ (Review) trước khi mở Soạn bài mới (Preview)"),
-    CONTENT_LENGTH_OUT_OF_RANGE("STUDY_004", HttpStatus.BAD_REQUEST, "Nội dung bài viết phải từ 850 đến 2.000 ký tự"),
+    CONTENT_LENGTH_OUT_OF_RANGE("STUDY_004", HttpStatus.BAD_REQUEST, "Nội dung bài viết phải từ 850 đến 3.000 ký tự"),
     MAX_REVISIONS_EXCEEDED("STUDY_005", HttpStatus.BAD_REQUEST, "Em đã sử dụng hết tối đa 3 phiên bản (v1–v3) cho nhiệm vụ này"),
     SUBMISSION_EVALUATING_LOCKED("STUDY_006", HttpStatus.CONFLICT, "Bài làm đang được AI đánh giá, vui lòng đợi hoàn tất trước khi gửi bản mới"),
 

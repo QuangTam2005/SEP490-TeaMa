@@ -23,7 +23,7 @@
 
 ## 2. Typography & Iconography
 - **Primary Font:** `Be Vietnam Pro` (`subsets: ['vietnamese', 'latin']`).
-- **Monospace Font:** `JetBrains Mono` (`tabular-nums`) cho bộ đếm ký tự (`850 / 2,000`), mã môn (`MATH`, `LIT`, `ENG`, `SCI`, `HISGEO`), phiên bản (`v1`..`v4`), mã liên kết (`8` ký tự) và ngày mục tiêu.
+- **Monospace Font:** `JetBrains Mono` (`tabular-nums`) cho bộ đếm ký tự (`850 / 3,000`), mã môn (`MATH`, `LIT`, `ENG`, ...), phiên bản (`v1`..`v3`), mã liên kết (`8` ký tự) và ngày mục tiêu.
 - **Icons:** Duy nhất `lucide-react` (`strokeWidth={1.75}`), kèm `Shadcn Tooltip`.
 
 ## 3. Application Shell & Screens (`SRS §8.1`)
@@ -35,7 +35,7 @@
    - `/student/today`: Ngày mục tiêu là ngày mai (`Asia/Ho_Chi_Minh`) để chuẩn bị trước cho lịch học ngày mai (VD: thứ Hai học Toán $\rightarrow$ Chủ nhật làm bài Toán), mỗi môn gồm 2 nhiệm vụ tuần tự **`Ôn bài cũ (Review)`** và **`Soạn bài mới (Preview)`**.
    - `/student/timetable`: Cho phép chọn/cập nhật khối lớp của bé + Lưới **7 ngày (`T2`–`CN`) × 5 môn cố định**, lưu phiên bản lịch hiện hành.
    - `/student/tasks/[taskId]`:
-     - Nhập **Tựa bài** + **Nội dung** kèm bộ đếm ký tự realtime `850–2,000` (chuẩn hóa newline + trim), chặn Submit ngoài biên, không gọi AI khi đang gõ.
+     - Nhập **Tựa bài** + **Nội dung** kèm bộ đếm ký tự realtime `850–3,000` (chuẩn hóa newline + trim), tự động lưu nháp trình duyệt (`localStorage`), chặn Submit ngoài biên, không gọi AI khi đang gõ.
      - Trạng thái bất đồng bộ: `Đang AI đánh giá`, `Đã có kết quả` (bao gồm fallback nếu AI lỗi sau 3 lần thử tự động để phụ huynh tự xem bài).
      - Hiển thị kết quả AI (`Accuracy`, `Completeness`, `overall_status`, nhận xét ngắn `<= 600` ký tự, nguồn URL) và nút **`Viết bản mới (Revision)`** (hiển thị bộ đếm `Phiên bản X/3` — tối đa `v1..v3`).
 3. **Guardian Portal (`/guardian/*`):**
@@ -80,11 +80,11 @@
 ### 2. Timetable & Next-Day Study Plan (Student & Linked Guardian)
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/subjects` | Lấy 5 môn học cố định | Authenticated |
+| `GET` | `/api/subjects` | Lấy danh sách môn học (tùy chọn lọc `?grade=1..12`) | Authenticated |
 | `GET / PUT` | `/api/student/timetable` | Lấy / lưu phiên bản thời khóa biểu tuần hiện hành | `STUDENT` (Owner) hoặc `GUARDIAN` (Linked) |
 | `GET` | `/api/student/plans/next-day` | Lấy (hoặc tự tạo) kế hoạch ngày học kế tiếp theo `Asia/Ho_Chi_Minh` (học hôm trước để chuẩn bị cho ngày mai) | `STUDENT` |
 | `GET` | `/api/student/tasks/{taskId}` | Chi tiết nhiệm vụ, các phiên bản Submission (`v1..v3`) & Evaluation hiện hành | `STUDENT` (Owner) |
-| `POST` | `/api/student/tasks/{taskId}/submissions` | Submit bài (`850–2,000` chars, kiểm tra `REVIEW` trước `PREVIEW`, tối đa 3 phiên bản `v1..v3`, `Idempotency-Key`) | `STUDENT` (Owner) |
+| `POST` | `/api/student/tasks/{taskId}/submissions` | Submit bài (`850–3,000` chars, kiểm tra `REVIEW` trước `PREVIEW`, tối đa 3 phiên bản `v1..v3`, `Idempotency-Key`) | `STUDENT` (Owner) |
 | `POST` | `/api/student/submissions/{submissionId}/retry-evaluation` | Thử đánh giá lại khi job bị `EVALUATION_FAILED` | `STUDENT` (Owner) |
 
 ### 3. Guardian Read-Only Dashboard (`GUARDIAN`)

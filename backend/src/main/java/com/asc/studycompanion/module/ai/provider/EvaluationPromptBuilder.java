@@ -31,7 +31,7 @@ public class EvaluationPromptBuilder {
 
     public String buildUserPrompt(AiEvaluationInput input) {
         String taskLabel = input.taskType() == StudyTaskType.REVIEW ? "Ôn bài cũ (Review)" : "Soạn bài mới (Preview)";
-        int maxTotalChars = Math.max(2400, aiProperties.getMaxContextTokens() * CHARS_PER_TOKEN_ESTIMATE);
+        int maxTotalChars = Math.max(4600, aiProperties.getMaxContextTokens() * CHARS_PER_TOKEN_ESTIMATE);
 
         StringBuilder sourcesSection = new StringBuilder();
         List<SearchSnippet> sources = input.sources() != null ? input.sources() : List.of();
@@ -47,7 +47,7 @@ public class EvaluationPromptBuilder {
                         safe(s.url()),
                         safe(s.snippet())
                 );
-                if (sourcesSection.length() + block.length() > maxTotalChars / 2) {
+                if (sourcesSection.length() + block.length() > 1400) {
                     break;
                 }
                 sourcesSection.append(block);
@@ -64,7 +64,7 @@ public class EvaluationPromptBuilder {
                 sourcesSection
         );
 
-        int remainingBudget = Math.max(800, maxTotalChars - header.length());
+        int remainingBudget = Math.max(3000, maxTotalChars - header.length());
         String studentText = safe(input.studentText());
         if (studentText.length() > remainingBudget) {
             studentText = studentText.substring(0, remainingBudget);

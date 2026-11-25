@@ -361,20 +361,33 @@ class AcceptanceCoreFlowsTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.version").value(2));
 
+        // 3001 normalized chars rejected with 400 STUDY_004
         h.tasks.stream().filter(t -> t.getId().equals(reviewTaskId)).findFirst().orElseThrow()
                 .setStatus(StudyTaskStatus.EVALUATED);
+        h.mockMvc.perform(post("/api/student/tasks/" + reviewTaskId + "/submissions")
+                        .header("Authorization", "Bearer " + studentJwt)
+                        .header("Idempotency-Key", "idem-over-3000")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(h.objectMapper.writeValueAsString(Map.of(
+                                "lessonTitle", "Bài 2: Vượt quá 3000 ký tự",
+                                "content", "Z".repeat(3001),
+                                "idempotencyKey", "idem-over-3000"
+                        ))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("STUDY_004"));
+
         h.mockMvc.perform(post("/api/student/tasks/" + reviewTaskId + "/submissions")
                         .header("Authorization", "Bearer " + studentJwt)
                         .header("Idempotency-Key", "idem-v3")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(h.objectMapper.writeValueAsString(Map.of(
                                 "lessonTitle", "Bài 2: Bản sửa v3",
-                                "content", "Z".repeat(2000),
+                                "content", "Z".repeat(3000),
                                 "idempotencyKey", "idem-v3"
                         ))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.version").value(3))
-                .andExpect(jsonPath("$.data.charCount").value(2000));
+                .andExpect(jsonPath("$.data.charCount").value(3000));
 
         // AC-10: 4th submission (v4) rejected because max versions is v1..v3 (400 STUDY_005)
         h.tasks.stream().filter(t -> t.getId().equals(reviewTaskId)).findFirst().orElseThrow()

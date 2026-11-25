@@ -514,7 +514,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                             rows={12}
-                            placeholder="Con viết các ý chính đã học hoặc tóm tắt bài mới bằng lời hiểu của mình (850–2.000 ký tự)..."
+                            placeholder="Con viết các ý chính đã học hoặc tóm tắt bài mới bằng lời hiểu của mình (850–3.000 ký tự)..."
                             className="w-full rounded-lg border bg-background p-3.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           />
 

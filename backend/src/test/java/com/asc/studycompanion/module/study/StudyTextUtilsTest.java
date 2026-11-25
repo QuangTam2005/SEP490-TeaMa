@@ -17,11 +17,11 @@ class StudyTextUtilsTest {
     }
 
     @Test
-    void enforcesStrictInclusiveBounds850To2000() {
+    void enforcesStrictInclusiveBounds850To3000() {
         assertFalse(StudyTextUtils.isValidLength("a".repeat(849)));
         assertFalse(StudyTextUtils.isValidLength("  " + "a".repeat(849) + "\r\n"));
         assertTrue(StudyTextUtils.isValidLength("a".repeat(850)));
-        assertTrue(StudyTextUtils.isValidLength("a".repeat(2000)));
-        assertFalse(StudyTextUtils.isValidLength("a".repeat(2001)));
+        assertTrue(StudyTextUtils.isValidLength("a".repeat(3000)));
+        assertFalse(StudyTextUtils.isValidLength("a".repeat(3001)));
     }
 }

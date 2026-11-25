@@ -83,3 +83,26 @@
 - [x] `[TASK-INT.1]` *(2 SP)* Chuyển `NEXT_PUBLIC_DATA_MODE=api`, rà soát CORS/JWT & khớp hợp đồng REST trên toàn bộ route Frontend
 - [x] `[TASK-INT.2a]` *(2 SP)* Kiểm thử E2E luồng Auth, Link Code, Timetable Versioning và nộp bài `REVIEW` $\rightarrow$ `PREVIEW` (`AC-01`–`AC-10`)
 - [x] `[TASK-INT.2b]` *(3 SP)* Chạy PoC kiểm định chất lượng đánh giá AI trên đủ 5 môn lớp 6, kiểm tra Guardian Read-Only & các tiêu chí còn lại (`AC-11`–`AC-20`) *(đã kiểm định đầy đủ bằng bộ test tự động MockMvc + MockRestServiceServer; staging thật cần bật Docker Desktop & `.env`)*
+
+---
+
+## Phase 7: Production Feature Expansion & `850–3,000` Char Upgrade
+
+### Task 11 — Specs, `850–3,000` Chars, Flyway `V3` & Account/Multi-Child APIs *(3 subtasks)*
+- [x] `[TASK-FEAT.1a]` *(2 SP)* Đồng bộ đặc tả `docs/` và nâng chuẩn độ dài bài làm `[850, 3000]` ký tự (`StudyTextUtils`, `ErrorCode`, `EvaluationPromptBuilder`, `study-utils.ts`) & unit tests
+- [ ] `[TASK-FEAT.1b]` *(3 SP)* Tạo Flyway `V3__expand_features_and_subjects.sql` (`char_count BETWEEN 850 AND 3000`, mở rộng môn học theo Khối `1–12`, `study_tasks` parent note/ack), cập nhật entity/`SubjectController`/`TimetableView` & tests
+- [ ] `[TASK-FEAT.1c]` *(3 SP)* Xây dựng API tài khoản (`PUT /api/auth/profile`, `PUT /api/auth/password`), hủy liên kết (`POST /api/links/unlink`) & chuyển đổi nhiều con (`GET /api/links/children`, `?studentId=`) + tests
+
+### Task 12 — Student History, Streak, Auto-Save Draft & Profile UI *(3 subtasks)*
+- [ ] `[TASK-FEAT.2a]` *(3 SP)* Xây dựng Backend `GET /api/student/plans/history` & `GET /api/student/streak` trong `StudyPlanService`/`StudyPlanController` & unit tests
+- [ ] `[TASK-FEAT.2b]` *(3 SP)* Xây dựng giao diện `/profile` (sửa họ tên, khối lớp, đổi mật khẩu, ngắt liên kết / danh sách liên kết) & gắn điều hướng trên `StudentShell`/`GuardianShell`
+- [ ] `[TASK-FEAT.2c]` *(3 SP)* Xây dựng `/student/history`, hiển thị Streak trên `/student/today`, và lưu nháp tự động `localStorage` trong `TaskWorkspaceView`
+
+### Task 13 — Guardian Weekly Overview, Excel Export & Parent Note *(3 subtasks)*
+- [ ] `[TASK-FEAT.3a]` *(3 SP)* Xây dựng Backend `POST /api/guardian/tasks/{taskId}/acknowledge`, `GET /api/guardian/weekly` & `GET /api/guardian/export` (Apache POI `.xlsx`) + unit tests
+- [ ] `[TASK-FEAT.3b]` *(3 SP)* Xây dựng UI Phụ huynh bấm "Đã xem" + lời nhắn động viên, chọn chuyển giữa các con, Tổng quan tuần & tải Excel trên `/guardian/dashboard` + `/guardian/timetable`
+- [ ] `[TASK-FEAT.3c]` *(3 SP)* Đồng bộ toàn bộ `MockServices` (Account, Multi-Child, History, Streak, Acknowledge, Weekly) tương thích `1:1` với API thật
+
+### Task 14 — Rate Limiting, Ops Telemetry & Full Verification *(2 subtasks)*
+- [ ] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
+- [ ] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`

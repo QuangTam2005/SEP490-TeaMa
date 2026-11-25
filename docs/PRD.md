@@ -22,9 +22,9 @@ Xây dựng nền tảng web responsive **AI Study Companion** với định hư
 ## 2. Target Users & Roles (RBAC)
 1. **Student (Học sinh):**
    - **Tự thiết lập khối lớp của mình (`1–12`)** khi đăng ký hoặc cập nhật hồ sơ học tập (không mặc định cứng khối 6).
-   - Nhập và cập nhật **Thời khóa biểu tuần** gồm **5 môn cố định** (`Toán`, `Ngữ văn`, `Tiếng Anh`, `Khoa học tự nhiên`, `Lịch sử – Địa lý`).
+   - Nhập và cập nhật **Thời khóa biểu tuần** theo danh mục môn phù hợp khối lớp (`Toán`, `Ngữ văn`, `Tiếng Anh`, `Khoa học tự nhiên`, `Lịch sử – Địa lý`, và các môn THCS/THPT `Vật lí`, `Hóa học`, `Sinh học`, `Lịch sử`, `Địa lí`, `Tin học`, `GDCD`).
    - Chuẩn bị bài vào **ngày hôm trước** của ngày có lịch học môn (theo múi giờ `Asia/Ho_Chi_Minh`: ví dụ thứ Hai có môn Toán $\rightarrow$ Chủ nhật làm bài ôn/soạn môn Toán).
-   - Thực hiện tuần tự cặp nhiệm vụ **Review (Ôn bài cũ)** trước $\rightarrow$ **Preview (Soạn bài mới)** sau, tự viết kiến thức từ `850` đến `2.000` ký tự.
+   - Thực hiện tuần tự cặp nhiệm vụ **Review (Ôn bài cũ)** trước $\rightarrow$ **Preview (Soạn bài mới)** sau, tự viết kiến thức từ `850` đến `3.000` ký tự (kèm lưu nháp cục bộ trên trình duyệt).
    - Xem kết quả AI đánh giá (`Accuracy`, `Completeness`, `overall_status`, nhận xét `<= 600` ký tự, nguồn tham khảo) và có thể nộp tối đa **3 phiên bản tổng cộng (`v1`, `v2`, `v3`)** cho mỗi nhiệm vụ.
 2. **Guardian (Người giám sát / Phụ huynh):**
    - Liên kết với hồ sơ Student thông qua **mã liên kết dùng 1 lần (8 ký tự)** (`O-01`).
@@ -41,11 +41,11 @@ Xây dựng nền tảng web responsive **AI Study Companion** với định hư
 - **FR-AUTH-06 (Student–Guardian 1-Time Link Code — `O-01`):** Tạo mã liên kết 8 ký tự dùng 1 lần trên giao diện (hạn 24h, không Email/SMS).
 
 ### Module 2: Weekly Timetable & Preparation Study Plan (`FR-SCH`, `FR-PLAN`)
-- **FR-SCH-01..07 (Weekly Timetable):** **Student hoặc Guardian đã liên kết** đều có thể chọn các ngày (`MON`–`SUN`) và gán môn trong **5 môn cố định** (`MATH`, `LIT`, `ENG`, `SCI`, `HISGEO`), kèm ghi chú/tiết học. Lưu thời điểm & người cập nhật (`updated_by_user_id`) dưới dạng phiên bản lịch mới; không xóa/sửa các `StudyPlan`, `StudySubmission` và `AIEvaluation` lịch sử.
-- **FR-PLAN-01..05 (Next-Day Preparation Plan):** Ngày chuẩn bị là **hôm nay**, lập kế hoạch cho **ngày lịch kế tiếp** (ngày mai theo `Asia/Ho_Chi_Minh`). Ví dụ thứ Hai có môn Toán theo thời khóa biểu $\rightarrow$ Chủ nhật hệ thống hiển thị môn Toán để bé ôn/soạn. Mỗi môn trong ngày tạo đúng **1 cặp (`REVIEW` + `PREVIEW`)**. Ngày kế tiếp trống lịch hiển thị *"Không có môn học theo thời khóa biểu"*.
+- **FR-SCH-01..07 (Weekly Timetable):** **Student hoặc Guardian đã liên kết** đều có thể chọn các ngày (`MON`–`SUN`) và gán môn theo khối lớp (`1–12`). Lưu thời điểm & người cập nhật (`updated_by_user_id`) dưới dạng phiên bản lịch mới; không xóa/sửa các `StudyPlan`, `StudySubmission` và `AIEvaluation` lịch sử.
+- **FR-PLAN-01..05 (Next-Day Preparation Plan & Streak/History):** Ngày chuẩn bị là **hôm nay**, lập kế hoạch cho **ngày lịch kế tiếp** (ngày mai theo `Asia/Ho_Chi_Minh`). Ví dụ thứ Hai có môn Toán theo thời khóa biểu $\rightarrow$ Chủ nhật hệ thống hiển thị môn Toán để bé ôn/soạn. Mỗi môn trong ngày tạo đúng **1 cặp (`REVIEW` + `PREVIEW`)**. Hỗ trợ xem lại lịch sử bài đã làm theo ngày/môn và chuỗi ngày học (`Streak`).
 
 ### Module 3: Review & Preview Submissions (`FR-REV`, `FR-PRE`, `O-04`)
-- **FR-REV-01..07 & FR-PRE-01..07:** Tựa bài (bắt buộc) + Nội dung **`850–2.000` ký tự** (chuẩn hóa `\r\n` $\rightarrow$ `\n`, `.trim()`). Cổng tuần tự: `REVIEW` nộp xong mới mở `PREVIEW` cùng môn/ngày (`BR-08`).
+- **FR-REV-01..07 & FR-PRE-01..07:** Tựa bài (bắt buộc) + Nội dung **`850–3.000` ký tự** (chuẩn hóa `\r\n` $\rightarrow$ `\n`, `.trim()`), hỗ trợ lưu nháp tự động tại trình duyệt. Cổng tuần tự: `REVIEW` nộp xong mới mở `PREVIEW` cùng môn/ngày (`BR-08`).
 - **Revision Policy (`v1..v3`):** Tối đa **3 phiên bản tổng cộng (`v1` gốc + tối đa 2 lần sửa `v2`, `v3`)** cho mỗi nhiệm vụ. Khóa nộp mới trong lúc đang `EVALUATING`; mọi phiên bản bất biến.
 
 ### Module 4: AI Verification Pipeline & Cost Control (`FR-AI`, `FR-OPS`)
@@ -58,5 +58,8 @@ Xây dựng nền tảng web responsive **AI Study Companion** với định hư
   - Khi lỗi gọi/parse AI, Worker **retry tự động tối đa 3 lần** (exponential backoff).
   - **Nếu quá 3 lần vẫn lỗi:** ngưng retry, ghi nhận `AIEvaluation` fallback (`overall_status = INSUFFICIENT_EVIDENCE`, `accuracy = UNVERIFIABLE`, `completeness = UNDETERMINED`, nhận xét thông báo hệ thống AI đang gặp lỗi sau 3 lần thử, phụ huynh vui lòng tự kiểm tra bài làm của con) và chuyển trạng thái task sang `EVALUATED` để hiển thị cho Guardian như đã hoàn tất bước AI review (không tạo chức năng check thủ công riêng).
 
-### Module 5: Guardian Dashboard (`FR-GRD`)
-- **FR-GRD-01..08:** Xem tiến độ theo ngày/tuần, lọc theo ngày và 5 môn, chỉnh sửa Thời khóa biểu tuần cho con, và kiểm tra nguyên văn bất biến mọi phiên bản (`v1..v3`) + đánh giá AI + nguồn đối chiếu (tuyệt đối không lộ `AIUsageLog`).
+### Module 5: Guardian Dashboard, Multi-Child, Parent Note & Export (`FR-GRD`)
+- **FR-GRD-01..10:** Xem tiến độ theo ngày/tuần, lọc theo ngày và môn, chuyển đổi giữa nhiều con đã liên kết hoặc hủy liên kết, chỉnh sửa Thời khóa biểu tuần cho con, bấm "Đã xem" + gửi lời nhắn động viên ngắn trên từng nhiệm vụ, xuất báo cáo tuần ra Excel (`.xlsx`), và kiểm tra nguyên văn bất biến mọi phiên bản (`v1..v3`) + đánh giá AI + nguồn đối chiếu (tuyệt đối không lộ `AIUsageLog`).
+
+### Module 6: Account Security, Rate Limiting & Ops Cost Visibility (`FR-SEC`, `FR-OPS`)
+- **FR-SEC-01..03:** Tự cập nhật họ tên, đổi mật khẩu, bảo vệ rate-limit cho đăng nhập/đăng ký/nộp bài (`429 SYS_429`), và endpoint nội bộ `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` để chủ hệ thống kiểm tra chi phí/token AI mà không lộ ra UI Student/Guardian.
