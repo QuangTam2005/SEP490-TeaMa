@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -155,7 +154,6 @@ export function GuardianDashboardView() {
             <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               Theo dõi học tập của con
             </h1>
-            <Badge variant="brand">Chỉ xem · Dữ liệu gốc</Badge>
           </div>
           {dashboardQuery.data?.linkedStudentName ? (
             <p className="text-sm text-muted-foreground">

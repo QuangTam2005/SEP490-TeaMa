@@ -9,7 +9,6 @@ import {
   Compass,
   ExternalLink,
   History,
-  Lock,
   Sparkles,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -97,10 +96,6 @@ export function SubmissionDetailView({
                           Soạn bài mới
                         </span>
                       )}
-                    </Badge>
-                    <Badge variant="secondary">
-                      <Lock className="h-3 w-3" strokeWidth={1.75} />
-                      Bản gốc chỉ xem
                     </Badge>
                     <StatusBadge status={detail.status} />
                   </div>

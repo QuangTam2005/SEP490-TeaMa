@@ -597,13 +597,10 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                   ) : activeSubmission ? (
                     <Card>
                       <CardHeader className="border-b pb-3.5">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <CardTitle className="text-base">
-                            Bài đã nộp (Bản {activeSubmission.version} ·{' '}
-                            {activeSubmission.charCount} ký tự)
-                          </CardTitle>
-                          <Badge variant="outline">Lưu bất biến</Badge>
-                        </div>
+                        <CardTitle className="text-base">
+                          Bài đã nộp (Bản {activeSubmission.version} ·{' '}
+                          {activeSubmission.charCount} ký tự)
+                        </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3 pt-4">
                         <p className="text-sm font-semibold text-foreground">

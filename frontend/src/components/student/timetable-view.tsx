@@ -10,7 +10,6 @@ import {
   Save,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
@@ -87,7 +86,7 @@ export function TimetableView() {
       );
       void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
       setHasUnsavedChanges(false);
-      toast.success(`Đã lưu thời khóa biểu (Phiên bản v${saved.version})`);
+      toast.success('Đã lưu thời khóa biểu');
     },
     onError: (err) => {
       toast.error(extractApiErrorMessage(err));
@@ -131,9 +130,6 @@ export function TimetableView() {
             <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               Thời khóa biểu tuần
             </h1>
-            {timetableQuery.data ? (
-              <Badge variant="brand">Phiên bản v{timetableQuery.data.version}</Badge>
-            ) : null}
           </div>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <History className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
