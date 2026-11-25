@@ -531,9 +531,9 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                 </div>
               ) : null}
 
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 xl:gap-8">
                 {/* Left / Main editor or immutable submission reader */}
-                <div className="space-y-4 lg:col-span-7">
+                <div className="space-y-4 lg:col-span-7 2xl:col-span-8">
                   {submissions.length > 0 ? (
                     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3">
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -672,9 +672,9 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                               }
                               setContent(nextValue);
                             }}
-                            rows={12}
+                            rows={14}
                             placeholder="Con tự gõ các ý chính đã học hoặc tóm tắt bài mới bằng lời hiểu của mình (850–3.000 ký tự, không hỗ trợ dán văn bản)..."
-                            className="w-full rounded-lg border bg-background p-3.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="min-h-[300px] w-full rounded-lg border bg-background p-3.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:min-h-[420px]"
                           />
 
                           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -810,7 +810,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                 </div>
 
                 {/* Right / AI evaluation panel */}
-                <div className="lg:col-span-5">
+                <div className="lg:sticky lg:top-24 lg:col-span-5 lg:self-start 2xl:col-span-4">
                   <EvaluationPanel
                     submission={activeSubmission}
                     isEvaluating={isEvaluating}

@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { formatViDate } from '@/lib/study-utils';
+import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
 import { studyService } from '@/services';
 
@@ -209,7 +210,12 @@ export function StudyHistoryView() {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent
+                  className={cn(
+                    'grid grid-cols-1 gap-3',
+                    plan.subjects.length > 1 && 'xl:grid-cols-2'
+                  )}
+                >
                   {plan.subjects.map((pair) => (
                     <div
                       key={pair.subjectCode}

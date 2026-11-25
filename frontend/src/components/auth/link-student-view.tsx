@@ -101,7 +101,7 @@ export function LinkStudentView() {
   return (
     <div className="min-h-screen bg-canvas">
       <header className="h-16 border-b bg-card">
-        <div className="mx-auto flex h-full max-w-[960px] items-center justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
           <div className="flex items-center gap-3">
             <Link
               href={homeHref}
@@ -119,7 +119,7 @@ export function LinkStudentView() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[540px] px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-xl px-4 py-8 sm:px-6">
         <QueryStateBoundary
           data={linkQuery.data}
           isLoading={linkQuery.isLoading}

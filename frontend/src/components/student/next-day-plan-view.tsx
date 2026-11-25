@@ -224,7 +224,12 @@ export function NextDayPlanView() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-5">
+              <div
+                className={cn(
+                  'grid grid-cols-1 gap-5',
+                  plan.subjects.length > 1 && '2xl:grid-cols-2'
+                )}
+              >
                 {plan.subjects.map((pair) => (
                   <Card key={pair.subjectCode} className="overflow-hidden">
                     <CardHeader className="border-b bg-brand-soft/35 pb-3.5 dark:bg-sky-950/30">

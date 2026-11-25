@@ -173,7 +173,7 @@ export function ProfileView() {
     );
 
   return wrapWithShell(
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto w-full max-w-[1440px] space-y-6">
       <div className="flex flex-col gap-3 rounded-xl border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
@@ -194,6 +194,8 @@ export function ProfileView() {
         </Badge>
       </div>
 
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="space-y-6 xl:col-span-7">
       {/* Card 1: Personal profile */}
       <Card>
         <CardHeader>
@@ -337,6 +339,8 @@ export function ProfileView() {
       </Card>
 
       {/* Card 3: Link Management */}
+        </div>
+        <div className="xl:col-span-5">
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -468,6 +472,8 @@ export function ProfileView() {
           )}
         </CardContent>
       </Card>
+        </div>
+      </div>
     </div>
   );
 }

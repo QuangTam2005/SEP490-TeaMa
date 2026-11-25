@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="min-h-screen bg-canvas">
       <header className="h-14 border-b bg-card">
-        <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-10">
+        <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
           <Link
             href="/login"
             className="inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -23,7 +23,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         </div>
       </header>
 
-      <main className="mx-auto flex min-h-[calc(100svh-3.5rem)] max-w-[1280px] items-center justify-center px-4 py-10 sm:px-6">
+      <main className="mx-auto flex min-h-[calc(100svh-3.5rem)] max-w-[1600px] items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
         {children}
       </main>
     </div>
