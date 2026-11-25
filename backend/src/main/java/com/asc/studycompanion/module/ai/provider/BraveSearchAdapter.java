@@ -139,7 +139,7 @@ public class BraveSearchAdapter implements SearchProvider {
     }
 
     public String buildWikipediaQuery(SearchQuery query) {
-        String lesson = safe(query.lessonTitle());
+        String lesson = stripLessonNumberPrefix(safe(query.lessonTitle()));
         if (lesson.isBlank()) {
             lesson = extractCoreContentKeywords(query.submissionContent());
         }
@@ -147,6 +147,15 @@ public class BraveSearchAdapter implements SearchProvider {
             return "";
         }
         return ("site:vi.wikipedia.org " + lesson).replaceAll("\\s+", " ").trim();
+    }
+
+    private static String stripLessonNumberPrefix(String rawTitle) {
+        if (rawTitle == null || rawTitle.isBlank()) {
+            return "";
+        }
+        String stripped = rawTitle.trim()
+                .replaceFirst("^(?iu)(bài|chương|chủ đề|tiết|phần)\\s+\\d+\\s*[:.\\-–]?\\s*", "");
+        return stripped.isBlank() ? rawTitle.trim() : stripped.trim();
     }
 
     public String buildContentExcerptQuery(SearchQuery query, String coreKeywords) {
@@ -241,6 +250,9 @@ public class BraveSearchAdapter implements SearchProvider {
             if (result.url() == null || result.url().isBlank() || result.title() == null || result.title().isBlank()) {
                 continue;
             }
+            if (isMetaPublisherPage(result)) {
+                continue;
+            }
             snippets.add(new SearchSnippet(
                     truncate(result.title().trim(), 255),
                     truncate(result.url().trim(), 1000),
@@ -271,6 +283,16 @@ public class BraveSearchAdapter implements SearchProvider {
                 sparePool.add(snippet);
             }
         }
+    }
+
+    private static boolean isMetaPublisherPage(BraveWebResult result) {
+        String url = safeLower(result.url());
+        if (!url.contains("wikipedia.org")) {
+            return false;
+        }
+        String title = safeLower(result.title());
+        return title.startsWith("kết nối tri thức với cuộc sống")
+                || title.startsWith("nhà xuất bản giáo dục việt nam");
     }
 
     private static int sourcePriorityScore(BraveWebResult result) {

@@ -87,11 +87,11 @@ class BraveSearchAdapterTest {
                 7,
                 SubjectCode.MATH,
                 "Toán",
-                "Ước chung lớn nhất",
+                "Bài 11: Ước chung lớn nhất",
                 "Ước chung lớn nhất của hai hay nhiều số là số lớn nhất trong tập hợp các ước chung của các số đó."
         );
-        assertTrue(adapter.buildLessonWebQuery(query).contains("Lớp 7 Toán Ước chung lớn nhất"));
-        assertTrue(adapter.buildWikipediaQuery(query).contains("site:vi.wikipedia.org Ước chung lớn nhất"));
+        assertTrue(adapter.buildLessonWebQuery(query).contains("Lớp 7 Toán Bài 11: Ước chung lớn nhất"));
+        assertEquals("site:vi.wikipedia.org Ước chung lớn nhất", adapter.buildWikipediaQuery(query));
 
         List<SearchSnippet> results = adapter.search(query);
         server.verify();
