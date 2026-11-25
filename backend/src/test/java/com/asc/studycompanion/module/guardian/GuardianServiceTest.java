@@ -75,7 +75,8 @@ class GuardianServiceTest {
                 studySubmissionRepository,
                 aiEvaluationRepository,
                 evaluationJobRepository,
-                studyTaskService
+                studyTaskService,
+                studyTaskRepository
         );
     }
 
@@ -147,5 +148,63 @@ class GuardianServiceTest {
                 () -> guardianService.getSubmissionDetail(999L, 602L)
         );
         assertEquals(ErrorCode.GUARDIAN_NOT_LINKED, ex.getErrorCode());
+    }
+
+    @Test
+    void acknowledgeTaskWeeklySummaryAndExcelExportWorkWithoutAiUsageLeak() throws Exception {
+        StudentProfile student = StudentProfile.builder()
+                .id(10L)
+                .displayName("Khoi")
+                .grade(7)
+                .timezone("Asia/Ho_Chi_Minh")
+                .build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        LocalDate weekStart = LocalDate.of(2026, 11, 23);
+
+        StudyTask task = StudyTask.builder()
+                .id(101L)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.EVALUATED)
+                .revisionCount(1)
+                .build();
+        StudyPlan plan = StudyPlan.builder()
+                .id(20L)
+                .student(student)
+                .targetDate(LocalDate.of(2026, 11, 24))
+                .tasks(List.of(task))
+                .build();
+        task.setPlan(plan);
+
+        when(studyTaskRepository.findById(101L)).thenReturn(Optional.of(task));
+        when(studyTaskRepository.save(task)).thenReturn(task);
+
+        var ack = guardianService.acknowledgeTask(
+                2L,
+                101L,
+                new com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeRequest("  Con làm rất tốt!  ")
+        );
+        assertEquals(101L, ack.taskId());
+        assertEquals("Con làm rất tốt!", ack.note());
+        assertEquals("Con làm rất tốt!", task.getGuardianNote());
+
+        when(studyAccessGuard.requireLinkedStudentForGuardian(2L)).thenReturn(student);
+        when(studyPlanRepository.findAllByStudentIdAndTargetDateBetweenOrderByTargetDateDesc(
+                10L, weekStart, weekStart.plusDays(6)
+        )).thenReturn(List.of(plan));
+
+        var weekly = guardianService.getWeeklySummary(2L, weekStart, null);
+        assertEquals(1, weekly.totalTasks());
+        assertEquals(1, weekly.completedTasks());
+        assertEquals(1, weekly.acknowledgedTasks());
+        assertEquals(7, weekly.days().size());
+
+        when(studyPlanRepository.findAllByStudentIdAndTargetDateBetweenOrderByTargetDateDesc(
+                10L, weekStart, LocalDate.of(2026, 11, 29)
+        )).thenReturn(List.of(plan));
+        byte[] xlsx = guardianService.exportExcelReport(2L, weekStart, LocalDate.of(2026, 11, 29), null);
+        // ZIP / OOXML magic bytes 'PK'
+        assertEquals((byte) 'P', xlsx[0]);
+        assertEquals((byte) 'K', xlsx[1]);
     }
 }

@@ -214,7 +214,8 @@ final class InMemoryStudyHarness {
                 studySubmissionRepository,
                 aiEvaluationRepository,
                 evaluationJobRepository,
-                studyTaskService
+                studyTaskService,
+                studyTaskRepository
         );
 
         objectMapper = new ObjectMapper()
@@ -246,7 +247,10 @@ final class InMemoryStudyHarness {
         mockMvc = MockMvcBuilders.standaloneSetup(controllers.toArray())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
-                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .setMessageConverters(
+                        new org.springframework.http.converter.ByteArrayHttpMessageConverter(),
+                        new MappingJackson2HttpMessageConverter(objectMapper)
+                )
                 .addFilters(clearContextFilter, jwtAuthFilter)
                 .build();
     }

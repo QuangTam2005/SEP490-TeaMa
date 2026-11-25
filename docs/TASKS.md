@@ -99,7 +99,7 @@
 - [x] `[TASK-FEAT.2c]` *(3 SP)* Xây dựng `/student/history`, hiển thị Streak trên `/student/today`, và lưu nháp tự động `localStorage` trong `TaskWorkspaceView`
 
 ### Task 13 — Guardian Weekly Overview, Excel Export & Parent Note *(3 subtasks)*
-- [ ] `[TASK-FEAT.3a]` *(3 SP)* Xây dựng Backend `POST /api/guardian/tasks/{taskId}/acknowledge`, `GET /api/guardian/weekly` & `GET /api/guardian/export` (Apache POI `.xlsx`) + unit tests
+- [x] `[TASK-FEAT.3a]` *(3 SP)* Xây dựng Backend `POST /api/guardian/tasks/{taskId}/acknowledge`, `GET /api/guardian/weekly` & `GET /api/guardian/export` (Apache POI `.xlsx`) + unit tests
 - [ ] `[TASK-FEAT.3b]` *(3 SP)* Xây dựng UI Phụ huynh bấm "Đã xem" + lời nhắn động viên, chọn chuyển giữa các con, Tổng quan tuần & tải Excel trên `/guardian/dashboard` + `/guardian/timetable`
 - [ ] `[TASK-FEAT.3c]` *(3 SP)* Đồng bộ toàn bộ `MockServices` (Account, Multi-Child, History, Streak, Acknowledge, Weekly) tương thích `1:1` với API thật
 

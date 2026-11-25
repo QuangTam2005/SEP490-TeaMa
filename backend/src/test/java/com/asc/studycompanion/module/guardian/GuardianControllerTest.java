@@ -33,9 +33,13 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -56,7 +60,10 @@ class GuardianControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(new GuardianController(guardianService))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
-                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .setMessageConverters(
+                        new org.springframework.http.converter.ByteArrayHttpMessageConverter(),
+                        new MappingJackson2HttpMessageConverter(objectMapper)
+                )
                 .build();
     }
 
@@ -114,5 +121,33 @@ class GuardianControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.submissionId").value(602))
                 .andExpect(jsonPath("$.data.studentName").value("Khoi"));
+
+        when(guardianService.acknowledgeTask(eq(2L), eq(101L), any())).thenReturn(
+                new com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeResponse(
+                        101L, java.time.Instant.parse("2026-11-30T10:00:00Z"), "Cố gắng lên con!"
+                )
+        );
+        mockMvc.perform(post("/api/guardian/tasks/101/acknowledge")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"note\":\"Cố gắng lên con!\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.taskId").value(101))
+                .andExpect(jsonPath("$.data.note").value("Cố gắng lên con!"));
+
+        when(guardianService.getWeeklySummary(2L, LocalDate.of(2026, 11, 23), null)).thenReturn(
+                new com.asc.studycompanion.module.guardian.dto.GuardianWeeklySummaryResponse(
+                        10L, "Khoi", 7, LocalDate.of(2026, 11, 23), LocalDate.of(2026, 11, 29),
+                        4, 3, 2, List.of(), List.of()
+                )
+        );
+        mockMvc.perform(get("/api/guardian/weekly").param("weekStart", "2026-11-23"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.completedTasks").value(3))
+                .andExpect(jsonPath("$.data.acknowledgedTasks").value(2));
+
+        when(guardianService.exportExcelReport(2L, null, null, null)).thenReturn(new byte[]{'P', 'K', 3, 4});
+        mockMvc.perform(get("/api/guardian/export"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", containsString("bao-cao-hoc-tap.xlsx")));
     }
 }

@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 7 In Progress (`[TASK-FEAT.1a]`–`[TASK-FEAT.2c]` Done; expanding Smart Otter production features & `850–3,000` char standard)  
+**Current Phase:** Phase 7 In Progress (`[TASK-FEAT.1a]`–`[TASK-FEAT.3a]` Done; expanding Smart Otter production features & `850–3,000` char standard)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -64,7 +64,8 @@
 - **[DONE] `[TASK-FEAT.1c]` (`81587a2`):** Implemented `PUT /api/auth/profile` (`UpdateProfileRequest`), `PUT /api/auth/password` (`ChangePasswordRequest` with BCrypt current-password verification), `POST /api/links/unlink` (`UnlinkRequest`), `GET /api/links/children` (`LinkedChildResponse`), and multi-child `?studentId=` anti-IDOR resolution across `StudyAccessGuard`, `TimetableController`, and `GuardianController`; verified with MockMvc + `AcceptanceCoreFlowsTest` (`83/83` backend tests passing).
 - **[DONE] `[TASK-FEAT.2a]` (`bfcc263`):** Implemented `GET /api/student/plans/history` (`StudyPlanHistoryItem`) & `GET /api/student/streak` (`StudentStreakResponse` with `tomorrow`-or-`today` anchor consecutive streak computation) in `StudyPlanRepository`, `StudyPlanService`, and `StudyPlanController`; verified with unit + MockMvc tests (`84/84` backend tests passing).
 - **[DONE] `[TASK-FEAT.2b]` (`fef8467`):** Built `/profile` (`ProfileView` + `app/profile/page.tsx`) for Student & Guardian profile updates (`fullName`, Student `grade`), password changes, and unlink / multi-child link management, wired `Tài khoản` header/mobile links in `StudentShell` & `GuardianShell`, and updated `auth`/`link` TypeScript contracts and HTTP/mock services. Verified `tsc --noEmit`, `next lint`, and `next build` (`13` routes, `0` errors).
-- **[DONE] `[TASK-FEAT.2c]`:** Built `/student/history` (`StudyHistoryView` + `app/student/history/page.tsx`) with Streak KPIs & date filtering, added Flame Streak badge + History button to `NextDayPlanView` (`/student/today`) and `StudentShell` nav, and implemented debounced browser-only `localStorage` auto-save draft (`asc_draft_<userId>_<taskId>`) in `TaskWorkspaceView` (zero AI calls while typing). Verified `tsc --noEmit`, `next lint`, and `next build` (`14` routes, `0` errors).
+- **[DONE] `[TASK-FEAT.2c]` (`c7f9921`):** Built `/student/history` (`StudyHistoryView` + `app/student/history/page.tsx`) with Streak KPIs & date filtering, added Flame Streak badge + History button to `NextDayPlanView` (`/student/today`) and `StudentShell` nav, and implemented debounced browser-only `localStorage` auto-save draft (`asc_draft_<userId>_<taskId>`) in `TaskWorkspaceView` (zero AI calls while typing). Verified `tsc --noEmit`, `next lint`, and `next build` (`14` routes, `0` errors).
+- **[DONE] `[TASK-FEAT.3a]`:** Implemented `POST /api/guardian/tasks/{taskId}/acknowledge` (`GuardianAcknowledgeRequest`/`Response`), `GET /api/guardian/weekly` (`GuardianWeeklySummaryResponse` across Mon–Sun + subject stats), and Apache POI `.xlsx` report generation (`GET /api/guardian/export`); surfaced `guardianAcknowledgedAt` & `guardianNote` across `GuardianTaskItem`, `GuardianSubmissionDetailResponse`, and `StudyTaskSummaryResponse` without `AIUsageLog` exposure (`85/85` backend tests passing).
 
 ---
 

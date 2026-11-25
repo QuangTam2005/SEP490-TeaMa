@@ -80,7 +80,9 @@ public class StudyTaskService {
                 task.getRevisionCount(),
                 StudyTask.MAX_REVISIONS,
                 current != null ? current.lessonTitle() : null,
-                (current != null && current.evaluation() != null) ? current.evaluation().overallStatus() : null
+                (current != null && current.evaluation() != null) ? current.evaluation().overallStatus() : null,
+                task.getGuardianAcknowledgedAt(),
+                task.getGuardianNote()
         );
 
         return new StudyTaskDetailResponse(

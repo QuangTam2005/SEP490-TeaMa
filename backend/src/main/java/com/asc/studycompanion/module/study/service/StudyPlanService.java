@@ -345,7 +345,9 @@ public class StudyPlanService {
                 task.getRevisionCount(),
                 StudyTask.MAX_REVISIONS,
                 currentLessonTitle,
-                latestEvaluationStatus
+                latestEvaluationStatus,
+                task.getGuardianAcknowledgedAt(),
+                task.getGuardianNote()
         );
     }
 

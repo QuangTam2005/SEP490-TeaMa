@@ -5,6 +5,7 @@ import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
 import com.asc.studycompanion.module.timetable.entity.SubjectCode;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -13,6 +14,7 @@ import java.util.List;
  */
 public record GuardianSubmissionDetailResponse(
         Long submissionId,
+        Long taskId,
         String studentName,
         LocalDate targetDate,
         SubjectCode subjectCode,
@@ -20,6 +22,34 @@ public record GuardianSubmissionDetailResponse(
         StudyTaskType taskType,
         StudyTaskStatus status,
         Integer revisionCount,
+        Instant guardianAcknowledgedAt,
+        String guardianNote,
         List<StudySubmissionResponse> versions
 ) {
+    public GuardianSubmissionDetailResponse(
+            Long submissionId,
+            String studentName,
+            LocalDate targetDate,
+            SubjectCode subjectCode,
+            String subjectName,
+            StudyTaskType taskType,
+            StudyTaskStatus status,
+            Integer revisionCount,
+            List<StudySubmissionResponse> versions
+    ) {
+        this(
+                submissionId,
+                null,
+                studentName,
+                targetDate,
+                subjectCode,
+                subjectName,
+                taskType,
+                status,
+                revisionCount,
+                null,
+                null,
+                versions
+        );
+    }
 }
