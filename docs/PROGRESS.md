@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 2 In Progress (`[TASK-UI.4]` Completed)  
+**Current Phase:** Phase 2 Completed (`[TASK-UI.1]`–`[TASK-UI.5]`) $\rightarrow$ Ready for Phase 3 (`Database Baseline & Auth/Link Backend`)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -31,13 +31,12 @@
 - **[DONE] `[TASK-UI.1]` (`55770b6`):** Applied Ocean Blue (`#0284C7`/`#0369A1`) + White (`#FFFFFF`) design tokens across `tailwind.config.ts`, `globals.css`, `button.tsx`, `badge.tsx`, and `docs/DESIGN.md` & `docs/RULES.md`; implemented strict Study Companion DTOs (`timetable`, `ai`, `study`, `guardian`), `study-utils.ts` (`BR-12` `850–2,000` normalized char counter & `Asia/Ho_Chi_Minh` next-day helper), updated `StatusBadge` (all task/AI enums in child-friendly Vietnamese), and added AI async/error scenarios (`evaluating`, `evaluation_failed`, `insufficient_evidence`) to `MockRuntime` & `UiReviewToolbar`. Verified `typecheck`, `lint`, `build` passed cleanly.
 - **[DONE] `[TASK-UI.2]` (`ef21113`):** Created `link.service.ts` (+ `linkMockService` & `linkHttpService`), polished `/login` and `/register` (`h-11` THCS tap targets, `STUDENT`/`GUARDIAN` role switcher, quick mock role login buttons, Ocean Blue + White styling), and built `/link-student` (`LinkStudentView` for 8-character one-time code generation/copying for Students and code redemption for Guardians with `AUTH_007`/`AUTH_008` validation). Verified `typecheck`, `lint`, `build` passed cleanly.
 - **[DONE] `[TASK-UI.3]` (`9185caa`):** Built `study-seed.ts` (Grade 6 timetable, BR-12-compliant `850–2,000` char Vietnamese submissions & `<= 600` char AI evaluations), `timetable.service.ts` (+ `timetableMockService` & `timetableHttpService`), `StudentShell` (`app/student/layout.tsx` Ocean Blue + White responsive header), and `/student/timetable` (`TimetableView` 7-day × 5-subject desktop grid & mobile day cards with `periodNote` and history-preserving versioning). Verified `typecheck`, `lint`, `build` passed cleanly.
-- **[DONE] `[TASK-UI.4]`:** Built `study.service.ts` (+ `studyMockService` & `studyHttpService`), `/student/today` (`NextDayPlanView` showing tomorrow's `Asia/Ho_Chi_Minh` subject plan with `REVIEW` -> `PREVIEW` sequential gate & empty schedule state), and `/student/tasks/[taskId]` (`TaskWorkspaceView` with live `850–2,000` normalized char bar, idempotent submission, async `EVALUATING` polling, `<= 600` char AI feedback + clickable sources, retry on `EVALUATION_FAILED`, and up to 3 post-evaluation immutable revisions). Verified `typecheck`, `lint`, `build` passed cleanly.
+- **[DONE] `[TASK-UI.4]` (`8fdeee6`):** Built `study.service.ts` (+ `studyMockService` & `studyHttpService`), `/student/today` (`NextDayPlanView` showing tomorrow's `Asia/Ho_Chi_Minh` subject plan with `REVIEW` -> `PREVIEW` sequential gate & empty schedule state), and `/student/tasks/[taskId]` (`TaskWorkspaceView` with live `850–2,000` normalized char bar, idempotent submission, async `EVALUATING` polling, `<= 600` char AI feedback + clickable sources, retry on `EVALUATION_FAILED`, and up to 3 post-evaluation immutable revisions). Verified `typecheck`, `lint`, `build` passed cleanly.
+- **[DONE] `[TASK-UI.5]`:** Built `guardian.service.ts` (+ `guardianMockService` & `guardianHttpService`), `GuardianShell` (`/guardian/layout.tsx`), `/guardian/dashboard` (`GuardianDashboardView` with date & subject filters, completion summary, desktop `DataTable` + mobile cards), and `/guardian/submissions/[submissionId]` (`SubmissionDetailView` read-only immutable student version inspector with Accuracy/Completeness, incorrect/missing points, clickable `sources` + `retrievedAt`, and zero `AIUsageLog`/cost leaks). Verified `typecheck`, `lint`, `build` (`10` App Router routes compiled with `0` errors/warnings).
 
 ---
 
-## 3. Next Steps Queue (Phase 2 — Frontend UI-First Prototype)
-1. `[TASK-UI.1]` Build Study Companion strict DTOs (`src/types/{auth,timetable,study,ai,guardian}.ts`), `study-utils.ts` (`BR-12` char counter `850–2,000`, `Asia/Ho_Chi_Minh` next-day helper), and `MockRuntime` (`EVALUATING`/`EVALUATION_FAILED`/`INSUFFICIENT_EVIDENCE`).
-2. `[TASK-UI.2]` Build Auth & 1-Time Link Code Flow (`/login`, `/register`, `/link-student` 8-char code generator/acceptor).
-3. `[TASK-UI.3]` Build Student Workspace Shell & Weekly Timetable (`/student/layout.tsx`, `/student/timetable`).
-4. `[TASK-UI.4]` Build Next-Day Plan & Review/Preview Submission Workspace (`/student/today`, `/student/tasks/[taskId]`).
-5. `[TASK-UI.5]` Build Guardian Read-Only Dashboard (`/guardian/dashboard`) & Immutable Submission Inspector (`/guardian/submissions/[submissionId]`).
+## 3. Next Steps Queue (Phase 3 — Backend Database & Auth/Link)
+1. `[TASK-BE.1]` Create Flyway `V1__init_study_companion_schema.sql` (14 PostgreSQL tables per `DESIGN.md` + 5 seeded Grade 6 `subjects`) and verify JPA `ddl-auto=validate` alignment.
+2. `[TASK-BE.2]` Upgrade `auth` module (`STUDENT`/`GUARDIAN` roles, `StudentProfile`, `GuardianLink`, 8-char 1-time Link Code APIs, and `StudyAccessGuard` anti-IDOR protection).
+3. Proceed sequentially through `[TASK-BE.3]`–`[TASK-BE.6]`.
