@@ -49,8 +49,8 @@ class BraveSearchAdapterTest {
 
     @Test
     void searchesWithExtraSnippetsFiltersNonEduAndCapsRequestsAndSourcesToTwo() {
-        String extra1 = "Phần 1: Khái niệm Ước chung lớn nhất (ƯCLN) của hai hay nhiều số tự nhiên là số lớn nhất trong tập hợp các ước chung của các số đó. ".repeat(3).trim();
-        String extra2 = "Phần 2: Để tìm ƯCLN bằng cách phân tích các số ra thừa số nguyên tố, ta chọn các thừa số nguyên tố chung với số mũ nhỏ nhất rồi nhân lại. ".repeat(3).trim();
+        String extra1 = "Phần 1: Khái niệm Ước chung lớn nhất (ƯCLN) của hai hay nhiều số tự nhiên là số lớn nhất trong tập hợp các ước chung của các số đó. ".repeat(6).trim();
+        String extra2 = "Phần 2: Để tìm ƯCLN bằng cách phân tích các số ra thừa số nguyên tố, ta chọn các thừa số nguyên tố chung với số mũ nhỏ nhất rồi nhân lại. ".repeat(6).trim();
         String webJson = """
                 {
                   "web": {
@@ -115,8 +115,8 @@ class BraveSearchAdapterTest {
         assertFalse(results.stream().anyMatch(s -> s.url().contains("haylamdo.com")));
         assertTrue(results.get(0).title().contains("Kết nối tri thức"));
         assertTrue(results.get(0).snippet().contains("thừa số nguyên tố"));
-        assertTrue(results.get(0).snippet().length() > 600 && results.get(0).snippet().length() <= 1000,
-                "Expected snippet > 600 and <= 1000 chars but got " + results.get(0).snippet().length());
+        assertTrue(results.get(0).snippet().length() > 1000 && results.get(0).snippet().length() <= 2000,
+                "Expected snippet > 1000 and <= 2000 chars but got " + results.get(0).snippet().length());
         assertTrue(results.get(1).url().contains("vi.wikipedia.org"));
     }
 

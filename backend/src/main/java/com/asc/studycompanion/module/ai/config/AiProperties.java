@@ -18,7 +18,7 @@ public class AiProperties {
     public static final String DEFAULT_TEXTBOOK_EDITION = "GDPT 2018";
 
     private int maxSources = 2;
-    private int maxContextTokens = 2250;
+    private int maxContextTokens = 2700;
     private String textbookSeries = DEFAULT_TEXTBOOK_SERIES;
     private String englishTextbookSeries = ENGLISH_TEXTBOOK_SERIES;
     private String textbookEdition = DEFAULT_TEXTBOOK_EDITION;

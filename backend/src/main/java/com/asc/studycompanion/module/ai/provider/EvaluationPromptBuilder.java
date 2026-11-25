@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Builds deterministic, PII-free Vietnamese mentor evaluation prompts constrained to <= 2,250 context tokens,
+ * Builds deterministic, PII-free Vietnamese mentor evaluation prompts constrained to <= 2,700 context tokens,
  * anchored to the student's textbook series/edition, with anti-injection, anti-nitpick, and <= 1,000-char structured feedback rules.
  */
 @Component
@@ -17,7 +17,7 @@ import java.util.List;
 public class EvaluationPromptBuilder {
 
     private static final int CHARS_PER_TOKEN_ESTIMATE = 3;
-    private static final int MAX_SOURCES_CHARS = 2500;
+    private static final int MAX_SOURCES_CHARS = 4500;
 
     private final AiProperties aiProperties;
 
@@ -58,7 +58,7 @@ public class EvaluationPromptBuilder {
 
     public String buildUserPrompt(AiEvaluationInput input) {
         String taskLabel = input.taskType() == StudyTaskType.REVIEW ? "Ôn bài cũ (Review)" : "Soạn bài mới (Preview)";
-        int maxTotalChars = Math.max(5200, aiProperties.getMaxContextTokens() * CHARS_PER_TOKEN_ESTIMATE);
+        int maxTotalChars = Math.max(8100, aiProperties.getMaxContextTokens() * CHARS_PER_TOKEN_ESTIMATE);
 
         StringBuilder sourcesSection = new StringBuilder();
         List<SearchSnippet> sources = input.sources() != null ? input.sources() : List.of();

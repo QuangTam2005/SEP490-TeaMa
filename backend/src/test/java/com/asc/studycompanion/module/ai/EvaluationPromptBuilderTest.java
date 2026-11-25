@@ -19,7 +19,7 @@ class EvaluationPromptBuilderTest {
     @Test
     void buildsPiiFreePromptEnforcingKnttTextbookAndContextBudget() {
         AiProperties props = new AiProperties();
-        props.setMaxContextTokens(2250);
+        props.setMaxContextTokens(2700);
         EvaluationPromptBuilder builder = new EvaluationPromptBuilder(props);
 
         String system = builder.buildSystemPrompt();
@@ -38,18 +38,18 @@ class EvaluationPromptBuilderTest {
                 "Toán",
                 StudyTaskType.REVIEW,
                 "Hằng đẳng thức đáng nhớ",
-                "a".repeat(900),
+                "a".repeat(2990) + "END_MARKER",
                 List.of(
                         new SearchSnippet(
                                 "Toán 8 Kết nối tri thức - Bài 6",
                                 "https://loigiaihay.com/ket-noi-tri-thuc-bai-6-hang-dang-thuc",
-                                "Hiệu hai bình phương: a^2 - b^2 = (a - b)(a + b). " + "Kiến thức SGK chi tiết. ".repeat(38),
+                                "Hiệu hai bình phương: a^2 - b^2 = (a - b)(a + b). " + "Kiến thức SGK chi tiết. ".repeat(80),
                                 Instant.now()
                         ),
                         new SearchSnippet(
                                 "VietJack Toán 8 - Hằng đẳng thức",
                                 "https://vietjack.com/toan-8-kntt-bai-6",
-                                "Bình phương của một tổng và một hiệu. " + "Ví dụ minh họa cụ thể. ".repeat(38),
+                                "Bình phương của một tổng và một hiệu. " + "Ví dụ minh họa cụ thể. ".repeat(80),
                                 Instant.now()
                         )
                 )
@@ -63,9 +63,10 @@ class EvaluationPromptBuilderTest {
         assertTrue(userPrompt.contains("<reference_sources>"));
         assertTrue(userPrompt.contains("[1] Toán 8 Kết nối tri thức - Bài 6"));
         assertTrue(userPrompt.contains("[2] VietJack Toán 8 - Hằng đẳng thức"));
+        assertTrue(userPrompt.contains("END_MARKER"));
         assertTrue(userPrompt.contains("<student_submission>"));
         assertFalse(userPrompt.contains("@gmail.com"));
-        assertTrue(userPrompt.length() <= 2250 * 3 + 50);
+        assertTrue(userPrompt.length() <= 2700 * 3 + 50);
     }
 
     @Test

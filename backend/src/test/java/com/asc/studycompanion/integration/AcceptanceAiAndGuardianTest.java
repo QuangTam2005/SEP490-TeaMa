@@ -58,7 +58,7 @@ class AcceptanceAiAndGuardianTest {
     private static AiProperties createAiProperties() {
         AiProperties props = new AiProperties();
         props.setMaxSources(2);
-        props.setMaxContextTokens(2250);
+        props.setMaxContextTokens(2700);
         props.getBrave().setBaseUrl("https://api.search.brave.com/res/v1/web/search");
         props.getBrave().setApiKey("test-brave-api-key");
         props.getCkey().setBaseUrl("https://api.ckey.example/v1");

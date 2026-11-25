@@ -45,7 +45,7 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
   ai:
     max-sources: ${AI_MAX_SOURCES:2}
-    max-context-tokens: ${AI_MAX_CONTEXT_TOKENS:2250}
+    max-context-tokens: ${AI_MAX_CONTEXT_TOKENS:2700}
     textbook-series: ${AI_TEXTBOOK_SERIES:Kết nối tri thức với cuộc sống}
     english-textbook-series: ${AI_ENGLISH_TEXTBOOK_SERIES:Global Success}
     textbook-edition: ${AI_TEXTBOOK_EDITION:GDPT 2018}

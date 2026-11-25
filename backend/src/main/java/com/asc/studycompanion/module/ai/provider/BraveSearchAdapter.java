@@ -24,7 +24,7 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * Brave Search adapter (Option B: extra_snippets=true, <= 3 Brave HTTP calls, <= 2 sources, <= 1,000 chars/source)
+ * Brave Search adapter (Option B: extra_snippets=true, <= 3 Brave HTTP calls, <= 2 sources, <= 2,000 chars/source)
  * with subject-specific source routing (Global Success for ENG, textbook portals for LIT,
  * official curriculum portals + Wikipedia for conceptual subjects) and non-educational filtering.
  */
@@ -34,7 +34,7 @@ public class BraveSearchAdapter implements SearchProvider {
 
     private static final int HARD_SOURCE_CAP = 2;
     private static final int MAX_BRAVE_REQUESTS = 3;
-    private static final int MAX_SNIPPET_CHARS = 1000;
+    private static final int MAX_SNIPPET_CHARS = 2000;
     private static final int MAX_CONTENT_KEYWORDS_CHARS = 90;
 
     private static final List<String> BLOCKED_NON_EDUCATIONAL_HOSTS = List.of(
@@ -402,7 +402,7 @@ public class BraveSearchAdapter implements SearchProvider {
         }
         String slice = joined.substring(0, MAX_SNIPPET_CHARS);
         int lastSep = Math.max(slice.lastIndexOf('.'), slice.lastIndexOf(' '));
-        if (lastSep >= MAX_SNIPPET_CHARS - 120) {
+        if (lastSep >= MAX_SNIPPET_CHARS - 200) {
             return slice.substring(0, lastSep).trim();
         }
         return slice.trim();

@@ -107,7 +107,7 @@
 - [x] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
 - [x] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`
 
-### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(20 subtasks)*
+### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(21 subtasks)*
 - [x] `[TASK-FEAT.5a]` *(2 SP)* Xây dựng hệ thống chống copy/dán vào ô nội dung bài làm (`anti-paste.ts`, `TaskWorkspaceView`: chặn `paste`/`drop`/`contextmenu`/`Ctrl+V`/`beforeinput` & bulk-insert `delta > 30` giữ nguyên bộ gõ Telex/VNI) & đồng bộ `docs/`
 - [x] `[TASK-FEAT.5b]` *(2 SP)* Tối ưu layout responsive màn hình rộng 24 inch (`max-w-[1600px]` cho `StudentShell`/`GuardianShell`/`AuthLayout`/`LinkStudentView`, `lg:` nav breakpoint chống dồn header, `2xl:grid-cols-2`/`8:4` cho `NextDayPlanView`/`StudyHistoryView`/`TaskWorkspaceView`/`SubmissionDetailView`/`ProfileView`)
 - [x] `[TASK-FEAT.5c]` *(2 SP)* Cập nhật logic tính chuỗi học (`StudyPlanService.getStreak`) bỏ qua các ngày nghỉ không có môn trên thời khóa biểu `ACTIVE` (ví dụ T7, CN trống lịch) mà vẫn ngắt chuỗi khi bỏ lỡ ngày có lịch học & bổ sung unit tests (`StudyPlanServiceTest`)
@@ -128,6 +128,7 @@
 - [x] `[TASK-FEAT.5r]` *(1 SP)* Thu gọn tối đa **2 nguồn** tham khảo và tăng độ sâu mỗi nguồn lên **`1.000` ký tự**, nâng trần `<reference_sources>` `MAX_SOURCES_CHARS = 2.500` ký tự (tỉa đều cuối từ để không rớt nguồn thứ 2), nâng `KnowledgeCache` `v4` (`AiProperties`, `application.yml`, `BraveSearchAdapter`, `EvaluationPromptBuilder`, tests & docs)
 - [x] `[TASK-FEAT.5s]` *(2 SP)* Kiểm định thực tế khả năng crawl của Brave trên 5 trang chính thống & các cổng K12: loại bỏ `hanhtrangso.nxbgd.vn` (SPA rỗng), `hoc10.vn` (SPA), `moet.gov.vn` (tin hành chính), bỏ ưu tiên `nxbgd.vn`/`gdpt.vn` & các trang chặn bot Cloudflare (`olm.vn`, `hoc247.net`, `haylamdo.com`), bổ sung & nâng điểm các cổng K12 HTML server-render giàu nội dung (`vietjack.com`, `khoahoc.vietjack.com`, `loigiaihay.com`, `vndoc.com`, `tech12h.com`, `vuihoc.vn`, `doctailieu.com`, `vi.wikipedia.org`, `tailieumoi.vn`, `quantrimang.com`, `toanmath.com`, `monkey.edu.vn`, `colearn.vn`, `hocgioi.vn`, `vi.wikibooks.org`, `vi.wiktionary.org`, `taphuan.nxbgd.vn`) trong `BraveSearchAdapter` + tests
 - [x] `[TASK-FEAT.5t]` *(1 SP)* Loại bỏ hoàn toàn các trang chặn Cloudflare/anti-bot/timeout (`olm.vn`, `hoc247.net`, `haylamdo.com`, `thuvienhoclieu.com`, `hocmai.vn`, `baitap123.com`) khỏi kết quả chọn nguồn của `BraveSearchAdapter` + tests (`99/99` BE)
+- [x] `[TASK-FEAT.5u]` *(1 SP)* Nâng giới hạn trích nguồn lên **`2.000` ký tự/nguồn** (`BraveSearchAdapter.MAX_SNIPPET_CHARS = 2000`), nâng tổng vùng nguồn **`MAX_SOURCES_CHARS = 4.500`** ký tự, nâng **`maxContextTokens = 2.700`** (`8.100` ký tự để không cắt bài làm `3.000` ký tự), nâng `KnowledgeCache` `v5`, đồng bộ docs (`RULES.md`, `PRD.md`, `ARCHITECTURE.md`) & tests (`99/99` BE)
 
 ---
 
