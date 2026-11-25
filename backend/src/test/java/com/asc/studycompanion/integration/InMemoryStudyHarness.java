@@ -2,10 +2,16 @@ package com.asc.studycompanion.integration;
 
 import com.asc.studycompanion.common.exception.GlobalExceptionHandler;
 import com.asc.studycompanion.module.ai.entity.AIEvaluation;
+import com.asc.studycompanion.module.ai.entity.AIUsageLog;
 import com.asc.studycompanion.module.ai.entity.EvaluationJob;
 import com.asc.studycompanion.module.ai.entity.EvaluationJobStatus;
+import com.asc.studycompanion.module.ai.entity.KnowledgeCache;
 import com.asc.studycompanion.module.ai.repository.AIEvaluationRepository;
+import com.asc.studycompanion.module.ai.repository.AIUsageLogRepository;
 import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
+import com.asc.studycompanion.module.ai.repository.KnowledgeCacheRepository;
+import com.asc.studycompanion.module.guardian.controller.GuardianController;
+import com.asc.studycompanion.module.guardian.service.GuardianService;
 import com.asc.studycompanion.module.auth.controller.AuthController;
 import com.asc.studycompanion.module.auth.controller.LinkController;
 import com.asc.studycompanion.module.auth.controller.StudentProfileController;
@@ -97,6 +103,8 @@ final class InMemoryStudyHarness {
     final List<StudySubmission> submissions = new ArrayList<>();
     final List<EvaluationJob> jobs = new ArrayList<>();
     final List<AIEvaluation> evaluations = new ArrayList<>();
+    final List<AIUsageLog> usageLogs = new ArrayList<>();
+    final List<KnowledgeCache> knowledgeCaches = new ArrayList<>();
 
     final UserRepository userRepository = mock(UserRepository.class);
     final StudentProfileRepository studentProfileRepository = mock(StudentProfileRepository.class);
@@ -108,6 +116,8 @@ final class InMemoryStudyHarness {
     final StudySubmissionRepository studySubmissionRepository = mock(StudySubmissionRepository.class);
     final EvaluationJobRepository evaluationJobRepository = mock(EvaluationJobRepository.class);
     final AIEvaluationRepository aiEvaluationRepository = mock(AIEvaluationRepository.class);
+    final AIUsageLogRepository aiUsageLogRepository = mock(AIUsageLogRepository.class);
+    final KnowledgeCacheRepository knowledgeCacheRepository = mock(KnowledgeCacheRepository.class);
 
     final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
     final JwtProperties jwtProperties;
@@ -122,6 +132,7 @@ final class InMemoryStudyHarness {
     final StudyPlanService studyPlanService;
     final StudyTaskService studyTaskService;
     final StudySubmissionService studySubmissionService;
+    final GuardianService guardianService;
     final ObjectMapper objectMapper;
     final MockMvc mockMvc;
 
@@ -197,6 +208,14 @@ final class InMemoryStudyHarness {
                 aiEvaluationRepository,
                 studyTaskService
         );
+        guardianService = new GuardianService(
+                studyAccessGuard,
+                studyPlanRepository,
+                studySubmissionRepository,
+                aiEvaluationRepository,
+                evaluationJobRepository,
+                studyTaskService
+        );
 
         objectMapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
@@ -210,7 +229,8 @@ final class InMemoryStudyHarness {
                 new TimetableController(timetableService),
                 new StudyPlanController(studyPlanService),
                 new StudyTaskController(studyTaskService, studySubmissionService),
-                new StudySubmissionController(studySubmissionService)
+                new StudySubmissionController(studySubmissionService),
+                new GuardianController(guardianService)
         ));
         controllers.addAll(List.of(extraControllers));
 
@@ -422,6 +442,10 @@ final class InMemoryStudyHarness {
         });
 
         // EvaluationJobs
+        lenient().when(evaluationJobRepository.findById(anyLong())).thenAnswer(inv -> {
+            Long id = inv.getArgument(0);
+            return jobs.stream().filter(j -> Objects.equals(j.getId(), id)).findFirst();
+        });
         lenient().when(evaluationJobRepository.findBySubmissionId(anyLong())).thenAnswer(inv -> {
             Long subId = inv.getArgument(0);
             return jobs.stream().filter(j -> Objects.equals(j.getSubmissionId(), subId)).findFirst();
@@ -452,6 +476,23 @@ final class InMemoryStudyHarness {
             return evaluations.stream().filter(e -> ids.contains(e.getSubmissionId())).toList();
         });
         lenient().when(aiEvaluationRepository.save(any(AIEvaluation.class))).thenAnswer(inv -> persistEvaluation(inv.getArgument(0)));
+
+        // AIUsageLogs
+        lenient().when(aiUsageLogRepository.findAllByJobIdOrderByCreatedAtDesc(anyLong())).thenAnswer(inv -> {
+            Long jobId = inv.getArgument(0);
+            return usageLogs.stream()
+                    .filter(u -> Objects.equals(u.getJobId(), jobId))
+                    .sorted(Comparator.comparing(AIUsageLog::getCreatedAt).reversed())
+                    .toList();
+        });
+        lenient().when(aiUsageLogRepository.save(any(AIUsageLog.class))).thenAnswer(inv -> persistUsageLog(inv.getArgument(0)));
+
+        // KnowledgeCache
+        lenient().when(knowledgeCacheRepository.findByCacheKey(anyString())).thenAnswer(inv -> {
+            String key = inv.getArgument(0);
+            return knowledgeCaches.stream().filter(c -> key.equals(c.getCacheKey())).findFirst();
+        });
+        lenient().when(knowledgeCacheRepository.save(any(KnowledgeCache.class))).thenAnswer(inv -> persistKnowledgeCache(inv.getArgument(0)));
     }
 
     private User persistUser(User user) {
@@ -575,5 +616,26 @@ final class InMemoryStudyHarness {
         evaluations.removeIf(e -> Objects.equals(e.getId(), evaluation.getId()));
         evaluations.add(evaluation);
         return evaluation;
+    }
+
+    private AIUsageLog persistUsageLog(AIUsageLog log) {
+        if (log.getId() == null) {
+            log.setId(seq.incrementAndGet());
+        }
+        if (log.getCreatedAt() == null) {
+            log.setCreatedAt(Instant.now());
+        }
+        usageLogs.removeIf(u -> Objects.equals(u.getId(), log.getId()));
+        usageLogs.add(log);
+        return log;
+    }
+
+    private KnowledgeCache persistKnowledgeCache(KnowledgeCache cache) {
+        if (cache.getId() == null) {
+            cache.setId(seq.incrementAndGet());
+        }
+        knowledgeCaches.removeIf(c -> Objects.equals(c.getId(), cache.getId()));
+        knowledgeCaches.add(cache);
+        return cache;
     }
 }
