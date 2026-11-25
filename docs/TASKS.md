@@ -107,7 +107,7 @@
 - [x] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
 - [x] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`
 
-### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(13 subtasks)*
+### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(14 subtasks)*
 - [x] `[TASK-FEAT.5a]` *(2 SP)* Xây dựng hệ thống chống copy/dán vào ô nội dung bài làm (`anti-paste.ts`, `TaskWorkspaceView`: chặn `paste`/`drop`/`contextmenu`/`Ctrl+V`/`beforeinput` & bulk-insert `delta > 30` giữ nguyên bộ gõ Telex/VNI) & đồng bộ `docs/`
 - [x] `[TASK-FEAT.5b]` *(2 SP)* Tối ưu layout responsive màn hình rộng 24 inch (`max-w-[1600px]` cho `StudentShell`/`GuardianShell`/`AuthLayout`/`LinkStudentView`, `lg:` nav breakpoint chống dồn header, `2xl:grid-cols-2`/`8:4` cho `NextDayPlanView`/`StudyHistoryView`/`TaskWorkspaceView`/`SubmissionDetailView`/`ProfileView`)
 - [x] `[TASK-FEAT.5c]` *(2 SP)* Cập nhật logic tính chuỗi học (`StudyPlanService.getStreak`) bỏ qua các ngày nghỉ không có môn trên thời khóa biểu `ACTIVE` (ví dụ T7, CN trống lịch) mà vẫn ngắt chuỗi khi bỏ lỡ ngày có lịch học & bổ sung unit tests (`StudyPlanServiceTest`)
@@ -121,6 +121,7 @@
 - [x] `[TASK-FEAT.5k]` *(1 SP)* Tinh chỉnh prompt đánh giá AI (`EvaluationPromptBuilder`): cấm bắt lỗi vặt hình thức ghi chép (chữ hoa đầu dòng như `Cave`, dấu ngăn cách ghi chú `:`, `;`), buộc kiểm tra đúng nguyên văn trước khi chỉ lỗi để không gán nhầm sang từ khác (như `forest`), và không bác bỏ từ vựng/ý đúng thuộc phần khác trong cùng bài/Unit SGK (`EvaluationPromptBuilderTest`)
 - [x] `[TASK-FEAT.5l]` *(1 SP)* Đổi tiêu đề cột `"Kết quả AI"` thành `"AI Đánh giá"` trên `GuardianDashboardView`
 - [x] `[TASK-FEAT.5m]` *(1 SP)* Loại bỏ toàn bộ icon khỏi `StatusBadge` (mọi trạng thái, vai trò & đánh giá) và khỏi cột `Môn học` (`Ôn bài cũ`/`Soạn bài mới`) + nút thao tác (`Xem bài gốc`, `Bỏ qua`, `Khôi phục`) trên `GuardianDashboardView`
+- [x] `[TASK-FEAT.5n]` *(5 SP)* Nâng cấp AI Mentor (`<= +10%` ngân sách token, Option B không gọi ngoài Wikipedia API): định danh `textbookSeries`/`textbookEdition` (`Global Success` / `Kết nối tri thức với cuộc sống` / `GDPT 2018`) trong `SearchQuery`, `AiEvaluationInput` & `KnowledgeCache v3`; bật `extra_snippets=true`, định tuyến nguồn theo môn (`ENG` → `Global Success`, `LIT` → Ngữ văn, lọc nguồn mạng xã hội/rác); nâng `maxContextTokens=2250` (`+9.86%`) & `max_tokens=1045` (`+10%`), `feedback VARCHAR(1000)` qua Flyway `V6` (`600–1.000` ký tự gồm `Nhận xét tổng quan` + `Cần khắc phục`), `StudyTextUtils`/`study-utils.ts` + `whitespace-pre-wrap` hiển thị FE & đồng bộ unit/integration tests (`99/99` BE, `14` FE routes)
 
 ---
 

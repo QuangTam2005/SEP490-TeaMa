@@ -24,6 +24,7 @@ import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
 import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
+import com.asc.studycompanion.module.timetable.entity.SubjectCode;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -111,6 +112,9 @@ public class EvaluationJobWorker {
                 .orElseThrow(() -> new AppException(ErrorCode.SUBMISSION_NOT_FOUND));
         StudyTask task = submission.getTask();
         int grade = task.getPlan().getStudent().getGrade();
+        SubjectCode subjectCode = task.getSubject().getCode();
+        String textbookSeries = aiProperties.resolveTextbookSeries(subjectCode);
+        String textbookEdition = aiProperties.resolveTextbookEdition();
 
         int searchCount = 0;
         boolean cacheHit = false;
@@ -118,8 +122,10 @@ public class EvaluationJobWorker {
         try {
             Optional<List<SearchSnippet>> cachedSources = knowledgeCacheService.lookup(
                     grade,
-                    task.getSubject().getCode(),
-                    submission.getLessonTitle()
+                    subjectCode,
+                    submission.getLessonTitle(),
+                    textbookSeries,
+                    textbookEdition
             );
 
             List<SearchSnippet> snippets;
@@ -129,18 +135,22 @@ public class EvaluationJobWorker {
             } else {
                 snippets = searchProvider.search(new SearchQuery(
                         grade,
-                        task.getSubject().getCode(),
+                        subjectCode,
                         task.getSubject().getName(),
                         submission.getLessonTitle(),
-                        submission.getContent()
+                        submission.getContent(),
+                        textbookSeries,
+                        textbookEdition
                 ));
                 searchCount = (searchProvider instanceof com.asc.studycompanion.module.ai.provider.BraveSearchAdapter braveAdapter)
                         ? braveAdapter.consumeLastRequestCount()
                         : 1;
                 knowledgeCacheService.store(
                         grade,
-                        task.getSubject().getCode(),
+                        subjectCode,
                         submission.getLessonTitle(),
+                        textbookSeries,
+                        textbookEdition,
                         snippets,
                         true
                 );
@@ -148,12 +158,14 @@ public class EvaluationJobWorker {
 
             AiEvaluationResult aiResult = aiEvaluationProvider.evaluate(new AiEvaluationInput(
                     grade,
-                    task.getSubject().getCode(),
+                    subjectCode,
                     task.getSubject().getName(),
                     task.getTaskType(),
                     submission.getLessonTitle(),
                     submission.getContent(),
-                    snippets
+                    snippets,
+                    textbookSeries,
+                    textbookEdition
             ));
 
             saveSucceededEvaluation(submission, task, job, aiResult, snippets);

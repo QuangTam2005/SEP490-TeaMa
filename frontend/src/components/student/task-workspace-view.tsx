@@ -179,7 +179,7 @@ function EvaluationPanel({
           <StatusBadge status={evaluation.confidence} />
         </div>
 
-        <div className="break-words rounded-lg border border-brand/20 bg-brand-soft/35 p-3.5 text-sm leading-relaxed text-foreground [overflow-wrap:anywhere] dark:bg-sky-950/25">
+        <div className="break-words whitespace-pre-wrap rounded-lg border border-brand/20 bg-brand-soft/35 p-3.5 text-sm leading-relaxed text-foreground [overflow-wrap:anywhere] dark:bg-sky-950/25">
           {clampedFeedback}
         </div>
 

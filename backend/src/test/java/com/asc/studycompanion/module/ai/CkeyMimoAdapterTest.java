@@ -56,8 +56,9 @@ class CkeyMimoAdapterTest {
     }
 
     @Test
-    void parsesValidEvaluationJsonClampsFeedbackUnder600AndCapturesUsage() {
-        String longFeedback = "Câu thứ nhất nhận xét rất rõ ràng và tích cực cho bài làm của con. ".repeat(12);
+    void parsesValidEvaluationJsonClampsFeedbackUnder1000AndCapturesUsage() {
+        String longFeedback = ("Nhận xét tổng quan: Con trình bày ý chính rõ ràng và bám sát kiến thức trọng tâm. "
+                + "Cần khắc phục: Con hãy kiểm tra lại ví dụ minh họa và bổ sung thêm trường hợp đặc biệt theo sách giáo khoa nhé. ").repeat(8);
         String innerJson = """
                 {
                   "accuracy": "CORRECT",
@@ -76,7 +77,7 @@ class CkeyMimoAdapterTest {
                   "choices": [
                     { "message": { "content": "```json\\n%s\\n```" } }
                   ],
-                  "usage": { "prompt_tokens": 512, "completion_tokens": 144 }
+                  "usage": { "prompt_tokens": 512, "completion_tokens": 220 }
                 }
                 """.formatted(escaped);
 
@@ -103,14 +104,15 @@ class CkeyMimoAdapterTest {
         assertEquals(OverallEvaluationStatus.NEEDS_IMPROVEMENT, result.overallStatus());
         assertEquals(ConfidenceLevel.HIGH, result.confidence());
         assertEquals(1, result.missingPoints().size());
-        assertTrue(result.feedback().length() >= 300 && result.feedback().length() <= 600);
+        assertTrue(result.feedback().length() >= 600 && result.feedback().length() <= 1000,
+                "Expected 600..1000 chars but got " + result.feedback().length());
         assertTrue(result.feedback().endsWith("."));
         assertEquals(512, result.inputTokens());
-        assertEquals(144, result.outputTokens());
+        assertEquals(220, result.outputTokens());
     }
 
     @Test
-    void padsShortFeedbackToAtLeast300CharsWithin600Bound() {
+    void padsShortFeedbackToAtLeast600CharsWithin1000Bound() {
         String shortJson = """
                 {
                   "accuracy": "PARTIALLY_CORRECT",
@@ -122,10 +124,12 @@ class CkeyMimoAdapterTest {
                   "confidence": "HIGH"
                 }
                 """;
-        AiEvaluationResult result = adapter.parseAndValidateJson(shortJson, 200, 80, "laguna-xs-2.1");
-        assertTrue(result.feedback().length() >= 300,
-                "Expected >= 300 chars but got " + result.feedback().length());
-        assertTrue(result.feedback().length() <= 600);
+        AiEvaluationResult result = adapter.parseAndValidateJson(shortJson, 200, 80, "mimo-v2-flash");
+        assertTrue(result.feedback().length() >= 600,
+                "Expected >= 600 chars but got " + result.feedback().length());
+        assertTrue(result.feedback().length() <= 1000);
+        assertTrue(result.feedback().contains("Nhận xét tổng quan"));
+        assertTrue(result.feedback().contains("Cần khắc phục"));
     }
 
     @Test
@@ -201,11 +205,11 @@ class CkeyMimoAdapterTest {
     }
 
     @Test
-    void clampsBoundarySpaceAt599StrictlyUnder600AndRejectsJsonNullFeedback() {
-        // Space at index 599 must still produce <= 600 chars after appending "..."
-        String boundaryFeedback = "a".repeat(599) + " wordoverflow";
+    void clampsBoundarySpaceAt999StrictlyUnder1000AndRejectsJsonNullFeedback() {
+        // Space at index 999 must still produce <= 1000 chars after appending "..."
+        String boundaryFeedback = "a".repeat(999) + " wordoverflow";
         String clamped = CkeyMimoAdapter.clampFeedbackGracefully(boundaryFeedback);
-        assertTrue(clamped.length() <= 600, "Expected <= 600 chars, got " + clamped.length());
+        assertTrue(clamped.length() <= 1000, "Expected <= 1000 chars, got " + clamped.length());
         assertTrue(clamped.endsWith("..."));
 
         String nullFeedbackJson = """

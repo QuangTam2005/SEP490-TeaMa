@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * AI evaluation output mapped to ai_evaluations (max 600-char Vietnamese feedback).
+ * AI evaluation output mapped to ai_evaluations (600–1,000-char Vietnamese mentor feedback).
  */
 @Getter
 @Setter
@@ -55,7 +55,7 @@ public class AIEvaluation {
     @Column(name = "overall_status", nullable = false, length = 30)
     private OverallEvaluationStatus overallStatus;
 
-    @Column(name = "feedback", nullable = false, length = 600)
+    @Column(name = "feedback", nullable = false, length = 1000)
     private String feedback;
 
     @Builder.Default

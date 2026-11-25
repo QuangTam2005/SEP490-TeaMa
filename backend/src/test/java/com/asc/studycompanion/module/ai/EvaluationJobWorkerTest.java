@@ -120,8 +120,13 @@ class EvaluationJobWorkerTest {
 
         when(evaluationJobRepository.findById(901L)).thenReturn(Optional.of(job));
         when(studySubmissionRepository.findById(501L)).thenReturn(Optional.of(submission));
-        when(knowledgeCacheService.lookup(7, SubjectCode.MATH, "Ước chung lớn nhất"))
-                .thenReturn(Optional.of(List.of(cached)));
+        when(knowledgeCacheService.lookup(
+                7,
+                SubjectCode.MATH,
+                "Ước chung lớn nhất",
+                AiProperties.DEFAULT_TEXTBOOK_SERIES,
+                AiProperties.DEFAULT_TEXTBOOK_EDITION
+        )).thenReturn(Optional.of(List.of(cached)));
         when(aiEvaluationProvider.evaluate(any())).thenReturn(new AiEvaluationResult(
                 AccuracyLevel.CORRECT,
                 CompletenessLevel.COMPLETE,
@@ -165,7 +170,13 @@ class EvaluationJobWorkerTest {
 
         when(evaluationJobRepository.findById(902L)).thenReturn(Optional.of(job));
         when(studySubmissionRepository.findById(501L)).thenReturn(Optional.of(submission));
-        when(knowledgeCacheService.lookup(7, SubjectCode.MATH, "Ước chung lớn nhất")).thenReturn(Optional.empty());
+        when(knowledgeCacheService.lookup(
+                7,
+                SubjectCode.MATH,
+                "Ước chung lớn nhất",
+                AiProperties.DEFAULT_TEXTBOOK_SERIES,
+                AiProperties.DEFAULT_TEXTBOOK_EDITION
+        )).thenReturn(Optional.empty());
         when(searchProvider.search(any())).thenReturn(List.of());
         when(aiEvaluationProvider.evaluate(any()))
                 .thenThrow(new AppException(ErrorCode.AI_PROVIDER_UNAVAILABLE, "Timeout"));

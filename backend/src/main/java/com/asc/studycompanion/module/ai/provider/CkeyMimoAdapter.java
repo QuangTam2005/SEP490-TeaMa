@@ -34,7 +34,8 @@ import java.util.Map;
 public class CkeyMimoAdapter implements AiEvaluationProvider {
 
     private static final int MAX_POINT_ITEMS = 4;
-    private static final int MAX_POINT_CHARS = 140;
+    private static final int MAX_POINT_CHARS = 160;
+    private static final int LLM_MAX_OUTPUT_TOKENS = 1045;
 
     private final RestClient restClient;
     private final AiProperties aiProperties;
@@ -67,7 +68,7 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
         Map<String, Object> payload = Map.of(
                 "model", model,
                 "temperature", 0.2,
-                "max_tokens", 950,
+                "max_tokens", LLM_MAX_OUTPUT_TOKENS,
                 "response_format", Map.of("type", "json_object"),
                 "messages", List.of(
                         Map.of("role", "system", "content", promptBuilder.buildSystemPrompt()),
@@ -175,7 +176,8 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
     }
 
     /**
-     * Ensures AI feedback stays strictly within 300..600 characters (including punctuation & spaces).
+     * Ensures AI feedback stays strictly within 600..1,000 characters (including punctuation & spaces)
+     * with clear mentor guidance when raw output is below the minimum threshold.
      */
     public static String ensureFeedbackBounds(
             String rawFeedback,
@@ -187,21 +189,31 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
             return clamped;
         }
 
-        StringBuilder sb = new StringBuilder(clamped);
+        StringBuilder sb = new StringBuilder();
+        if (!clamped.contains("Nhận xét tổng quan")) {
+            sb.append("Nhận xét tổng quan: ").append(clamped);
+        } else {
+            sb.append(clamped);
+        }
         if (!clamped.endsWith(".") && !clamped.endsWith("!") && !clamped.endsWith("?")) {
             sb.append('.');
         }
 
-        if (incorrectPoints != null && !incorrectPoints.isEmpty()) {
-            sb.append(" Điểm cần lưu ý thêm: ").append(String.join("; ", incorrectPoints)).append('.');
+        boolean hasNeedsFixHeader = clamped.contains("Cần khắc phục");
+        if (!hasNeedsFixHeader) {
+            sb.append("\nCần khắc phục:");
         }
-        if (sb.length() < StudyTextUtils.MIN_FEEDBACK_CHARS && missingPoints != null && !missingPoints.isEmpty()) {
-            sb.append(" Phần con nên bổ sung: ").append(String.join("; ", missingPoints)).append('.');
+        if (incorrectPoints != null && !incorrectPoints.isEmpty()) {
+            sb.append(" Về điểm sai cần chỉnh: ").append(String.join("; ", incorrectPoints)).append('.');
+        }
+        if (missingPoints != null && !missingPoints.isEmpty()) {
+            sb.append(" Phần diễn đạt chưa rõ hoặc ý nên bổ sung: ").append(String.join("; ", missingPoints)).append('.');
         }
 
         List<String> guidanceClauses = List.of(
-                " Con hãy đọc kỹ lại nội dung bài học từ Wikipedia và tài liệu học tập tham khảo để chắc chắn từng khái niệm quan trọng.",
-                " Việc rà soát thêm ví dụ minh họa cụ thể, diễn đạt lại bằng lời của con và kiểm tra trình tự lập luận sẽ giúp bài làm đầy đủ, mạch lạc và vững kiến thức hơn rất nhiều."
+                " Con hãy đối chiếu lại từng định nghĩa, từ khóa trọng tâm và ví dụ minh họa trong sách giáo khoa để rà soát độ chính xác của bài làm.",
+                " Khi tự học, hãy thử tự đặt câu hỏi vì sao hoặc lấy thêm một ví dụ ngắn bằng lời của mình để làm rõ ý chưa đầy đủ và ghi nhớ kiến thức vững hơn.",
+                " Sau khi chỉnh sửa, con có thể đọc lướt lại mạch bài một lượt xem các ý chính đã liên kết rõ ràng và khớp với trọng tâm bài học trên lớp chưa nhé."
         );
         for (String clause : guidanceClauses) {
             if (sb.length() >= StudyTextUtils.MIN_FEEDBACK_CHARS) {
@@ -213,8 +225,8 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
     }
 
     /**
-     * Enforces <= 600 chars without abruptly cutting mid-word or mid-sentence when possible,
-     * while preserving at least 300 characters when input exceeds 600 chars.
+     * Enforces <= 1,000 chars without abruptly cutting mid-word or mid-sentence when possible,
+     * while preserving at least 600 characters when input exceeds 1,000 chars.
      */
     public static String clampFeedbackGracefully(String rawFeedback) {
         if (rawFeedback == null) {

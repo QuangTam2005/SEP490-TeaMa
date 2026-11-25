@@ -58,7 +58,7 @@ class AcceptanceAiAndGuardianTest {
     private static AiProperties createAiProperties() {
         AiProperties props = new AiProperties();
         props.setMaxSources(3);
-        props.setMaxContextTokens(2048);
+        props.setMaxContextTokens(2250);
         props.getBrave().setBaseUrl("https://api.search.brave.com/res/v1/web/search");
         props.getBrave().setApiKey("test-brave-api-key");
         props.getCkey().setBaseUrl("https://api.ckey.example/v1");
@@ -166,7 +166,12 @@ class AcceptanceAiAndGuardianTest {
                     .andExpect(method(HttpMethod.GET))
                     .andExpect(requestTo(not(containsString("bao.ngoc.pii"))))
                     .andRespond(withSuccess(braveWebJson, MediaType.APPLICATION_JSON));
-            braveServer.expect(requestTo(containsString("vi.wikipedia.org")))
+            String expectedSecondaryToken = switch (subject) {
+                case ENG -> "Global%20Success";
+                case LIT -> "Ng%E1%BB%AF%20v%C4%83n";
+                default -> "vi.wikipedia.org";
+            };
+            braveServer.expect(requestTo(containsString(expectedSecondaryToken)))
                     .andExpect(method(HttpMethod.GET))
                     .andRespond(withSuccess(braveWikiJson, MediaType.APPLICATION_JSON));
 
@@ -207,11 +212,12 @@ class AcceptanceAiAndGuardianTest {
         braveServer.verify();
         ckeyServer.verify();
 
-        // All 5 REVIEW tasks evaluated, capped at <= 3 sources and <= 600 char feedback
+        // All 5 REVIEW tasks evaluated, capped at <= 3 sources and 600..1000 char mentor feedback
         assertEquals(5, h.evaluations.size());
         assertEquals(5, h.usageLogs.size());
         h.evaluations.forEach(ev -> {
-            assertTrue(ev.getFeedback().length() >= 300 && ev.getFeedback().length() <= 600);
+            assertTrue(ev.getFeedback().length() >= 600 && ev.getFeedback().length() <= 1000,
+                    "Expected feedback length 600..1000 but got " + ev.getFeedback().length());
             assertTrue(ev.getSources().size() <= 3 && !ev.getSources().isEmpty());
             assertEquals(OverallEvaluationStatus.GOOD, ev.getOverallStatus());
         });
@@ -368,8 +374,9 @@ class AcceptanceAiAndGuardianTest {
         String braveWikiJson = """
                 {"web":{"results":[{"title":"Wikipedia: Số hữu tỉ","url":"https://vi.wikipedia.org/wiki/So_huu_ti","description":"Khái niệm số hữu tỉ"}]}}
                 """;
-        String v2Feedback320 = "Bản v2 đúng kiến thức SGK Toán 7 Kết nối tri thức. "
-                .concat("Con đã trình bày định nghĩa số hữu tỉ và điều kiện mẫu số khác không rất đầy đủ, rõ ràng. ".repeat(4))
+        String v2Feedback640 = ("Nhận xét tổng quan: Bản v2 đúng kiến thức SGK Toán 7 Kết nối tri thức. "
+                + "Con đã trình bày định nghĩa số hữu tỉ và điều kiện mẫu số khác không rất đầy đủ, rõ ràng. "
+                + "Cần khắc phục: Con có thể bổ sung thêm ví dụ phân số âm để bài ôn tập thêm sinh động. ").repeat(3)
                 .trim();
         for (int version = 1; version <= 2; version++) {
             braveServer.reset();
@@ -381,8 +388,9 @@ class AcceptanceAiAndGuardianTest {
                         .andRespond(withSuccess(braveWikiJson, MediaType.APPLICATION_JSON));
             }
             String feedback = version == 2
-                    ? v2Feedback320
-                    : "Bản v1 đúng kiến thức SGK Toán 7 Kết nối tri thức. ".concat("Con cần bổ sung thêm ví dụ minh họa phân số bằng nhau để bài học đầy đủ và dễ nhớ hơn nữa nhé. ".repeat(4));
+                    ? v2Feedback640
+                    : ("Nhận xét tổng quan: Bản v1 đúng kiến thức SGK Toán 7 Kết nối tri thức. "
+                    + "Cần khắc phục: Con cần bổ sung thêm ví dụ minh họa phân số bằng nhau để bài học đầy đủ và dễ nhớ hơn nữa nhé. ").repeat(4);
             String okPayload = wrapChatCompletion(h, """
                     {"accuracy":"CORRECT","completeness":"COMPLETE","overallStatus":"GOOD","feedback":"%s","incorrectPoints":[],"missingPoints":[],"confidence":"HIGH"}
                     """.formatted(feedback));
@@ -432,7 +440,7 @@ class AcceptanceAiAndGuardianTest {
             ckeyServer.reset();
             braveServer.expect(requestTo(containsString("api.search.brave.com")))
                     .andRespond(withSuccess(braveMathWebJson, MediaType.APPLICATION_JSON));
-            braveServer.expect(requestTo(containsString("vi.wikipedia.org")))
+            braveServer.expect(requestTo(containsString("Ng%E1%BB%AF%20v%C4%83n")))
                     .andRespond(withSuccess(braveWikiJson, MediaType.APPLICATION_JSON));
             ckeyServer.expect(requestTo("https://api.ckey.example/v1/chat/completions"))
                     .andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE));
@@ -468,7 +476,7 @@ class AcceptanceAiAndGuardianTest {
                 .andExpect(jsonPath("$.data.totalTasks").value(2))
                 .andExpect(jsonPath("$.data.completedTasks").value(1))
                 .andExpect(jsonPath("$.data.items[0].subjectCode").value("MATH"))
-                .andExpect(jsonPath("$.data.items[0].evaluation.feedback").value(v2Feedback320));
+                .andExpect(jsonPath("$.data.items[0].evaluation.feedback").value(v2Feedback640));
 
         // Guardian sees LIT fallback task cleanly as EVALUATED on dashboard
         h.mockMvc.perform(get("/api/guardian/dashboard?date=2026-11-30&subjectCode=LIT")

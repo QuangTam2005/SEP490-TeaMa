@@ -32,7 +32,7 @@ import java.util.List;
 @Table(name = "knowledge_cache")
 public class KnowledgeCache {
 
-    public static final String CURRENT_POLICY_VERSION = "v2";
+    public static final String CURRENT_POLICY_VERSION = "v3";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

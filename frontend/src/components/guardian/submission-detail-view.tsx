@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
-import { formatViDate } from '@/lib/study-utils';
+import { MAX_FEEDBACK_CHARS, formatViDate } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
 import { guardianService } from '@/services';
@@ -228,8 +228,11 @@ export function SubmissionDetailView({
                             />
                           </div>
 
-                          <div className="break-words rounded-lg border border-brand/20 bg-brand-soft/35 p-3.5 text-sm leading-relaxed text-foreground [overflow-wrap:anywhere] dark:bg-sky-950/25">
-                            {activeVersion.evaluation.feedback}
+                          <div className="break-words whitespace-pre-wrap rounded-lg border border-brand/20 bg-brand-soft/35 p-3.5 text-sm leading-relaxed text-foreground [overflow-wrap:anywhere] dark:bg-sky-950/25">
+                            {activeVersion.evaluation.feedback.slice(
+                              0,
+                              MAX_FEEDBACK_CHARS
+                            )}
                           </div>
 
                           {activeVersion.evaluation.incorrectPoints.length >

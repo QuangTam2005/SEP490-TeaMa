@@ -93,4 +93,14 @@ class FlywayMigrationSchemaTest {
         assertTrue(sql.contains("'SKIPPED'"));
         assertTrue(sql.contains("study_tasks_status_check"));
     }
+
+    @Test
+    void v6MigrationExpandsAiEvaluationFeedbackTo1000Chars() throws IOException {
+        ClassPathResource resource = new ClassPathResource("db/migration/V6__expand_ai_feedback_1000.sql");
+        assertTrue(resource.exists(), "V6 migration must exist on classpath");
+
+        String sql = resource.getContentAsString(StandardCharsets.UTF_8);
+        assertTrue(sql.contains("ai_evaluations"));
+        assertTrue(sql.contains("VARCHAR(1000)"));
+    }
 }

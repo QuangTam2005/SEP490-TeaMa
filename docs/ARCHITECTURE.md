@@ -60,8 +60,8 @@ flowchart TB
     end
 
     subgraph External ["External Providers (Server-to-Server HTTPS)"]
-        Brave["Brave Search API (Max 3 sources / ~2,048 ctx tokens)"]
-        CKEY["MiMo v2.6 Flash via CKEY (JSON Schema <= 600 chars feedback)"]
+        Brave["Brave Search API (Max 3 sources, extra_snippets=true / <= 2,250 ctx tokens)"]
+        CKEY["MiMo v2.6 Flash via CKEY (JSON Schema 600..1,000 chars feedback)"]
     end
 
     Postgres[("PostgreSQL 16 (14 Core Tables)")]
@@ -126,7 +126,7 @@ flowchart TB
 2. Student sends `POST /api/study/tasks/{taskId}/submissions` with `Idempotency-Key` header.
 3. `StudyService` validates task ownership, `REVIEW` completion lock (if `PREVIEW`), revision quota (`max 3 updates after AI feedback` $\rightarrow$ max `4` versions, and blocks while `EVALUATING`), normalizes/counts characters identically to frontend, and **persists `StudySubmission` + `EvaluationJob` (`PENDING`) atomically in PostgreSQL before any external HTTP call**.
 4. Async Worker picks up `EvaluationJob`:
-   - Checks `KnowledgeCache` (by normalized `grade + subject + lessonTitle + policyVersion`).
-   - On cache miss, calls **Brave Search API** (query: `Lớp 6 + subjectName + lessonTitle`, up to 3 relevant/clean sources, ~2,048 tokens budget).
-   - Builds PII-free prompt (`grade=6`, `subject`, `taskType`, `lessonTitle`, `studentText`, `sourcesContext`) and calls **MiMo v2.6 Flash via CKEY** once.
-   - Validates JSON enum contract (`accuracy`, `completeness`, `overall_status`, `confidence`, valid `sources`, Vietnamese student display feedback `<= 600` chars). Retries transient `timeout`/`429`/`5xx` with exponential backoff + jitter; caps formatting retry at 1; transitions cleanly to `EVALUATION_FAILED` when retries exhaust without ever losing `StudySubmission`.
+   - Checks `KnowledgeCache` (by `policyVersion + textbookSeries + textbookEdition + grade + subject + lessonTitle`).
+   - On cache miss, calls **Brave Search API** (`extra_snippets=true`, subject-routed to `Global Success` for `ENG`, literature curriculum portals for `LIT`, and KNTT + Wikipedia for other subjects; up to 3 official/educational sources, `<= 2,250` tokens budget).
+   - Builds PII-free prompt (`grade`, `subject`, `textbookSeries`, `textbookEdition`, `taskType`, `lessonTitle`, `studentText`, `sourcesContext`) and calls **MiMo v2.6 Flash via CKEY** once.
+   - Validates JSON enum contract (`accuracy`, `completeness`, `overall_status`, `confidence`, valid `sources`, structured Vietnamese mentor feedback `600..1,000` chars). Retries transient `timeout`/`429`/`5xx` with exponential backoff + jitter; caps formatting retry at 1; transitions cleanly to `EVALUATION_FAILED` when retries exhaust without ever losing `StudySubmission`.

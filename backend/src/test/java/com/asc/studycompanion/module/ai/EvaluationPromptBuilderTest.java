@@ -19,15 +19,18 @@ class EvaluationPromptBuilderTest {
     @Test
     void buildsPiiFreePromptEnforcingKnttTextbookAndContextBudget() {
         AiProperties props = new AiProperties();
-        props.setMaxContextTokens(2048);
+        props.setMaxContextTokens(2250);
         EvaluationPromptBuilder builder = new EvaluationPromptBuilder(props);
 
         String system = builder.buildSystemPrompt();
+        assertTrue(system.contains("MENTOR"));
         assertTrue(system.contains("Kết nối tri thức với cuộc sống"));
         assertTrue(system.contains("Wikipedia"));
         assertTrue(system.contains("INSUFFICIENT_EVIDENCE"));
-        assertTrue(system.contains("300"));
         assertTrue(system.contains("600"));
+        assertTrue(system.contains("1000"));
+        assertTrue(system.contains("Nhận xét tổng quan"));
+        assertTrue(system.contains("Cần khắc phục"));
 
         AiEvaluationInput input = new AiEvaluationInput(
                 8,
@@ -47,12 +50,12 @@ class EvaluationPromptBuilderTest {
         String userPrompt = builder.buildUserPrompt(input);
         assertTrue(userPrompt.contains("Lớp 8"));
         assertTrue(userPrompt.contains("Toán"));
-        assertTrue(userPrompt.contains("Kết nối tri thức"));
+        assertTrue(userPrompt.contains("Kết nối tri thức với cuộc sống (GDPT 2018)"));
         assertTrue(userPrompt.contains("<lesson_title>Hằng đẳng thức đáng nhớ</lesson_title>"));
         assertTrue(userPrompt.contains("<reference_sources>"));
         assertTrue(userPrompt.contains("<student_submission>"));
         assertFalse(userPrompt.contains("@gmail.com"));
-        assertTrue(userPrompt.length() <= 2048 * 3 + 50);
+        assertTrue(userPrompt.length() <= 2250 * 3 + 50);
     }
 
     @Test

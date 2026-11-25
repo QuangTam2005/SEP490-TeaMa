@@ -45,7 +45,10 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
   ai:
     max-sources: ${AI_MAX_SOURCES:3}
-    max-context-tokens: ${AI_MAX_CONTEXT_TOKENS:2048}
+    max-context-tokens: ${AI_MAX_CONTEXT_TOKENS:2250}
+    textbook-series: ${AI_TEXTBOOK_SERIES:Kết nối tri thức với cuộc sống}
+    english-textbook-series: ${AI_ENGLISH_TEXTBOOK_SERIES:Global Success}
+    textbook-edition: ${AI_TEXTBOOK_EDITION:GDPT 2018}
     ckey:
       base-url: ${CKEY_API_BASE_URL:}
       api-key: ${CKEY_API_KEY:}

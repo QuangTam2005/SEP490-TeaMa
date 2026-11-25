@@ -18,7 +18,9 @@ import org.springframework.web.client.RestClient;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
@@ -46,19 +48,21 @@ class BraveSearchAdapterTest {
     }
 
     @Test
-    void searchesLessonWebsitesAndWikipediaAndCapsRequestsAndSourcesToThree() {
-        String longDesc = "Kiến thức trọng tâm ".repeat(40);
+    void searchesWithExtraSnippetsFiltersNonEduAndCapsRequestsAndSourcesToThree() {
+        String extra1 = "Phần 1: Khái niệm Ước chung lớn nhất (ƯCLN) của hai hay nhiều số tự nhiên là số lớn nhất trong tập hợp các ước chung của các số đó.";
+        String extra2 = "Phần 2: Để tìm ƯCLN bằng cách phân tích các số ra thừa số nguyên tố, ta chọn các thừa số nguyên tố chung với số mũ nhỏ nhất.";
         String webJson = """
                 {
                   "web": {
                     "results": [
-                      { "title": "Blog chung", "url": "https://example.com/1", "description": "Mô tả 1" },
-                      { "title": "Toán 7 Kết nối tri thức - Bài 11", "url": "https://loigiaihay.com/ket-noi-tri-thuc-bai-11", "description": "%s" },
-                      { "title": "VietJack Toán 7 - Ước chung lớn nhất", "url": "https://vietjack.com/toan-7/ucln", "description": "Lý thuyết trọng tâm" }
+                      { "title": "Video Facebook giải nhanh", "url": "https://www.facebook.com/groups/math7", "description": "Không dùng nguồn mạng xã hội" },
+                      { "title": "Blog chung", "url": "https://example.com/1", "description": "Mô tả chung" },
+                      { "title": "Toán 7 Kết nối tri thức - Bài 11", "url": "https://loigiaihay.com/ket-noi-tri-thuc-bai-11", "description": "Lý thuyết trọng tâm Toán 7.", "extra_snippets": ["%s", "%s"] },
+                      { "title": "VietJack Toán 7 - Ước chung lớn nhất", "url": "https://vietjack.com/toan-7/ucln", "description": "Tóm tắt bài học chuẩn SGK" }
                     ]
                   }
                 }
-                """.formatted(longDesc);
+                """.formatted(extra1, extra2);
 
         String wikiJson = """
                 {
@@ -70,16 +74,18 @@ class BraveSearchAdapterTest {
                 }
                 """;
 
-        // Request 1: educational lesson websites
+        // Request 1: educational lesson websites with extra_snippets=true
         server.expect(requestTo(containsString("api.search.brave.com")))
                 .andExpect(requestTo(containsString("country=ALL")))
                 .andExpect(requestTo(containsString("search_lang=vi")))
+                .andExpect(requestTo(containsString("extra_snippets=true")))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("X-Subscription-Token", "test-brave-key"))
                 .andRespond(withSuccess(webJson, MediaType.APPLICATION_JSON));
 
-        // Request 2: Wikipedia directly for the lesson title (Request 3 skipped since 2+1 = 3 sources collected)
+        // Request 2: Wikipedia directly for conceptual MATH topic (Request 3 skipped since 2+1 = 3 sources collected)
         server.expect(requestTo(containsString("vi.wikipedia.org")))
+                .andExpect(requestTo(containsString("extra_snippets=true")))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(wikiJson, MediaType.APPLICATION_JSON));
 
@@ -98,9 +104,11 @@ class BraveSearchAdapterTest {
 
         assertEquals(2, adapter.consumeLastRequestCount());
         assertEquals(3, results.size());
+        assertFalse(results.stream().anyMatch(s -> s.url().contains("facebook.com")));
         assertTrue(results.get(0).title().contains("Kết nối tri thức"));
+        assertTrue(results.get(0).snippet().contains("thừa số nguyên tố"));
+        assertTrue(results.get(0).snippet().length() <= 600);
         assertTrue(results.get(2).url().contains("vi.wikipedia.org"));
-        assertTrue(results.get(0).snippet().length() <= 350);
     }
 
     @Test
@@ -158,10 +166,37 @@ class BraveSearchAdapterTest {
     }
 
     @Test
-    void buildsSubjectSpecificQueriesForEnglishAndTechnology() {
-        SearchQuery english = new SearchQuery(7, SubjectCode.ENG, "Tiếng Anh", "Unit 3: Teenagers Present Simple");
+    void routesEnglishToGlobalSuccessAndLiteratureToVietnameseTextbookPortals() {
+        SearchQuery english = new SearchQuery(6, SubjectCode.ENG, "Tiếng Anh", "Unit 5: Natural Wonders");
         assertTrue(adapter.buildLessonWebQuery(english).contains("Global Success"));
-        assertEquals("site:vi.wikipedia.org Teenagers Present Simple", adapter.buildWikipediaQuery(english));
+        String engSecondary = adapter.buildSecondarySourceQuery(english);
+        assertTrue(engSecondary.contains("Global Success"));
+        assertFalse(engSecondary.contains("vi.wikipedia.org"));
+
+        // Ensure Request 2 for ENG does NOT query vi.wikipedia.org
+        String engWeb1 = """
+                {"web":{"results":[{"title":"Global Success Unit 5","url":"https://vietjack.com/eng6-unit5","description":"Nature vocab"}]}}
+                """;
+        String engWeb2 = """
+                {"web":{"results":[{"title":"Loigiaihay Unit 5 Natural Wonders","url":"https://loigiaihay.com/eng6-unit5","description":"Travel items vocab: plaster, backpack, sleeping bag"}]}}
+                """;
+        server.expect(requestTo(containsString("Global%20Success")))
+                .andExpect(requestTo(not(containsString("vi.wikipedia.org"))))
+                .andRespond(withSuccess(engWeb1, MediaType.APPLICATION_JSON));
+        server.expect(requestTo(containsString("Global%20Success")))
+                .andExpect(requestTo(not(containsString("vi.wikipedia.org"))))
+                .andRespond(withSuccess(engWeb2, MediaType.APPLICATION_JSON));
+
+        List<SearchSnippet> engResults = adapter.search(english);
+        server.verify();
+        assertEquals(2, engResults.size());
+
+        SearchQuery lit = new SearchQuery(7, SubjectCode.LIT, "Ngữ văn", "Bài 1: Bầy chim chìa vôi");
+        assertTrue(adapter.buildLessonWebQuery(lit).contains("Kết nối tri thức"));
+        String litSecondary = adapter.buildSecondarySourceQuery(lit);
+        assertTrue(litSecondary.contains("Ngữ văn Lớp 7"));
+        assertTrue(litSecondary.contains("Bầy chim chìa vôi"));
+        assertFalse(litSecondary.contains("vi.wikipedia.org"));
 
         SearchQuery tech = new SearchQuery(8, SubjectCode.TECH, "Công nghệ", "Bài 4: Vật liệu cơ khí");
         assertTrue(adapter.buildLessonWebQuery(tech).contains("Lớp 8 Công nghệ Bài 4: Vật liệu cơ khí Kết nối tri thức"));
