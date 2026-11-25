@@ -15,7 +15,6 @@ import {
   Compass,
   Download,
   Eye,
-  HeartHandshake,
   Link2,
   Loader2,
   RotateCcw,
@@ -277,8 +276,7 @@ export function GuardianDashboardView() {
       align: 'center',
       render: (row) =>
         row.guardianAcknowledgedAt ? (
-          <Badge variant="success" className="gap-1">
-            <HeartHandshake className="h-3 w-3" />
+          <Badge variant="success" className="whitespace-nowrap">
             Đã xem
           </Badge>
         ) : (
@@ -635,8 +633,7 @@ export function GuardianDashboardView() {
                           </>
                         ) : null}
                         {item.guardianAcknowledgedAt ? (
-                          <Badge variant="success" className="gap-1">
-                            <HeartHandshake className="h-3 w-3" />
+                          <Badge variant="success" className="whitespace-nowrap">
                             Đã xem
                           </Badge>
                         ) : null}

@@ -1,11 +1,8 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  AlertCircle,
-  AlertTriangle,
   CheckCircle2,
   Circle,
   Clock,
-  HelpCircle,
   Lock,
   Send,
   ShieldCheck,
@@ -15,6 +12,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type {
   AccuracyLevel,
   CompletenessLevel,
@@ -35,7 +33,7 @@ export type StudyBadgeStatus =
 interface StatusStyleConfig {
   label: string;
   variant: NonNullable<BadgeProps['variant']>;
-  icon: LucideIcon;
+  icon?: LucideIcon;
 }
 
 const STATUS_MAP: Record<StudyBadgeStatus, StatusStyleConfig> = {
@@ -52,49 +50,25 @@ const STATUS_MAP: Record<StudyBadgeStatus, StatusStyleConfig> = {
     variant: 'danger',
     icon: XCircle,
   },
-  BLOCKED: { label: 'Làm Ôn bài trước', variant: 'secondary', icon: Lock },
-  SKIPPED: { label: 'Phụ huynh bỏ qua', variant: 'secondary', icon: SkipForward },
+  BLOCKED: { label: 'Chưa mở', variant: 'secondary', icon: Lock },
+  SKIPPED: { label: 'Bỏ qua', variant: 'secondary', icon: SkipForward },
 
-  CORRECT: { label: 'Chính xác', variant: 'success', icon: CheckCircle2 },
-  PARTIALLY_CORRECT: {
-    label: 'Đúng một phần',
-    variant: 'warning',
-    icon: AlertTriangle,
-  },
-  INCORRECT: { label: 'Cần sửa thêm', variant: 'danger', icon: AlertCircle },
-  UNVERIFIABLE: {
-    label: 'Chưa đủ chứng cứ',
-    variant: 'secondary',
-    icon: HelpCircle,
-  },
+  CORRECT: { label: 'Chính xác', variant: 'success' },
+  PARTIALLY_CORRECT: { label: 'Đúng một phần', variant: 'warning' },
+  INCORRECT: { label: 'Cần sửa thêm', variant: 'danger' },
+  UNVERIFIABLE: { label: 'Chưa đủ chứng cứ', variant: 'secondary' },
 
-  COMPLETE: { label: 'Đầy đủ ý', variant: 'success', icon: CheckCircle2 },
-  INCOMPLETE: {
-    label: 'Còn thiếu ý',
-    variant: 'warning',
-    icon: AlertTriangle,
-  },
-  UNDETERMINED: {
-    label: 'Chưa xác định',
-    variant: 'secondary',
-    icon: HelpCircle,
-  },
+  COMPLETE: { label: 'Đầy đủ ý', variant: 'success' },
+  INCOMPLETE: { label: 'Còn thiếu ý', variant: 'warning' },
+  UNDETERMINED: { label: 'Chưa xác định', variant: 'secondary' },
 
-  GOOD: { label: 'Tốt', variant: 'success', icon: CheckCircle2 },
-  NEEDS_IMPROVEMENT: {
-    label: 'Cần bổ sung',
-    variant: 'warning',
-    icon: AlertTriangle,
-  },
-  INSUFFICIENT_EVIDENCE: {
-    label: 'Thiếu nguồn đối chiếu',
-    variant: 'secondary',
-    icon: HelpCircle,
-  },
+  GOOD: { label: 'Tốt', variant: 'success' },
+  NEEDS_IMPROVEMENT: { label: 'Cần bổ sung', variant: 'warning' },
+  INSUFFICIENT_EVIDENCE: { label: 'Thiếu nguồn đối chiếu', variant: 'secondary' },
 
-  HIGH: { label: 'Tin cậy cao', variant: 'success', icon: CheckCircle2 },
-  MEDIUM: { label: 'Tin cậy vừa', variant: 'info', icon: AlertCircle },
-  LOW: { label: 'Tin cậy thấp', variant: 'warning', icon: HelpCircle },
+  HIGH: { label: 'Tin cậy cao', variant: 'success' },
+  MEDIUM: { label: 'Tin cậy vừa', variant: 'info' },
+  LOW: { label: 'Tin cậy thấp', variant: 'warning' },
 };
 
 export interface StatusBadgeProps {
@@ -111,12 +85,11 @@ export function StatusBadge({
   const config = STATUS_MAP[status] ?? {
     label: status,
     variant: 'secondary' as const,
-    icon: AlertCircle,
   };
   const Icon = config.icon;
   return (
-    <Badge variant={config.variant} className={className}>
-      <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+    <Badge variant={config.variant} className={cn('whitespace-nowrap', className)}>
+      {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> : null}
       <span>{labelOverride ?? config.label}</span>
     </Badge>
   );
