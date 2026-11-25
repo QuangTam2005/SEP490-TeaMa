@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 7 In Progress (`[TASK-FEAT.1a]`–`[TASK-FEAT.3b]` Done; expanding Smart Otter production features & `850–3,000` char standard)  
+**Current Phase:** Phase 7 In Progress (`[TASK-FEAT.1a]`–`[TASK-FEAT.3c]` Done; expanding Smart Otter production features & `850–3,000` char standard)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -66,7 +66,8 @@
 - **[DONE] `[TASK-FEAT.2b]` (`fef8467`):** Built `/profile` (`ProfileView` + `app/profile/page.tsx`) for Student & Guardian profile updates (`fullName`, Student `grade`), password changes, and unlink / multi-child link management, wired `Tài khoản` header/mobile links in `StudentShell` & `GuardianShell`, and updated `auth`/`link` TypeScript contracts and HTTP/mock services. Verified `tsc --noEmit`, `next lint`, and `next build` (`13` routes, `0` errors).
 - **[DONE] `[TASK-FEAT.2c]` (`c7f9921`):** Built `/student/history` (`StudyHistoryView` + `app/student/history/page.tsx`) with Streak KPIs & date filtering, added Flame Streak badge + History button to `NextDayPlanView` (`/student/today`) and `StudentShell` nav, and implemented debounced browser-only `localStorage` auto-save draft (`asc_draft_<userId>_<taskId>`) in `TaskWorkspaceView` (zero AI calls while typing). Verified `tsc --noEmit`, `next lint`, and `next build` (`14` routes, `0` errors).
 - **[DONE] `[TASK-FEAT.3a]` (`b6fe3d3`):** Implemented `POST /api/guardian/tasks/{taskId}/acknowledge` (`GuardianAcknowledgeRequest`/`Response`), `GET /api/guardian/weekly` (`GuardianWeeklySummaryResponse` across Mon–Sun + subject stats), and Apache POI `.xlsx` report generation (`GET /api/guardian/export`); surfaced `guardianAcknowledgedAt` & `guardianNote` across `GuardianTaskItem`, `GuardianSubmissionDetailResponse`, and `StudyTaskSummaryResponse` without `AIUsageLog` exposure (`85/85` backend tests passing).
-- **[DONE] `[TASK-FEAT.3b]`:** Added `useGuardianStore` multi-child switcher across `GuardianDashboardView` & `TimetableView`, dynamic grade subject filters, Weekly Progress Overview card (with week pagination & 7-day drilldown), authenticated `.xlsx` Excel export download, Guardian "Bấm Đã xem & Gửi lời nhắn động viên" card in `SubmissionDetailView`, and Student parent-note banners in `NextDayPlanView` & `TaskWorkspaceView`. Verified `tsc --noEmit`, `next lint`, and `next build` (`14` routes, `0` errors).
+- **[DONE] `[TASK-FEAT.3b]` (`8c14c1c`):** Added `useGuardianStore` multi-child switcher across `GuardianDashboardView` & `TimetableView`, dynamic grade subject filters, Weekly Progress Overview card (with week pagination & 7-day drilldown), authenticated `.xlsx` Excel export download, Guardian "Bấm Đã xem & Gửi lời nhắn động viên" card in `SubmissionDetailView`, and Student parent-note banners in `NextDayPlanView` & `TaskWorkspaceView`. Verified `tsc --noEmit`, `next lint`, and `next build` (`14` routes, `0` errors).
+- **[DONE] `[TASK-FEAT.3c]`:** Synced `study-seed.ts`, `study.mock-service.ts`, `link.mock-service.ts`, and `guardian.mock-service.ts` (`ALL_SUBJECTS`, stateful multi-child `guardianChildrenDb` + `unlink`, real bucket-backed `acknowledgeTask`, 7-day `getWeeklySummary`, date-filtered `getPlanHistory`, and `.xlsx` export blob) for 1:1 Mock/API parity. Verified `tsc --noEmit`, `next lint`, and `next build` (`14` routes, `0` errors).
 
 ---
 

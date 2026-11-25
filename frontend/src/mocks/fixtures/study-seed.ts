@@ -1,5 +1,5 @@
 import {
-  GRADE_6_SUBJECTS,
+  ALL_SUBJECTS,
   countNormalizedChars,
   getNextTargetDateIso,
   getSubjectName,
@@ -117,7 +117,7 @@ export function buildInitialStudyBuckets(
   const weekdayLabel = getWeekdayLabel(weekday);
 
   const uniqueSubjects: { code: SubjectCode; periodNote: string | null }[] = [];
-  for (const subject of GRADE_6_SUBJECTS) {
+  for (const subject of ALL_SUBJECTS) {
     const matches = entries.filter(
       (e) => e.weekday === weekday && e.subjectCode === subject.code
     );
@@ -436,6 +436,8 @@ export function buildGuardianDashboardFromBuckets(
       status: detail.task.status,
       lessonTitle: detail.task.currentLessonTitle,
       revisionCount: detail.task.revisionCount,
+      guardianAcknowledgedAt: detail.task.guardianAcknowledgedAt ?? null,
+      guardianNote: detail.task.guardianNote ?? null,
       evaluation: evaluation
         ? {
             accuracy: evaluation.accuracy,
@@ -469,6 +471,7 @@ export function findGuardianSubmissionDetail(
       if (detail.submissions.some((s) => s.id === submissionId)) {
         return {
           submissionId,
+          taskId: detail.task.id,
           studentName: 'Nguyễn Minh Khôi',
           targetDate: detail.targetDate,
           subjectCode: detail.task.subjectCode,
@@ -476,6 +479,8 @@ export function findGuardianSubmissionDetail(
           taskType: detail.task.taskType,
           status: detail.task.status,
           revisionCount: detail.task.revisionCount,
+          guardianAcknowledgedAt: detail.task.guardianAcknowledgedAt ?? null,
+          guardianNote: detail.task.guardianNote ?? null,
           versions: detail.submissions,
         };
       }

@@ -24,6 +24,23 @@ let guardianLinkState: LinkCodeResponse | null = {
   linkedUserName: 'Nguyễn Minh Khôi',
 };
 
+let guardianChildrenDb: LinkedChildResponse[] = [
+  {
+    studentId: 10,
+    studentUserId: 1,
+    displayName: 'Nguyễn Minh Khôi',
+    grade: 6,
+    linkedAt: '2026-11-24T01:00:00Z',
+  },
+  {
+    studentId: 11,
+    studentUserId: 3,
+    displayName: 'Nguyễn Minh An',
+    grade: 10,
+    linkedAt: '2026-11-23T01:00:00Z',
+  },
+];
+
 registerMockResetHook(() => {
   studentLinkState = structuredClone(INITIAL_STUDENT_LINK);
   guardianLinkState = {
@@ -32,6 +49,22 @@ registerMockResetHook(() => {
     status: 'ACTIVE',
     linkedUserName: 'Nguyễn Minh Khôi',
   };
+  guardianChildrenDb = [
+    {
+      studentId: 10,
+      studentUserId: 1,
+      displayName: 'Nguyễn Minh Khôi',
+      grade: 6,
+      linkedAt: '2026-11-24T01:00:00Z',
+    },
+    {
+      studentId: 11,
+      studentUserId: 3,
+      displayName: 'Nguyễn Minh An',
+      grade: 10,
+      linkedAt: '2026-11-23T01:00:00Z',
+    },
+  ];
 });
 
 function randomEightCharCode(): string {
@@ -133,27 +166,25 @@ export const linkMockService: LinkService = {
 
   async getLinkedChildren(): Promise<LinkedChildResponse[]> {
     return runMockOperation(
-      () =>
-        guardianLinkState && guardianLinkState.status === 'ACTIVE'
-          ? [
-              {
-                studentId: 10,
-                studentUserId: 1,
-                displayName: guardianLinkState.linkedUserName ?? 'Nguyễn Minh Khôi',
-                grade: 6,
-                linkedAt: new Date().toISOString(),
-              },
-            ]
-          : [],
+      () => guardianChildrenDb.map((child) => ({ ...child })),
       { requireRole: 'GUARDIAN', emptyFallback: [] }
     );
   },
 
-  async unlink(): Promise<void> {
+  async unlink(studentId?: number): Promise<void> {
     return runMockOperation(() => {
       const { simulatedRole } = getMockRuntimeState();
       if (simulatedRole === 'GUARDIAN') {
-        guardianLinkState = null;
+        if (studentId) {
+          guardianChildrenDb = guardianChildrenDb.filter(
+            (c) => c.studentId !== studentId
+          );
+        } else {
+          guardianChildrenDb = guardianChildrenDb.slice(1);
+        }
+        if (guardianChildrenDb.length === 0) {
+          guardianLinkState = null;
+        }
       } else {
         studentLinkState = null;
       }

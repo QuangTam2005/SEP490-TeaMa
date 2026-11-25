@@ -1,6 +1,6 @@
 import { ApiClientError } from '@/lib/api-client';
 import {
-  GRADE_6_SUBJECTS,
+  ALL_SUBJECTS,
   MAX_FEEDBACK_CHARS,
   MAX_POST_EVAL_REVISIONS,
   MAX_SUBMISSION_CHARS,
@@ -61,7 +61,7 @@ function syncBucketsWithTimetable(): void {
   const weekdayLabel = getWeekdayLabel(weekday);
 
   const nextBuckets: SeededTaskBucket[] = [];
-  for (const subject of GRADE_6_SUBJECTS) {
+  for (const subject of ALL_SUBJECTS) {
     const matches = timetable.entries.filter(
       (e) => e.weekday === weekday && e.subjectCode === subject.code
     );
@@ -482,7 +482,7 @@ export const studyMockService: StudyService = {
     );
   },
 
-  async getPlanHistory(): Promise<StudyPlanHistoryItem[]> {
+  async getPlanHistory(from?: string, to?: string): Promise<StudyPlanHistoryItem[]> {
     return runMockOperation<StudyPlanHistoryItem[]>(
       () => {
         syncBucketsWithTimetable();
@@ -494,7 +494,7 @@ export const studyMockService: StudyService = {
           previewTask: { ...bucket.previewTask.task },
         }));
         const allTasks = subjects.flatMap((s) => [s.reviewTask, s.previewTask]);
-        return [
+        const items: StudyPlanHistoryItem[] = [
           {
             planId: 1,
             targetDate: planState.targetDate,
@@ -504,6 +504,11 @@ export const studyMockService: StudyService = {
             subjects,
           },
         ];
+        return items.filter((item) => {
+          if (from && item.targetDate < from) return false;
+          if (to && item.targetDate > to) return false;
+          return true;
+        });
       },
       { requireRole: 'STUDENT', emptyFallback: [] }
     );
