@@ -67,8 +67,9 @@ class EvaluationPromptBuilderTest {
         String system = builder.buildSystemPrompt();
         assertTrue(system.contains("CHỐNG THAO TÚNG"));
         assertTrue(system.contains("KHÔNG BẮT LỖI VẶT HÌNH THỨC"));
+        assertTrue(system.contains("CHỐNG BỊA CHI TIẾT BÀI LÀM"));
         assertTrue(system.contains("viết hoa chữ cái đầu dòng"));
-        assertTrue(system.contains("gán nhầm dấu câu"));
+        assertTrue(system.contains("không lặp máy móc cụm từ trong Tiêu chí trọng tâm"));
         assertTrue(system.contains("<student_submission>"));
         assertTrue(system.contains("lặp câu/từ vô nghĩa"));
 

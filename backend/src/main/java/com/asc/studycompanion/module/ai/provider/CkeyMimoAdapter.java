@@ -67,7 +67,7 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
 
         Map<String, Object> payload = Map.of(
                 "model", model,
-                "temperature", 0.2,
+                "temperature", 0.0,
                 "max_tokens", LLM_MAX_OUTPUT_TOKENS,
                 "response_format", Map.of("type", "json_object"),
                 "messages", List.of(
