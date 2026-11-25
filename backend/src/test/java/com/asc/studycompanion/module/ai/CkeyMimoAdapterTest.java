@@ -215,6 +215,21 @@ class CkeyMimoAdapterTest {
         AiEvaluationResult insufficient = adapter.parseAndValidateJson(unverifiableMarkedGood, 100, 80, "mimo-v2-flash");
         assertEquals(OverallEvaluationStatus.INSUFFICIENT_EVIDENCE, insufficient.overallStatus());
         assertEquals(CompletenessLevel.UNDETERMINED, insufficient.completeness());
+
+        String missingCoreMarkedComplete = """
+                {
+                  "accuracy": "CORRECT",
+                  "completeness": "COMPLETE",
+                  "overallStatus": "GOOD",
+                  "feedback": "Nhận xét tổng quan: Con viết đúng phần 1.\\nMức độ đủ nội dung chính: Bài học gồm 2 phần chính, con mới nêu phần 1 và còn thiếu phần 2.\\nCần khắc phục: Con hãy bổ sung phần 2 nhé.",
+                  "incorrectPoints": [],
+                  "missingPoints": ["Thiếu nội dung chính phần 2"],
+                  "confidence": "HIGH"
+                }
+                """;
+        AiEvaluationResult downgradedMissing = adapter.parseAndValidateJson(missingCoreMarkedComplete, 100, 80, "mimo-v2-flash");
+        assertEquals(CompletenessLevel.INCOMPLETE, downgradedMissing.completeness());
+        assertEquals(OverallEvaluationStatus.NEEDS_IMPROVEMENT, downgradedMissing.overallStatus());
     }
 
     @Test

@@ -206,12 +206,12 @@ public class BraveSearchAdapter implements SearchProvider {
         }
         String seriesHint = shortenTextbookSeries(query.resolvedTextbookSeries());
         if (code == SubjectCode.ENG) {
-            return String.format("\"%s\" Lớp %d Tiếng Anh %s từ vựng ngữ pháp", seriesHint, query.grade(), lesson)
+            return String.format("\"%s\" Lớp %d Tiếng Anh %s từ vựng ngữ pháp nội dung chính", seriesHint, query.grade(), lesson)
                     .replaceAll("\\s+", " ")
                     .trim();
         }
         if (code == SubjectCode.LIT) {
-            return String.format("Ngữ văn Lớp %d %s %s nội dung nghệ thuật", query.grade(), lesson, seriesHint)
+            return String.format("Ngữ văn Lớp %d %s %s nội dung chính câu hỏi đọc hiểu", query.grade(), lesson, seriesHint)
                     .replaceAll("\\s+", " ")
                     .trim();
         }
@@ -239,13 +239,13 @@ public class BraveSearchAdapter implements SearchProvider {
 
     private static String subjectFocusHint(SubjectCode subjectCode) {
         if (subjectCode == null) {
-            return "lý thuyết trọng tâm";
+            return "nội dung chính kiến thức trọng tâm";
         }
         return switch (subjectCode) {
-            case ENG -> "từ vựng ngữ pháp";
-            case LIT -> "soạn bài tác phẩm";
-            case MATH, PHY, CHEM -> "định nghĩa công thức";
-            case SCI, BIO, TECH, INFO, HISGEO, HIST, GEO, CIVICS -> "lý thuyết trọng tâm";
+            case ENG -> "nội dung chính từ vựng ngữ pháp trọng tâm";
+            case LIT -> "tóm tắt nội dung chính kiến thức trọng tâm";
+            case MATH, PHY, CHEM -> "nội dung chính định nghĩa công thức trọng tâm";
+            case SCI, BIO, TECH, INFO, HISGEO, HIST, GEO, CIVICS -> "nội dung chính kiến thức trọng tâm";
         };
     }
 
@@ -254,7 +254,7 @@ public class BraveSearchAdapter implements SearchProvider {
             return "";
         }
         String stripped = rawTitle.trim()
-                .replaceFirst("^(?iu)(bài|chương|chủ đề|tiết|phần|unit|lesson)\\s+\\d+\\s*[:.\\-–]?\\s*", "");
+                .replaceFirst("^(?iu)(bài|chương|chủ đề|tiết|phần|unit|lesson|văn bản)\\s+(?:\\d+|một|hai|ba|bốn|tư|năm|sáu|bảy|tám|chín|mười)\\s*[:.\\-–]?\\s*", "");
         return stripped.isBlank() ? rawTitle.trim() : stripped.trim();
     }
 
@@ -496,6 +496,27 @@ public class BraveSearchAdapter implements SearchProvider {
                     && (combined.contains("global success") || combined.contains("global-success"))) {
                 score += 3;
             }
+        }
+
+        // Prefer lesson overview/core-content pages over narrow author-biography/metadata pages
+        if (combined.contains("nội dung chính")
+                || combined.contains("kiến thức trọng tâm")
+                || combined.contains("tóm tắt")
+                || combined.contains("trọng tâm")
+                || combined.contains("lý thuyết")
+                || combined.contains("đọc hiểu")
+                || combined.contains("trả lời câu hỏi")) {
+            score += 4;
+        }
+        String titleLower = safeLower(result.title());
+        if ((titleLower.contains("tác giả tác phẩm")
+                || titleLower.contains("hoàn cảnh sáng tác")
+                || titleLower.contains("xuất xứ")
+                || titleLower.contains("tiểu sử"))
+                && !titleLower.contains("nội dung chính")
+                && !titleLower.contains("trọng tâm")
+                && !titleLower.contains("soạn bài")) {
+            score -= 3;
         }
         return score;
     }

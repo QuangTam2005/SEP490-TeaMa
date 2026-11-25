@@ -25,7 +25,7 @@ Xây dựng nền tảng web responsive **AI Study Companion** với định hư
    - Nhập và cập nhật **Thời khóa biểu tuần** theo danh mục môn phù hợp khối lớp (`Toán`, `Ngữ văn`, `Tiếng Anh`, `Khoa học tự nhiên`, `Lịch sử – Địa lý`, và các môn THCS/THPT `Vật lí`, `Hóa học`, `Sinh học`, `Lịch sử`, `Địa lí`, `Tin học`, `Công nghệ`, `GDCD`).
    - Chuẩn bị bài vào **ngày hôm trước** của ngày có lịch học môn (theo múi giờ `Asia/Ho_Chi_Minh`: ví dụ thứ Hai có môn Toán $\rightarrow$ Chủ nhật làm bài ôn/soạn môn Toán).
    - Thực hiện tuần tự cặp nhiệm vụ **Review (Ôn bài cũ)** trước $\rightarrow$ **Preview (Soạn bài mới)** sau, tự viết kiến thức từ `850` đến `3.000` ký tự (kèm lưu nháp cục bộ trên trình duyệt).
-   - Xem kết quả AI đánh giá (`Accuracy`, `Completeness`, `overall_status`, nhận xét mentor `<= 1.000` ký tự gồm `Nhận xét tổng quan` và `Cần khắc phục`, nguồn tham khảo) và có thể nộp tối đa **3 phiên bản tổng cộng (`v1`, `v2`, `v3`)** cho mỗi nhiệm vụ.
+   - Xem kết quả AI đánh giá (`Accuracy`, `Completeness`, `overall_status`, nhận xét mentor `<= 1.000` ký tự gồm `Nhận xét tổng quan`, `Mức độ đủ nội dung chính` và `Cần khắc phục`, nguồn tham khảo) và có thể nộp tối đa **3 phiên bản tổng cộng (`v1`, `v2`, `v3`)** cho mỗi nhiệm vụ.
 2. **Guardian (Người giám sát / Phụ huynh):**
    - Liên kết với hồ sơ Student thông qua **mã liên kết dùng 1 lần (8 ký tự)** (`O-01`).
    - Có quyền **xem và cập nhật Thời khóa biểu tuần** cho Student đã liên kết (lưu dưới dạng phiên bản mới, giữ nguyên lịch sử cũ).
@@ -51,8 +51,8 @@ Xây dựng nền tảng web responsive **AI Study Companion** với định hư
 ### Module 4: AI Verification Pipeline & Cost Control (`FR-AI`, `FR-OPS`)
 - **FR-AI-01..15 (Brave Search + MiMo v2.6 Flash via CKEY):**
   - Chỉ kích hoạt khi Student bấm Submit hợp lệ (tuyệt đối **không** gọi AI khi đang gõ; **không** gửi PII/tên/email/ID).
-  - Nguồn chuẩn hóa: định danh `textbookSeries` (`Kết nối tri thức với cuộc sống` / `Global Success` cho `ENG`) & `textbookEdition` (`GDPT 2018`) trong `SearchQuery` và `KnowledgeCache` (`v5`), bật `extra_snippets=true` trên Brave Search (tối đa **3 request**, giữ tối đa **2 nguồn** chất lượng cao tới `2.000` ký tự/nguồn với tổng vùng nguồn `<= 4.500` ký tự; định tuyến `ENG` sang `Global Success`, `LIT` sang nguồn Ngữ văn phù hợp, loại bỏ SPA/tin hành chính/trang chặn Cloudflare), ngân sách ngữ cảnh `userPrompt` **tối đa `2.700` tokens** (chứa đủ cả 2 nguồn `4.500` ký tự + bài làm `3.000` ký tự).
-  - Đánh giá công tâm chuẩn mentor theo từng nhiệm vụ với `accuracy`, `completeness`, `overall_status`, `confidence`, nhận xét Tiếng Việt **không ép tối thiểu, tối đa 1.000 ký tự** (gồm `Nhận xét tổng quan` và `Cần khắc phục`), `incorrect_points`, `missing_points`, `sources`.
+  - Nguồn chuẩn hóa: định danh `textbookSeries` (`Kết nối tri thức với cuộc sống` / `Global Success` cho `ENG`) & `textbookEdition` (`GDPT 2018`) trong `SearchQuery` và `KnowledgeCache` (`v6`), bật `extra_snippets=true` trên Brave Search (tối đa **3 request** ưu tiên truy vấn nội dung chính/kiến thức trọng tâm của bài, giữ tối đa **2 nguồn** chất lượng cao tới `2.000` ký tự/nguồn với tổng vùng nguồn `<= 4.500` ký tự; định tuyến `ENG` sang `Global Success`, `LIT` sang nguồn Ngữ văn đọc hiểu/nội dung chính, loại bỏ SPA/tin hành chính/trang chặn Cloudflare), ngân sách ngữ cảnh `userPrompt` **tối đa `2.700` tokens** (chứa đủ cả 2 nguồn `4.500` ký tự + bài làm `3.000` ký tự).
+  - Đánh giá công tâm chuẩn mentor theo từng nhiệm vụ với `accuracy`, `completeness`, `overall_status`, `confidence`, nhận xét Tiếng Việt **không ép tối thiểu, tối đa 1.000 ký tự** (gồm `Nhận xét tổng quan`, `Mức độ đủ nội dung chính` và `Cần khắc phục`), `incorrect_points`, `missing_points`, `sources`.
 - **FR-OPS-01..07 (3-Attempt Retry & Fallback to Guardian):**
   - Xử lý bất đồng bộ qua `EvaluationJob` + `Idempotency-Key`.
   - Khi lỗi gọi/parse AI, Worker **retry tự động tối đa 3 lần** (exponential backoff).

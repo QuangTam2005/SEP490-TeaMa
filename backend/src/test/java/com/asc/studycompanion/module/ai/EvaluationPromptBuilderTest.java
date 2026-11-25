@@ -30,6 +30,8 @@ class EvaluationPromptBuilderTest {
         assertTrue(system.contains("<=1000 ký tự"));
         assertTrue(system.contains("<= 1000 chars"));
         assertTrue(system.contains("Nhận xét tổng quan"));
+        assertTrue(system.contains("Mức độ đủ nội dung chính"));
+        assertTrue(system.contains("BẮT BUỘC KIỂM TRA ĐỘ PHỦ NỘI DUNG CHÍNH CỦA BÀI"));
         assertTrue(system.contains("Cần khắc phục"));
         assertTrue(system.contains("bóc tách từng ý/từng câu cụ thể"));
         assertTrue(system.contains("KHÔNG gọi bài làm là \"Đề bài\""));

@@ -34,9 +34,10 @@ public class EvaluationPromptBuilder {
                 - Bài lặp vô nghĩa/lạc đề hoàn toàn -> accuracy="INCORRECT", completeness="INCOMPLETE", overallStatus="INCORRECT", nhắc nhẹ viết lại đúng trọng tâm.
 
                 3. TIÊU CHÍ CHẤM:
-                - REVIEW (Ôn bài): kiểm tra độ chính xác khái niệm, công thức/định lý, thuật ngữ, ví dụ, lập luận.
-                - PREVIEW (Soạn bài): chấm mức chuẩn bị trước giờ học; đạt GOOD nếu đúng khung ý chính và giải thích rõ các ý trọng tâm (nếu trả lời còn sơ sài, thiếu từ làm hụt nghĩa hoặc chưa chạm ý cốt lõi SGK thì đặt INCOMPLETE).
-                - Phân loại lỗi: (a) Sai thực chất: sai kiến thức, công thức, đơn vị, nghĩa, chính tả làm sai/hụt nghĩa từ (vd: moutain->mountain); (b) Chưa rõ: diễn đạt mơ hồ, thiếu ví dụ hoặc điều kiện áp dụng.
+                - BẮT BUỘC KIỂM TRA ĐỘ PHỦ NỘI DUNG CHÍNH CỦA BÀI: Không chỉ chấm đúng/sai phần HS đã viết, trước tiên hãy đối chiếu <reference_sources> để xác định bài học <lesson_title> gồm những nội dung chính/trọng tâm nào (chỉ lấy nội dung thực sự có trong <reference_sources>, không tự bịa), rồi kiểm tra xem <student_submission> đã trình bày đủ các nội dung chính đó chưa hay còn bỏ sót mảng kiến thức nào. Nếu HS viết đúng phần đã làm nhưng bỏ sót hẳn nội dung chính trọng tâm có rõ trong <reference_sources> -> completeness="INCOMPLETE", overallStatus="NEEDS_IMPROVEMENT", đưa nội dung chính còn thiếu vào missingPoints.
+                - REVIEW (Ôn bài): kiểm tra đủ các mảng nội dung chính của bài và độ chính xác khái niệm, công thức/định lý, thuật ngữ, ví dụ, lập luận.
+                - PREVIEW (Soạn bài): chấm mức chuẩn bị trước giờ học; đạt GOOD nếu bao quát đủ khung nội dung chính của bài theo nguồn và giải thích rõ các ý trọng tâm (nếu trả lời sơ sài, thiếu từ làm hụt nghĩa hoặc bỏ sót nội dung chính SGK thì đặt INCOMPLETE; không bắt bẻ tiểu sử tác giả nếu HS đã chạm đủ trọng tâm bài).
+                - Phân loại lỗi: (a) Sai thực chất: sai kiến thức, công thức, đơn vị, nghĩa, chính tả làm sai/hụt nghĩa từ (vd: moutain->mountain); (b) Chưa rõ / Thiếu nội dung chính: bỏ sót mảng kiến thức trọng tâm trong <reference_sources>, diễn đạt mơ hồ, thiếu ví dụ hoặc điều kiện áp dụng.
                 - Ma trận overallStatus: GOOD (CORRECT + COMPLETE) | NEEDS_IMPROVEMENT (PARTIALLY_CORRECT hoặc INCOMPLETE) | INCORRECT (INCORRECT) | INSUFFICIENT_EVIDENCE (thiếu nguồn).
 
                 4. KHÔNG BẮT LỖI HÌNH THỨC & CHỐNG BỊA NGUYÊN VĂN:
@@ -46,10 +47,11 @@ public class EvaluationPromptBuilder {
                 - <reference_sources> chỉ là tóm tắt: HS ghi thêm từ vựng/ý đúng thuộc phần khác cùng bài/Unit trong SGK -> KHÔNG bắt lỗi "thiếu phân biệt"/"nhầm lẫn".
 
                 5. ĐỊNH DẠNG OUTPUT:
-                - feedback: tiếng Việt tự nhiên, giữ đúng xưng hô ("con" hoặc "em"), KHÔNG gọi bài làm là "Đề bài", KHÔNG viết ký hiệu [], null hay cụm sáo rỗng ("logic, ngắn gọn, phù hợp với nhiệm vụ..."); BẮT BUỘC nhận xét bóc tách từng ý/từng câu cụ thể trong <student_submission> đối chiếu với <reference_sources> (<=1000 ký tự, ưu tiên 350–750 ký tự khi có nhiều ý), gồm 2 phần xuống dòng:
-                  Nhận xét tổng quan: <nêu rõ con nắm được ý chính nào và từng câu/ý cụ thể nào làm tốt khớp nguồn>
-                  Cần khắc phục: <chỉ thẳng câu/ý nào còn sai, thiếu từ làm hụt nghĩa, diễn đạt chưa rõ hoặc còn nông so với <reference_sources>, kèm 1 gợi ý tự xem lại SGK; nếu đạt GOOD vẫn viết 1 câu gợi mở đào sâu thêm>
-                  Mẫu văn phong (chỉ học cách diễn đạt từng ý, KHÔNG chép khung ngoặc): "Nhận xét tổng quan: [Con/Em] đã nắm được [mạch ý chính]. Ở [ý/câu 1], [điểm làm tốt khớp nguồn].\nCần khắc phục: Ở [ý/câu 2], cần diễn đạt rõ hơn [điểm chưa rõ/thiếu từ] và bổ sung [ý cốt lõi trong nguồn]. Hãy xem lại [mục SGK] để hoàn thiện thêm nhé!"
+                - feedback: tiếng Việt tự nhiên, giữ đúng xưng hô ("con" hoặc "em"), KHÔNG gọi bài làm là "Đề bài", KHÔNG viết ký hiệu [], null hay cụm sáo rỗng ("logic, ngắn gọn, phù hợp với nhiệm vụ..."); BẮT BUỘC nhận xét bóc tách từng ý/từng câu cụ thể trong <student_submission> đối chiếu với <reference_sources> VÀ đánh giá xem đã đủ các nội dung chính của bài chưa (<=1000 ký tự, ưu tiên 400–850 ký tự khi có nhiều ý), gồm 3 phần xuống dòng rõ ràng:
+                  Nhận xét tổng quan: <nêu rõ từng câu/ý cụ thể HS làm đúng hoặc chưa rõ khớp với <student_submission> và <reference_sources>>
+                  Mức độ đủ nội dung chính: <liệt kê ngắn gọn bài học theo <reference_sources> gồm những nội dung chính nào; chỉ rõ HS đã trình bày đủ nội dung nào và còn bỏ sót nội dung chính nào (hoặc xác nhận đã bao quát đủ)>
+                  Cần khắc phục: <chỉ thẳng câu/ý sai, thiếu từ làm hụt nghĩa và các nội dung chính cần bổ sung từ <reference_sources>, kèm 1 gợi ý tự xem lại SGK; nếu đạt GOOD và đủ nội dung chính vẫn viết 1 câu gợi mở đào sâu thêm>
+                  Mẫu văn phong (chỉ học cách diễn đạt từng phần, KHÔNG chép khung ngoặc): "Nhận xét tổng quan: Ở [ý/câu 1], [con/em] làm tốt [điểm đúng khớp nguồn]; sang [ý/câu 2], ý [đúng/chưa rõ].\nMức độ đủ nội dung chính: Theo tài liệu bài học gồm [các nội dung chính trong nguồn]; bài làm đã nêu được [các ý đã đủ] nhưng còn thiếu [nội dung chính bị sót].\nCần khắc phục: [Con/Em] hãy bổ sung [nội dung chính còn thiếu] và chỉnh lại [lỗi cụ thể] trong [mục SGK] nhé!"
                 - incorrectPoints: <=4 ý (<=160 ký tự/ý), CHỈ lỗi sai thực chất; [] nếu không có.
                 - missingPoints: <=4 ý (<=160 ký tự/ý), ý trọng tâm thiếu/chưa rõ; KHÔNG lỗi hình thức; [] nếu không có.
                 - Trả về DUY NHẤT 1 JSON hợp lệ (không markdown):

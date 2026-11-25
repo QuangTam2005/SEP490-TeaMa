@@ -202,10 +202,17 @@ class BraveSearchAdapterTest {
 
         SearchQuery lit = new SearchQuery(7, SubjectCode.LIT, "Ngữ văn", "Bài 1: Bầy chim chìa vôi");
         assertTrue(adapter.buildLessonWebQuery(lit).contains("Kết nối tri thức"));
+        assertTrue(adapter.buildLessonWebQuery(lit).contains("nội dung chính"));
         String litSecondary = adapter.buildSecondarySourceQuery(lit);
         assertTrue(litSecondary.contains("Ngữ văn Lớp 7"));
         assertTrue(litSecondary.contains("Bầy chim chìa vôi"));
+        assertTrue(litSecondary.contains("nội dung chính câu hỏi đọc hiểu"));
         assertFalse(litSecondary.contains("vi.wikipedia.org"));
+
+        SearchQuery litTextPrefix = new SearchQuery(6, SubjectCode.LIT, "Ngữ văn", "Văn bản ba: Con chào mào - Mai Văn Phấn");
+        String litTextSecondary = adapter.buildSecondarySourceQuery(litTextPrefix);
+        assertFalse(litTextSecondary.contains("Văn bản ba"));
+        assertTrue(litTextSecondary.contains("Con chào mào - Mai Văn Phấn"));
 
         SearchQuery tech = new SearchQuery(8, SubjectCode.TECH, "Công nghệ", "Bài 4: Vật liệu cơ khí");
         assertTrue(adapter.buildLessonWebQuery(tech).contains("Lớp 8 Công nghệ Bài 4: Vật liệu cơ khí Kết nối tri thức"));
@@ -230,5 +237,36 @@ class BraveSearchAdapterTest {
         );
         server.verify();
         assertEquals(1, results.size());
+    }
+
+    @Test
+    void prioritizesMainLessonContentOverAuthorBioPages() {
+        server.reset();
+        String litPrimaryJson = """
+                {
+                  "web": {
+                    "results": [
+                      { "title": "Con chào mào - Tác giả tác phẩm", "url": "https://vietjack.com/tac-gia-con-chao-mao", "description": "Tiểu sử tác giả Mai Văn Phấn và xuất xứ bài thơ" },
+                      { "title": "Soạn bài Con chào mào - Tóm tắt nội dung chính", "url": "https://loigiaihay.com/noi-dung-chinh-con-chao-mao", "description": "Nội dung chính và trả lời câu hỏi đọc hiểu trọng tâm" }
+                    ]
+                  }
+                }
+                """;
+        String litSecondaryJson = """
+                {"web":{"results":[{"title":"Ngữ văn 6 Kết nối tri thức - Câu hỏi đọc hiểu Con chào mào","url":"https://vietjack.com/doc-hieu-con-chao-mao","description":"Câu 1, Câu 2, Câu 3 và nội dung chính bài thơ"}]}}
+                """;
+
+        server.expect(requestTo(containsString("api.search.brave.com")))
+                .andRespond(withSuccess(litPrimaryJson, MediaType.APPLICATION_JSON));
+        server.expect(requestTo(containsString("api.search.brave.com")))
+                .andRespond(withSuccess(litSecondaryJson, MediaType.APPLICATION_JSON));
+
+        List<SearchSnippet> results = adapter.search(
+                new SearchQuery(6, SubjectCode.LIT, "Ngữ văn", "Văn bản ba: Con chào mào - Mai Văn Phấn")
+        );
+        server.verify();
+        assertEquals(2, results.size());
+        assertTrue(results.get(0).title().contains("nội dung chính"));
+        assertFalse(results.get(0).title().contains("Tác giả tác phẩm"));
     }
 }

@@ -139,10 +139,15 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
                         || overallStatus == OverallEvaluationStatus.NEEDS_IMPROVEMENT) {
                     overallStatus = OverallEvaluationStatus.INCORRECT;
                 }
-            } else if (overallStatus == OverallEvaluationStatus.GOOD
-                    && (completeness == CompletenessLevel.INCOMPLETE
-                    || accuracy == AccuracyLevel.PARTIALLY_CORRECT)) {
-                overallStatus = OverallEvaluationStatus.NEEDS_IMPROVEMENT;
+            } else {
+                if (completeness == CompletenessLevel.COMPLETE && !missingPoints.isEmpty()) {
+                    completeness = CompletenessLevel.INCOMPLETE;
+                }
+                if (overallStatus == OverallEvaluationStatus.GOOD
+                        && (completeness == CompletenessLevel.INCOMPLETE
+                        || accuracy == AccuracyLevel.PARTIALLY_CORRECT)) {
+                    overallStatus = OverallEvaluationStatus.NEEDS_IMPROVEMENT;
+                }
             }
 
             String feedback = ensureFeedbackBounds(feedbackNode.asText().trim(), incorrectPoints, missingPoints);
@@ -197,7 +202,8 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
             return "";
         }
         String text = rawFeedback.trim();
-        if (text.contains("Cần khắc phục:") && !text.startsWith("Nhận xét tổng quan")) {
+        if ((text.contains("Cần khắc phục:") || text.contains("Mức độ đủ nội dung chính:"))
+                && !text.startsWith("Nhận xét tổng quan")) {
             text = "Nhận xét tổng quan: " + text;
         }
         if (text.matches("(?s).*Cần khắc phục:\\s*(?:\\[\\s*\\]|null|không có\\.?).*")) {
