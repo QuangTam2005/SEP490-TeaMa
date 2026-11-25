@@ -46,9 +46,10 @@ public class EvaluationPromptBuilder {
                 - <reference_sources> chỉ là tóm tắt: HS ghi thêm từ vựng/ý đúng thuộc phần khác cùng bài/Unit trong SGK -> KHÔNG bắt lỗi "thiếu phân biệt"/"nhầm lẫn".
 
                 5. ĐỊNH DẠNG OUTPUT:
-                - feedback: tiếng Việt tự nhiên, giữ đúng xưng hô theo Khối lớp ("con" hoặc "em"), KHÔNG gọi bài làm là "Đề bài", KHÔNG viết ký hiệu [], null hay mã JSON trong feedback; súc tích, <=1000 ký tự, BẮT BUỘC có 2 phần xuống dòng:
-                  Nhận xét tổng quan: <khen cụ thể ý đã làm đúng trong bài, mức nắm trọng tâm, tinh thần tự học>
-                  Cần khắc phục: <viết bằng câu văn tự nhiên: (1) lỗi sai kiến thức/thiếu từ làm hụt nghĩa nếu có; (2) điểm sơ sài/chưa rõ hoặc ý SGK cần đào sâu; (3) 1 gợi ý/câu hỏi tự đối chiếu SGK; nếu đạt GOOD vẫn viết 1 câu gợi mở đào sâu thêm, TUYỆT ĐỐI không ghi "[]">
+                - feedback: tiếng Việt tự nhiên, giữ đúng xưng hô ("con" hoặc "em"), KHÔNG gọi bài làm là "Đề bài", KHÔNG viết ký hiệu [], null hay cụm sáo rỗng ("logic, ngắn gọn, phù hợp với nhiệm vụ..."); BẮT BUỘC nhận xét bóc tách từng ý/từng câu cụ thể trong <student_submission> đối chiếu với <reference_sources> (<=1000 ký tự, ưu tiên 350–750 ký tự khi có nhiều ý), gồm 2 phần xuống dòng:
+                  Nhận xét tổng quan: <nêu rõ con nắm được ý chính nào và từng câu/ý cụ thể nào làm tốt khớp nguồn>
+                  Cần khắc phục: <chỉ thẳng câu/ý nào còn sai, thiếu từ làm hụt nghĩa, diễn đạt chưa rõ hoặc còn nông so với <reference_sources>, kèm 1 gợi ý tự xem lại SGK; nếu đạt GOOD vẫn viết 1 câu gợi mở đào sâu thêm>
+                  Mẫu văn phong (chỉ học cách diễn đạt từng ý, KHÔNG chép khung ngoặc): "Nhận xét tổng quan: [Con/Em] đã nắm được [mạch ý chính]. Ở [ý/câu 1], [điểm làm tốt khớp nguồn].\nCần khắc phục: Ở [ý/câu 2], cần diễn đạt rõ hơn [điểm chưa rõ/thiếu từ] và bổ sung [ý cốt lõi trong nguồn]. Hãy xem lại [mục SGK] để hoàn thiện thêm nhé!"
                 - incorrectPoints: <=4 ý (<=160 ký tự/ý), CHỈ lỗi sai thực chất; [] nếu không có.
                 - missingPoints: <=4 ý (<=160 ký tự/ý), ý trọng tâm thiếu/chưa rõ; KHÔNG lỗi hình thức; [] nếu không có.
                 - Trả về DUY NHẤT 1 JSON hợp lệ (không markdown):

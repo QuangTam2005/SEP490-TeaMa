@@ -107,7 +107,7 @@
 - [x] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
 - [x] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`
 
-### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(24 subtasks)*
+### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(25 subtasks)*
 - [x] `[TASK-FEAT.5a]` *(2 SP)* Xây dựng hệ thống chống copy/dán vào ô nội dung bài làm (`anti-paste.ts`, `TaskWorkspaceView`: chặn `paste`/`drop`/`contextmenu`/`Ctrl+V`/`beforeinput` & bulk-insert `delta > 30` giữ nguyên bộ gõ Telex/VNI) & đồng bộ `docs/`
 - [x] `[TASK-FEAT.5b]` *(2 SP)* Tối ưu layout responsive màn hình rộng 24 inch (`max-w-[1600px]` cho `StudentShell`/`GuardianShell`/`AuthLayout`/`LinkStudentView`, `lg:` nav breakpoint chống dồn header, `2xl:grid-cols-2`/`8:4` cho `NextDayPlanView`/`StudyHistoryView`/`TaskWorkspaceView`/`SubmissionDetailView`/`ProfileView`)
 - [x] `[TASK-FEAT.5c]` *(2 SP)* Cập nhật logic tính chuỗi học (`StudyPlanService.getStreak`) bỏ qua các ngày nghỉ không có môn trên thời khóa biểu `ACTIVE` (ví dụ T7, CN trống lịch) mà vẫn ngắt chuỗi khi bỏ lỡ ngày có lịch học & bổ sung unit tests (`StudyPlanServiceTest`)
@@ -132,6 +132,7 @@
 - [x] `[TASK-FEAT.5v]` *(1 SP)* Rà soát cuối cùng toàn web: vá lỗi `UriComponentsBuilder` trong `BraveSearchAdapter` khi tên bài chứa ký tự `{...}` (`queryParam("q", "{q}").encode().buildAndExpand(searchText)`), kiểm chứng `100/100` BE tests & `typecheck`/`lint`/`build` Frontend (`14` routes)
 - [x] `[TASK-FEAT.5w]` *(2 SP)* Tối ưu trải nghiệm di động (`360–640px`): chống iOS zoom `text-base md:text-sm` + `h-10`/`h-11` cho `Input`/textarea/nút phiên bản, hiện tên/lớp trong drawer mobile (`StudentShell`/`GuardianShell`), ưu tiên hiển thị `Đánh giá AI` lên trên khi xem kết quả trên mobile (`TaskWorkspaceView`/`SubmissionDetailView`), thanh lọc môn cuộn ngang gọn trên `GuardianDashboardView` & tối ưu chiều cao editor khi bật bàn phím ảo (`tsc`, `lint`, `next build` `14/14` routes)
 - [x] `[TASK-FEAT.5x]` *(1 SP)* Vá phản hồi AI (`EvaluationPromptBuilder`: giữ đúng xưng hô `"con"`/`"em"`, cấm gọi bài làm là `"Đề bài"`, cấm viết `[]`/`null` trong `feedback`, chấm công tâm hơn với câu trả lời `PREVIEW` còn sơ sài hoặc thiếu từ làm hụt nghĩa; `CkeyMimoAdapter.sanitizeMentorFeedback`: tự động dọn `Cần khắc phục: []` & bổ sung đầu mục `"Nhận xét tổng quan:"` nếu thiếu) + tests (`100/100` BE)
+- [x] `[TASK-FEAT.5y]` *(1 SP)* Nâng chất lượng nhận xét AI chuẩn mentor cụ thể (`EvaluationPromptBuilder`: cấm văn mẫu sáo rỗng, bắt buộc bóc tách từng ý/từng câu đối chiếu trực tiếp với `<student_submission>` và `<reference_sources>`, bổ sung mẫu văn phong 350–750 ký tự; `CkeyMimoAdapter`: nâng `temperature` từ `0.0` lên `0.15` để giữ chặt kiểm chứng chống bịa nhưng diễn đạt tự nhiên hơn) + `EvaluationPromptBuilderTest` (`100/100` BE)
 
 ---
 
