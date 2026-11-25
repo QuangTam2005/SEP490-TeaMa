@@ -55,7 +55,7 @@ public class BraveSearchAdapter implements SearchProvider {
         URI uri = UriComponentsBuilder.fromUriString(aiProperties.getBrave().getBaseUrl())
                 .queryParam("q", searchText)
                 .queryParam("count", maxSources + 2)
-                .queryParam("country", "VN")
+                .queryParam("country", "ALL")
                 .queryParam("search_lang", "vi")
                 .build()
                 .encode()

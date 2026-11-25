@@ -62,6 +62,8 @@ class BraveSearchAdapterTest {
                 """.formatted(longDesc);
 
         server.expect(requestTo(containsString("api.search.brave.com")))
+                .andExpect(requestTo(containsString("country=ALL")))
+                .andExpect(requestTo(containsString("search_lang=vi")))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("X-Subscription-Token", "test-brave-key"))
                 .andRespond(withSuccess(mockJson, MediaType.APPLICATION_JSON));
