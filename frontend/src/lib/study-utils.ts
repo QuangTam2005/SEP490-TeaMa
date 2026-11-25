@@ -1,0 +1,82 @@
+import type { SubjectCode, Weekday } from '@/types';
+
+export const MIN_SUBMISSION_CHARS = 850;
+export const MAX_SUBMISSION_CHARS = 2000;
+export const MAX_FEEDBACK_CHARS = 600;
+export const MAX_POST_EVAL_REVISIONS = 3;
+
+export const GRADE_6_SUBJECTS: {
+  code: SubjectCode;
+  name: string;
+  shortLabel: string;
+}[] = [
+  { code: 'MATH', name: 'Toán', shortLabel: 'Toán' },
+  { code: 'LIT', name: 'Ngữ văn', shortLabel: 'Văn' },
+  { code: 'ENG', name: 'Tiếng Anh', shortLabel: 'Anh' },
+  { code: 'SCI', name: 'Khoa học tự nhiên', shortLabel: 'KHTN' },
+  { code: 'HISGEO', name: 'Lịch sử – Địa lý', shortLabel: 'Sử - Địa' },
+];
+
+export const WEEKDAYS: { value: Weekday; label: string; shortLabel: string }[] = [
+  { value: 1, label: 'Thứ Hai', shortLabel: 'T2' },
+  { value: 2, label: 'Thứ Ba', shortLabel: 'T3' },
+  { value: 3, label: 'Thứ Tư', shortLabel: 'T4' },
+  { value: 4, label: 'Thứ Năm', shortLabel: 'T5' },
+  { value: 5, label: 'Thứ Sáu', shortLabel: 'T6' },
+  { value: 6, label: 'Thứ Bảy', shortLabel: 'T7' },
+  { value: 7, label: 'Chủ Nhật', shortLabel: 'CN' },
+];
+
+/**
+ * Normalizes line endings (\r\n -> \n) and trims leading/trailing whitespace
+ * per SRS BR-12 so Frontend and Backend character counts always agree.
+ */
+export function normalizeStudyText(raw: string): string {
+  return raw.replace(/\r\n/g, '\n').trim();
+}
+
+export function countNormalizedChars(raw: string): number {
+  return normalizeStudyText(raw).length;
+}
+
+export function isValidStudyLength(raw: string): boolean {
+  const count = countNormalizedChars(raw);
+  return count >= MIN_SUBMISSION_CHARS && count <= MAX_SUBMISSION_CHARS;
+}
+
+export function getSubjectName(code: SubjectCode): string {
+  return GRADE_6_SUBJECTS.find((s) => s.code === code)?.name ?? code;
+}
+
+/**
+ * Returns tomorrow's ISO date string (YYYY-MM-DD) in Asia/Ho_Chi_Minh timezone.
+ */
+export function getNextTargetDateIso(): string {
+  const now = new Date();
+  const vnNow = new Date(
+    now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
+  );
+  vnNow.setDate(vnNow.getDate() + 1);
+  const year = vnNow.getFullYear();
+  const month = String(vnNow.getMonth() + 1).padStart(2, '0');
+  const day = String(vnNow.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getWeekdayFromIsoDate(isoDate: string): Weekday {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const utcDay = new Date(Date.UTC(y, (m || 1) - 1, d || 1)).getUTCDay();
+  return (utcDay === 0 ? 7 : utcDay) as Weekday;
+}
+
+export function getWeekdayLabel(weekday: Weekday): string {
+  return WEEKDAYS.find((w) => w.value === weekday)?.label ?? '';
+}
+
+export function formatViDate(isoDate: string): string {
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) {
+    return isoDate;
+  }
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}

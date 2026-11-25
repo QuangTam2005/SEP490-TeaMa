@@ -6,6 +6,9 @@ export type MockScenario =
   | 'normal'
   | 'empty'
   | 'slow'
+  | 'evaluating'
+  | 'evaluation_failed'
+  | 'insufficient_evidence'
   | 'error_400'
   | 'error_403'
   | 'error_404'
@@ -185,6 +188,9 @@ export async function runMockOperation<T>(
         });
       case 'normal':
       case 'slow':
+      case 'evaluating':
+      case 'evaluation_failed':
+      case 'insufficient_evidence':
         break;
     }
   }

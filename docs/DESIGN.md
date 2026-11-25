@@ -1,8 +1,8 @@
 # SYSTEM DESIGN: UI/UX, DATABASE SCHEMA (ERD) & REST API SPECIFICATIONS
 **Product Name:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Design Philosophy:** Minimal-Text, Child-Friendly Clarity (`Be Vietnam Pro` + `JetBrains Mono`, `#E85D04` Burnt Orange, `1px hairline` Light/Dark)  
+**Design Philosophy:** Minimal-Text, Child-Friendly Clarity (`Be Vietnam Pro` + `JetBrains Mono`, Ocean Blue `#0284C7` / `#0369A1` + Pure White `#FFFFFF`, `1px hairline` Light/Dark)  
 **Database Engine:** PostgreSQL 16 (Managed via Flyway Migrations)  
-**Document Version:** 1.0 (Baseline — 14 Tables + REST APIs + Student/Guardian UI)  
+**Document Version:** 1.1 (Ocean Blue + White Palette & THCS Accessibility Polish)  
 
 ---
 
@@ -10,9 +10,10 @@
 
 ## 1. Visual Identity & Color Palette
 - **Entry Route (`/`):** Redirect trực tiếp sang `/login` (không có Landing Page marketing).
-- **Minimal-Text Discipline:** Cấm viết các đoạn văn giải thích dài dòng dưới tiêu đề trang, thẻ thống kê hoặc header form. Ngôn ngữ thân thiện, rõ ràng, **không mang tính trách phạt** cho học sinh lớp 6 (`NFR-ACC-01`).
-- **Light / Dark Mode:** Mặc định Light Mode (`#F8F9FA` canvas, `#FFFFFF` card, viền `1px #E5E7EB`, chữ chính `#1A1D23`), hỗ trợ nút chuyển Light/Dark trên Top Bar (`next-themes`).
-- **Single Brand Accent (`< 5%`):** `#E85D04` (`hover #C84E03`, soft tint `#FFF4ED`), cấm gradient tím/lavender.
+- **Minimal-Text & THCS Usability:** Ngôn ngữ đơn giản, thân thiện với học sinh lớp 6 (`NFR-ACC-01`), thao tác ít bước, vùng bấm lớn (`>= 44px`), không viết văn giải thích dài dưới tiêu đề trang hoặc card.
+- **Ocean Blue + White (Chủ đạo):**
+  - Không gian hiển thị (Card / Form / Bảng / Panel): Trắng tinh khiết **`#FFFFFF`** với viền mảnh `1px #E2E8F0` trên nền canvas xanh nhạt dịu mắt `#F8FAFC` (hỗ trợ nút chuyển **Light / Dark Mode** trên Top Bar).
+  - Màu nhấn chủ đạo (**Ocean Blue**): **`#0284C7`** (Sky-600) và **`#0369A1`** (Ocean-700 cho nút chính & chữ trắng đạt contrast `>= 5.9:1`, hover `#075985`, soft tint `#E0F2FE` / `#F0F9FF`). Cấm gradient tím/lavender.
 - **Semantic Status Colors (Accuracy / Completeness / Overall / Task Status):**
   - `GOOD` / `CORRECT` / `COMPLETE` / `EVALUATED`: Emerald (`#047857` trên `#ECFDF5`)
   - `NEEDS_IMPROVEMENT` / `PARTIALLY_CORRECT` / `INCOMPLETE` / `EVALUATING`: Amber (`#B45309` trên `#FFFBEB`)

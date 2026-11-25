@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 1 Completed $\rightarrow$ Ready for Phase 2 (`Frontend UI-First Prototype`)  
+**Current Phase:** Phase 2 In Progress (`[TASK-UI.1]` Completed — Ocean Blue + White THCS UI Theme)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -11,7 +11,7 @@
 | :--- | :---: | :---: | :--- |
 | [`docs/PRD.md`](./PRD.md) | `v1.0` | ✅ Baseline | `AI Study Companion – Grade 6`: 5 fixed subjects, `REVIEW` $\rightarrow$ `PREVIEW`, `850–2,000` chars, max `3` post-evaluation revisions, Brave Search + MiMo v2.6 Flash via CKEY, 1-time 8-char Guardian Link. |
 | [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.0` | ✅ Baseline | Modular Monolith (`com.asc.studycompanion`, Spring Boot 3.4 / Java 21) + Next.js 14 App Router + PostgreSQL 16 + Brave/CKEY Adapter Orchestration. |
-| [`docs/DESIGN.md`](./DESIGN.md) | `v1.0` | ✅ Baseline | Minimal-Text Student & Guardian UI/UX (`#E85D04`, Light/Dark Top Bar), 14-table PostgreSQL ERD (`SRS §7.1`), and REST API Contracts. |
+| [`docs/DESIGN.md`](./DESIGN.md) | `v1.1` | ✅ Baseline | Minimal-Text Student & Guardian UI/UX (**Ocean Blue** `#0284C7` / `#0369A1` + White `#FFFFFF`, Light/Dark Top Bar, `>= 44px` THCS tap targets), 14-table PostgreSQL ERD (`SRS §7.1`), and REST API Contracts. |
 | [`docs/RULES.md`](./RULES.md) | `v1.0` | ✅ Baseline | Domain & Engineering Red Lines (`BR-01..BR-24`, zero PII to AI, identical `BR-12` char counter, `ddl-auto=validate`, anti-IDOR, Atomic Commits). |
 | [`docs/TASKS.md`](./TASKS.md) | `v2.0` | ✅ Active | 6-Phase anti-hallucination migration roadmap (`Phase 0`–`Phase 6`). |
 
@@ -27,7 +27,8 @@
 - **[DONE] `[TASK-DOC.2]` (`6b9363a`):** Rewrote `docs/DESIGN.md`, `docs/RULES.md`, `docs/TASKS.md`, `docs/PROGRESS.md`, and `README.md`.
 - **[DONE] `[TASK-CLEAN.1]` (`eaf8fac`):** Updated `docker-compose.yml`, `.env.example`, and `application.yml` (`study_companion` DB, `Asia/Ho_Chi_Minh`, `CKEY`/`MiMo` & `Brave Search` config; removed SEP490 storage/multipart config).
 - **[DONE] `[TASK-CLEAN.2]` (`a787098`):** Migrated backend root package from `com.fptu.sep490` to `com.asc.studycompanion` (`StudyCompanionApplication`, `pom.xml`), removed legacy `module/project/**`, SEP490 migrations (`V1`–`V3`), and placeholders, added `timetable`/`study`/`ai`/`guardian` module stubs, updated `ErrorCode.java`, and verified `.\mvnw.cmd clean test` (`Tests run: 29, Failures: 0` — `BUILD SUCCESS`).
-- **[DONE] `[TASK-CLEAN.3]`:** Removed all legacy SEP490 frontend routes/components (`invite`, `(dashboard)/projects`, `supervisor`, `projects/*`, `workspace/*`, `seed-data.ts`, `project*` services/types), updated `api.ts`, `auth.ts`, `api-client.ts`, `auth-token.ts`, `mock-runtime.ts`, `StatusBadge`, `UiReviewToolbar`, `/login`, `/register`, and verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`).
+- **[DONE] `[TASK-CLEAN.3]` (`b4ca192`):** Removed all legacy SEP490 frontend routes/components (`invite`, `(dashboard)/projects`, `supervisor`, `projects/*`, `workspace/*`, `seed-data.ts`, `project*` services/types), updated `api.ts`, `auth.ts`, `api-client.ts`, `auth-token.ts`, `mock-runtime.ts`, `StatusBadge`, `UiReviewToolbar`, `/login`, `/register`, and verified `npm run typecheck`, `npm run lint` (`0` warnings/errors), and `npm run build` (`Compiled successfully`).
+- **[DONE] `[TASK-UI.1]`:** Applied Ocean Blue (`#0284C7`/`#0369A1`) + White (`#FFFFFF`) design tokens across `tailwind.config.ts`, `globals.css`, `button.tsx`, `badge.tsx`, and `docs/DESIGN.md` & `docs/RULES.md`; implemented strict Study Companion DTOs (`timetable`, `ai`, `study`, `guardian`), `study-utils.ts` (`BR-12` `850–2,000` normalized char counter & `Asia/Ho_Chi_Minh` next-day helper), updated `StatusBadge` (all task/AI enums in child-friendly Vietnamese), and added AI async/error scenarios (`evaluating`, `evaluation_failed`, `insufficient_evidence`) to `MockRuntime` & `UiReviewToolbar`. Verified `typecheck`, `lint`, `build` passed cleanly.
 
 ---
 

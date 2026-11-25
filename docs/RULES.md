@@ -38,5 +38,5 @@
 
 ## 4. Frontend Rules (`frontend/` - Next.js 14 / TypeScript)
 1. **Strict TypeScript:** Cấm `any` hoặc `@ts-ignore`. Toàn bộ DTO khai báo trong `src/types/`.
-2. **UI System:** Giữ `Be Vietnam Pro` + `JetBrains Mono`, duy nhất `lucide-react` (`strokeWidth={1.75}`), `#E85D04` Burnt Orange, `1px hairline` Light/Dark, Minimal-Text (không viết văn dài giải thích dưới heading).
+2. **UI System:** Giữ `Be Vietnam Pro` + `JetBrains Mono`, duy nhất `lucide-react` (`strokeWidth={1.75}`), **Ocean Blue (`#0284C7` / `#0369A1`) + White (`#FFFFFF`)**, `1px hairline` Light/Dark, thao tác đơn giản cho học sinh THCS (`>= 44px` tap target) và Minimal-Text.
 3. **App Router & Data Fetching:** Giữ `page.tsx`/`layout.tsx` Server Component mỏng khi không cần client state; mọi request đi qua `src/services/` $\rightarrow$ `src/lib/api-client.ts` + TanStack Query v5; mọi form validate bằng **React Hook Form + Zod**.

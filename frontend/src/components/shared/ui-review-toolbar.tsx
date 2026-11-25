@@ -25,6 +25,9 @@ const SCENARIO_OPTIONS: { value: MockScenario; label: string }[] = [
   { value: 'normal', label: 'Normal (Có dữ liệu)' },
   { value: 'empty', label: 'Empty State (Không có lịch)' },
   { value: 'slow', label: 'Slow Network (1.2s)' },
+  { value: 'evaluating', label: 'AI Đang đánh giá (Async)' },
+  { value: 'evaluation_failed', label: 'AI Evaluation Failed' },
+  { value: 'insufficient_evidence', label: 'AI Thiếu nguồn đối chiếu' },
   { value: 'error_400', label: '400 VAL_001' },
   { value: 'error_403', label: '403 GRD_001' },
   { value: 'error_404', label: '404 STUDY_001' },
@@ -149,7 +152,7 @@ export function UiReviewToolbar() {
                     className={cn(
                       'h-7 rounded border text-[11px] font-medium transition-colors',
                       runtime.simulatedRole === opt.value
-                        ? 'border-brand bg-brand text-white'
+                        ? 'border-brand-strong bg-brand-strong text-white'
                         : 'bg-background text-foreground hover:bg-muted'
                     )}
                   >

@@ -16,8 +16,9 @@ const config: Config = {
       },
       colors: {
         brand: {
-          DEFAULT: '#E85D04',
-          hover: '#C84E03',
+          DEFAULT: '#0284C7',
+          strong: '#0369A1',
+          hover: '#075985',
           soft: 'hsl(var(--brand-soft))',
         },
         canvas: 'hsl(var(--canvas))',

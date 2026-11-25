@@ -4,39 +4,39 @@
 
 @layer base {
   :root {
-    --canvas: 210 17% 98%;
-    --background: 210 17% 98%;
-    --foreground: 220 15% 12%;
+    --canvas: 204 100% 98%;
+    --background: 204 100% 98%;
+    --foreground: 215 28% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 12%;
+    --card-foreground: 215 28% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 12%;
-    --primary: 23 97% 46%;
+    --popover-foreground: 215 28% 14%;
+    --primary: 201 96% 32%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 220 15% 12%;
-    --muted: 210 20% 95%;
-    --muted-foreground: 218 11% 40%;
-    --accent: 24 100% 96%;
-    --accent-foreground: 23 97% 40%;
-    --brand-soft: 24 100% 96%;
+    --secondary: 204 33% 96%;
+    --secondary-foreground: 215 28% 14%;
+    --muted: 210 30% 95%;
+    --muted-foreground: 215 16% 42%;
+    --accent: 204 94% 94%;
+    --accent-foreground: 201 96% 32%;
+    --brand-soft: 204 94% 94%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 23 97% 46%;
+    --border: 214 32% 90%;
+    --input: 214 32% 88%;
+    --ring: 200 98% 39%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --canvas: 223 39% 7%;
-    --background: 223 39% 7%;
+    --canvas: 222 47% 7%;
+    --background: 222 47% 7%;
     --foreground: 210 40% 98%;
-    --card: 221 39% 11%;
+    --card: 220 39% 11%;
     --card-foreground: 210 40% 98%;
-    --popover: 221 39% 11%;
+    --popover: 220 39% 11%;
     --popover-foreground: 210 40% 98%;
-    --primary: 23 97% 46%;
+    --primary: 199 89% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 217 33% 16%;
     --secondary-foreground: 210 40% 98%;
@@ -44,12 +44,12 @@
     --muted-foreground: 215 20% 65%;
     --accent: 217 33% 16%;
     --accent-foreground: 210 40% 98%;
-    --brand-soft: 23 65% 15%;
+    --brand-soft: 201 65% 16%;
     --destructive: 0 63% 40%;
     --destructive-foreground: 210 40% 98%;
-    --border: 215 28% 17%;
-    --input: 215 28% 17%;
-    --ring: 23 97% 46%;
+    --border: 215 28% 18%;
+    --input: 215 28% 18%;
+    --ring: 199 89% 48%;
   }
 
   * {
@@ -72,7 +72,7 @@
   z-index: 60;
   transform: translateY(-200%);
   border-radius: 0.375rem;
-  background-color: #e85d04;
+  background-color: #0369a1;
   color: #ffffff;
   padding: 0.5rem 0.875rem;
   font-size: 0.875rem;
@@ -81,7 +81,7 @@
 
 .skip-link:focus {
   transform: translateY(0);
-  outline: 2px solid #1a1d23;
+  outline: 2px solid #0f172a;
   outline-offset: 2px;
 }
 
