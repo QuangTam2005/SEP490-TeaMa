@@ -13,7 +13,7 @@
 | [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.0` | ✅ Baseline | Modular Monolith (`com.asc.studycompanion`, Spring Boot 3.4 / Java 21) + Next.js 14 App Router + PostgreSQL 16 + Brave/CKEY Adapter Orchestration. |
 | [`docs/DESIGN.md`](./DESIGN.md) | `v1.1` | ✅ Baseline | Minimal-Text Student & Guardian UI/UX (**Ocean Blue** `#0284C7` / `#0369A1` + White `#FFFFFF`, Light/Dark Top Bar, `>= 44px` THCS tap targets), 14-table PostgreSQL ERD (`SRS §7.1`), and REST API Contracts. |
 | [`docs/RULES.md`](./RULES.md) | `v1.0` | ✅ Baseline | Domain & Engineering Red Lines (`BR-01..BR-24`, zero PII to AI, identical `BR-12` char counter, `ddl-auto=validate`, anti-IDOR, Atomic Commits). |
-| [`docs/TASKS.md`](./TASKS.md) | `v2.0` | ✅ Active | 6-Phase anti-hallucination migration roadmap (`Phase 0`–`Phase 6`). |
+| [`docs/TASKS.md`](./TASKS.md) | `v2.2` | ✅ Active | Backlog cấu trúc `<= 3 subtasks / Task`, mỗi subtask chỉ `2 / 3 / 5 SP` (`Phase 0`–`Phase 6`). |
 
 ---
 

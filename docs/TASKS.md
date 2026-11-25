@@ -1,50 +1,85 @@
 # TASK BACKLOG & WORK BREAKDOWN (TASKS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Rule:** Every `[TASK-*]` corresponds to **1 atomic commit** and passes `typecheck`/`lint`/`build` (FE) or `./mvnw.cmd test` (BE) before committing.  
-**Version:** 2.0 *(Phased Migration to AI Study Companion — Anti-Hallucination Schedule)*
+**Rule:**
+- Mỗi **Task cha** chứa **tối đa 3 subtasks**.
+- Mỗi **subtask** chỉ có độ phức tạp **`2 SP`**, **`3 SP`**, hoặc **`5 SP`** (Fibonacci Agile, không vượt quá `5 SP`).
+- `1 subtask = 1 atomic commit`, bắt buộc pass `typecheck`/`lint`/`build` (FE) hoặc `./mvnw.cmd test` (BE) trước khi commit.  
+**Version:** 2.2 *(Max 3 Subtasks / Task · 2 / 3 / 5 Story Points)*
 
 ---
 
 ## Phase 0: Specification & Documentation Reset (`docs/`)
-- [x] `[TASK-DOC.1]` Rewrite `docs/PRD.md` & `docs/ARCHITECTURE.md` aligned 100% with `SRS-ASC-G6-001` v1.0 (`5` subjects, `REVIEW` $\rightarrow$ `PREVIEW`, max `3` post-evaluation revisions, Brave + MiMo/CKEY, 1-time 8-char Guardian link code)
-- [x] `[TASK-DOC.2]` Rewrite `docs/DESIGN.md` (14-table ERD + REST APIs + Student/Guardian UI), `docs/RULES.md` (`BR-01..BR-24`), `docs/TASKS.md`, `docs/PROGRESS.md`, and `README.md`
+
+### Task 0 — Reset tài liệu hệ thống *(2 subtasks)*
+- [x] `[TASK-DOC.1]` *(3 SP)* Rewrite `docs/PRD.md` & `docs/ARCHITECTURE.md` aligned 100% with `SRS-ASC-G6-001` v1.0 (`5` subjects, `REVIEW` $\rightarrow$ `PREVIEW`, max `3` post-evaluation revisions, Brave + MiMo/CKEY, 1-time 8-char Guardian link code)
+- [x] `[TASK-DOC.2]` *(3 SP)* Rewrite `docs/DESIGN.md` (14-table ERD + REST APIs + Student/Guardian UI), `docs/RULES.md` (`BR-01..BR-24`), `docs/TASKS.md`, `docs/PROGRESS.md`, and `README.md`
 
 ---
 
 ## Phase 1: Legacy Domain Pruning & Package Rename (`com.asc.studycompanion`)
-- [x] `[TASK-CLEAN.1]` Update `docker-compose.yml`, `.env.example`, and `application.yml` for `AI Study Companion` (`Asia/Ho_Chi_Minh`, Brave Search & CKEY/MiMo config; remove SEP490 storage/SMTP config)
-- [x] `[TASK-CLEAN.2]` Rename Java package `com.fptu.sep490` $\rightarrow$ `com.asc.studycompanion` (`StudyCompanionApplication.java`, `pom.xml`), remove `module/project/**` & legacy SEP490 `.gitkeep` folders, update `ErrorCode.java` (`SCH_*`, `STUDY_*`, `AI_*`, `GRD_*`), and verify `./mvnw.cmd test` passes
-- [x] `[TASK-CLEAN.3]` Remove legacy SEP490 frontend routes/components (`app/invite`, `app/(dashboard)/projects/**`, `components/projects/**`, `components/workspace/**`, SEP490 types & mocks), adapt `api-client.ts` (`/guardian/`), and verify `npm run typecheck && npm run lint && npm run build` passes
+
+### Task 1 — Dọn mã nguồn cũ & đổi package sang `com.asc.studycompanion` *(3 subtasks)*
+- [x] `[TASK-CLEAN.1]` *(2 SP)* Update `docker-compose.yml`, `.env.example`, and `application.yml` for `AI Study Companion` (`Asia/Ho_Chi_Minh`, Brave Search & CKEY/MiMo config; remove SEP490 storage/SMTP config)
+- [x] `[TASK-CLEAN.2]` *(3 SP)* Rename Java package `com.fptu.sep490` $\rightarrow$ `com.asc.studycompanion` (`StudyCompanionApplication.java`, `pom.xml`), remove `module/project/**` & legacy SEP490 `.gitkeep` folders, update `ErrorCode.java`, and verify `./mvnw.cmd test` passes
+- [x] `[TASK-CLEAN.3]` *(3 SP)* Remove legacy SEP490 frontend routes/components (`app/invite`, `app/(dashboard)/projects/**`, `components/projects/**`, `components/workspace/**`, SEP490 types & mocks), adapt `api-client.ts`, and verify `typecheck/lint/build`
 
 ---
 
 ## Phase 2: Frontend UI-First Prototype (`frontend/` — Contract-First Mock Services)
-- [x] `[TASK-UI.1]` Build Study Companion strict DTOs (`src/types/{auth,timetable,study,ai,guardian}.ts`), `study-utils.ts` (`BR-12` char counter `850–2,000`, `Asia/Ho_Chi_Minh` next-day helper), updated `StatusBadge`, and `MockRuntime` (`STUDENT`/`GUARDIAN` roles + `EVALUATING`/`EVALUATION_FAILED`/`INSUFFICIENT_EVIDENCE` scenarios)
-- [x] `[TASK-UI.2]` Build Auth & 1-Time Link Code Flow (`/login`, `/register` with `STUDENT`/`GUARDIAN` role selector, and `/link-student` 8-char code generator/acceptor per `SRS O-01`)
-- [x] `[TASK-UI.3]` Build Student Workspace Shell & Weekly Timetable (`/student/layout.tsx`, `/student/timetable` 7-day × 5-subject grid with history preservation & Minimal-Text UI)
-- [x] `[TASK-UI.4]` Build Next-Day Plan & Review/Preview Submission Workspace (`/student/today`, `/student/tasks/[taskId]` — `REVIEW` locks `PREVIEW`, realtime `850–2,000` counter, async `EVALUATING` state, `<= 600` char AI feedback + sources, retry & max-3-revision flow)
-- [x] `[TASK-UI.5]` Build Guardian Read-Only Dashboard (`/guardian/dashboard` daily/weekly filters) & Immutable Submission Inspector (`/guardian/submissions/[submissionId]` version history, Accuracy/Completeness, incorrect/missing points, sources — no AI cost leaks) + Responsive/Light-Dark QA
+
+### Task 2 — Nền tảng UI Ocean Blue + White & Luồng Auth/Link *(2 subtasks)*
+- [x] `[TASK-UI.1]` *(3 SP)* Build Ocean Blue (`#0284C7`/`#0369A1`) + White (`#FFFFFF`) theme tokens, strict Study Companion DTOs, `study-utils.ts` (`BR-12` char counter `850–2,000`, `Asia/Ho_Chi_Minh` next-day helper), `StatusBadge`, and `MockRuntime` (`EVALUATING`/`EVALUATION_FAILED`/`INSUFFICIENT_EVIDENCE`)
+- [x] `[TASK-UI.2]` *(3 SP)* Build Auth & 1-Time Link Code Flow (`/login`, `/register` with `STUDENT`/`GUARDIAN` role selector, and `/link-student` 8-char code generator/acceptor per `SRS O-01`)
+
+### Task 3 — Không gian Học sinh & Cổng Phụ huynh chỉ xem *(3 subtasks)*
+- [x] `[TASK-UI.3]` *(3 SP)* Build Student Workspace Shell & Weekly Timetable (`/student/layout.tsx`, `/student/timetable` 7-day × 5-subject grid with history preservation & Minimal-Text UI)
+- [x] `[TASK-UI.4]` *(5 SP)* Build Next-Day Plan & Review/Preview Submission Workspace (`/student/today`, `/student/tasks/[taskId]` — `REVIEW` locks `PREVIEW`, realtime `850–2,000` counter, async `EVALUATING` state, `<= 600` char AI feedback + sources, retry & max-3-revision flow)
+- [x] `[TASK-UI.5]` *(3 SP)* Build Guardian Read-Only Dashboard (`/guardian/dashboard` daily/subject filters) & Immutable Submission Inspector (`/guardian/submissions/[submissionId]` version history, Accuracy/Completeness, incorrect/missing points, sources — no AI cost leaks) + Responsive/Light-Dark QA
 
 ---
 
 ## Phase 3: Database Baseline & Auth/Link Backend (`backend/`)
-- [ ] `[TASK-BE.1]` Create Flyway `V1__init_study_companion_schema.sql` (14 PostgreSQL tables per `DESIGN.md` + 5 seeded Grade 6 `subjects`) and verify JPA `ddl-auto=validate` alignment
-- [ ] `[TASK-BE.2]` Upgrade `auth` module (`STUDENT`/`GUARDIAN` roles, `StudentProfile`, `GuardianLink`, 8-char 1-time Link Code APIs, and `StudyAccessGuard` anti-IDOR protection)
+
+### Task 4 — Khởi tạo Database Schema 14 bảng (Flyway) *(2 subtasks)*
+- [ ] `[TASK-BE.1a]` *(3 SP)* Tạo Flyway `V1__init_auth_and_curriculum_schema.sql` (`users`, `student_profiles`, `guardian_links`, `subjects` + seed 5 môn lớp 6, `timetables`, `timetable_entries`) & kiểm tra PostgreSQL migration
+- [ ] `[TASK-BE.1b]` *(3 SP)* Tạo Flyway `V2__init_study_and_ai_schema.sql` (`study_plans`, `study_tasks`, `study_submissions`, `ai_evaluations`, `source_references`, `ai_usage_logs`, `knowledge_cache`, `evaluation_jobs`) & xác nhận JPA `ddl-auto=validate`
+
+### Task 5 — Nâng cấp Auth, Mã liên kết 8 ký tự & Anti-IDOR Guard *(3 subtasks)*
+- [ ] `[TASK-BE.2a]` *(3 SP)* Nâng cấp module `auth` (`STUDENT`/`GUARDIAN`, tự tạo `StudentProfile` khi đăng ký Học sinh, kiểm tra email mở, `GET /api/auth/me` + trạng thái `GuardianLink`) & unit tests
+- [ ] `[TASK-BE.2b]` *(3 SP)* Xây dựng API mã liên kết 8 ký tự dùng 1 lần (`POST /api/links/code`, `POST /api/links/accept`, `GET /api/links/current`, hạn 24h, `AUTH_007`/`AUTH_008`) & unit tests
+- [ ] `[TASK-BE.2c]` *(2 SP)* Xây dựng `StudyAccessGuard` (chống IDOR cho Student owner & `GuardianLink` active) + `GET /api/subjects` & security tests
 
 ---
 
 ## Phase 4: Timetable, Study Plan & Submission Backend (`backend/`)
-- [ ] `[TASK-BE.3]` Implement `timetable` module (`Subject`, `Timetable`, `TimetableEntry` versioned CRUD preserving historical plans/submissions `BR-20`)
-- [ ] `[TASK-BE.4]` Implement `study` module (`Asia/Ho_Chi_Minh` next-day `StudyPlan`/`StudyTask` generator `BR-04..BR-07`, `REVIEW`-before-`PREVIEW` gate, `BR-12` `850–2,000` char validation, max 3 revisions post-evaluation, `Idempotency-Key`, atomic `StudySubmission` + `EvaluationJob` persistence)
+
+### Task 6 — Thời khóa biểu phiên bản & Kế hoạch ngày kế tiếp *(2 subtasks)*
+- [ ] `[TASK-BE.3]` *(3 SP)* Xây dựng module `timetable` (`Timetable`, `TimetableEntry`, `GET/PUT /api/student/timetable` tạo phiên bản mới & lưu trữ phiên bản cũ để không làm mất lịch sử `BR-20`) & tests
+- [ ] `[TASK-BE.4a]` *(3 SP)* Xây dựng phần đọc kế hoạch học (`StudyPlan`, `StudyTask`, `GET /api/student/plans/next-day` theo `Asia/Ho_Chi_Minh`, mỗi môn 1 cặp `REVIEW` + `PREVIEW` & xử lý ngày trống `BR-04..BR-07`) & tests
+
+### Task 7 — Nộp bài Review/Preview, Chuẩn độ dài & Thử lại AI *(3 subtasks)*
+- [ ] `[TASK-BE.4b]` *(2 SP)* Xây dựng `GET /api/student/tasks/{taskId}` + `StudyTextUtils` (`\r\n` $\rightarrow$ `\n`, `.trim()`, kiểm tra `850–2,000` ký tự `BR-12`) & unit tests
+- [ ] `[TASK-BE.4c]` *(5 SP)* Xây dựng `POST /api/student/tasks/{taskId}/submissions` (cổng `REVIEW` trước `PREVIEW` `BR-08`, tối đa 3 lần sửa sau đánh giá `O-04`, khóa khi `EVALUATING`, chống trùng `Idempotency-Key` `BR-14`, lưu atomic `StudySubmission` + `PENDING` `EvaluationJob`) & tests
+- [ ] `[TASK-BE.4d]` *(2 SP)* Xây dựng `POST /api/student/submissions/{submissionId}/retry-evaluation` (đưa job `FAILED` về `PENDING`, chặn gọi sai trạng thái) & tests
 
 ---
 
 ## Phase 5: Brave Search + CKEY/MiMo AI Pipeline & Guardian Backend (`backend/`)
-- [ ] `[TASK-BE.5]` Implement `SearchProvider` (`BraveSearchAdapter`) & `AiEvaluationProvider` (`CkeyMimoAdapter`) with PII-free prompts, ~2,048 token context budget, max 3 sources, and strict JSON Schema + `<= 600` char feedback validator (plus PoC verification checklist)
-- [ ] `[TASK-BE.6]` Implement `KnowledgeCache`, Async `EvaluationJob` Worker (rate limiter + exponential backoff retry + `AIUsageLog`) & `guardian` Read-Only Dashboard/Submission APIs (`FR-GRD-01..08`)
+
+### Task 8 — Tích hợp Tìm kiếm Brave, Prompt không PII & MiMo/CKEY *(3 subtasks)*
+- [ ] `[TASK-BE.5a]` *(3 SP)* Xây dựng `SearchProvider` (`BraveSearchAdapter`: truy vấn kiến thức lớp 6 tiếng Việt theo `lessonTitle` + `subjectName`, tối đa `3` nguồn + `retrievedAt`, xử lý timeout/lỗi) & WireMock unit tests
+- [ ] `[TASK-BE.5b]` *(5 SP)* Xây dựng PII-free Prompt Builder & `AiEvaluationProvider` (`CkeyMimoAdapter`: ngân sách ~`2,048` token, strict JSON Schema parser + ràng buộc nhận xét `<= 600` ký tự) & unit tests
+- [ ] `[TASK-BE.6a]` *(2 SP)* Xây dựng `KnowledgeCache` service (tra cứu/lưu cache theo `grade` + `subjectCode` + `lessonTitle` đã chuẩn hóa với `cache_allowed` & TTL) & unit tests
+
+### Task 9 — Async Evaluation Worker & Guardian Read-Only APIs *(2 subtasks)*
+- [ ] `[TASK-BE.6b]` *(5 SP)* Xây dựng Async `EvaluationJob` Worker (`@Scheduled`/bounded executor, exponential backoff tối đa `3` lần, ghi `AIUsageLog`, cập nhật trạng thái `EVALUATED` / `EVALUATION_FAILED`) & integration tests
+- [ ] `[TASK-BE.6c]` *(3 SP)* Xây dựng module `guardian` Read-Only (`GET /api/guardian/dashboard` lọc ngày & môn, `GET /api/guardian/submissions/{submissionId}` lịch sử phiên bản + nguồn đối chiếu, tuyệt đối không lộ `AIUsageLog`) & tests
 
 ---
 
 ## Phase 6: API Integration & Acceptance Verification (`AC-01`..`AC-20`)
-- [ ] `[TASK-INT.1]` Implement real HTTP Services (`frontend/src/services/http/*`) and flip `NEXT_PUBLIC_DATA_MODE=api`
-- [ ] `[TASK-INT.2]` Verify all 20 SRS Acceptance Criteria (`AC-01`–`AC-20`) + PoC AI evaluation quality check across all 5 subjects
+
+### Task 10 — Tích hợp Full-Stack & Nghiệm thu 20 tiêu chí SRS *(3 subtasks)*
+- [ ] `[TASK-INT.1]` *(2 SP)* Chuyển `NEXT_PUBLIC_DATA_MODE=api`, rà soát CORS/JWT & khớp hợp đồng REST trên toàn bộ route Frontend
+- [ ] `[TASK-INT.2a]` *(2 SP)* Kiểm thử E2E luồng Auth, Link Code, Timetable Versioning và nộp bài `REVIEW` $\rightarrow$ `PREVIEW` (`AC-01`–`AC-10`)
+- [ ] `[TASK-INT.2b]` *(3 SP)* Chạy PoC kiểm định chất lượng đánh giá AI trên đủ 5 môn lớp 6, kiểm tra Guardian Read-Only & các tiêu chí còn lại (`AC-11`–`AC-20`)
