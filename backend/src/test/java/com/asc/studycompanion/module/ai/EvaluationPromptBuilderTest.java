@@ -27,8 +27,9 @@ class EvaluationPromptBuilderTest {
         assertTrue(system.contains("Kết nối tri thức với cuộc sống"));
         assertTrue(system.contains("Wikipedia"));
         assertTrue(system.contains("INSUFFICIENT_EVIDENCE"));
-        assertTrue(system.contains("600"));
-        assertTrue(system.contains("1000"));
+        assertTrue(system.contains("không ép độ dài tối thiểu"));
+        assertTrue(system.contains("TỐI ĐA 1000 KÝ TỰ"));
+        assertTrue(system.contains("<= 1000 chars"));
         assertTrue(system.contains("Nhận xét tổng quan"));
         assertTrue(system.contains("Cần khắc phục"));
 

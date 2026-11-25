@@ -104,32 +104,29 @@ class CkeyMimoAdapterTest {
         assertEquals(OverallEvaluationStatus.NEEDS_IMPROVEMENT, result.overallStatus());
         assertEquals(ConfidenceLevel.HIGH, result.confidence());
         assertEquals(1, result.missingPoints().size());
-        assertTrue(result.feedback().length() >= 600 && result.feedback().length() <= 1000,
-                "Expected 600..1000 chars but got " + result.feedback().length());
+        assertTrue(!result.feedback().isBlank() && result.feedback().length() <= 1000,
+                "Expected <= 1000 chars but got " + result.feedback().length());
         assertTrue(result.feedback().endsWith("."));
         assertEquals(512, result.inputTokens());
         assertEquals(220, result.outputTokens());
     }
 
     @Test
-    void padsShortFeedbackToAtLeast600CharsWithin1000Bound() {
+    void preservesConciseFeedbackWithoutMinimumPaddingWhileStillClampingOver1000() {
+        String concise = "Nhận xét tổng quan: Con đã nắm được định nghĩa cơ bản.\nCần khắc phục: Bổ sung thêm ví dụ minh họa.";
         String shortJson = """
                 {
                   "accuracy": "PARTIALLY_CORRECT",
                   "completeness": "INCOMPLETE",
                   "overallStatus": "NEEDS_IMPROVEMENT",
-                  "feedback": "Con đã nắm được định nghĩa cơ bản nhưng cần bổ sung ví dụ minh họa rõ hơn.",
+                  "feedback": "%s",
                   "incorrectPoints": ["Nhầm dấu khi chuyển vế"],
                   "missingPoints": ["Thiếu 2 ví dụ số hữu tỉ âm"],
                   "confidence": "HIGH"
                 }
-                """;
+                """.formatted(concise.replace("\n", "\\n"));
         AiEvaluationResult result = adapter.parseAndValidateJson(shortJson, 200, 80, "mimo-v2-flash");
-        assertTrue(result.feedback().length() >= 600,
-                "Expected >= 600 chars but got " + result.feedback().length());
-        assertTrue(result.feedback().length() <= 1000);
-        assertTrue(result.feedback().contains("Nhận xét tổng quan"));
-        assertTrue(result.feedback().contains("Cần khắc phục"));
+        assertEquals(concise, result.feedback());
     }
 
     @Test

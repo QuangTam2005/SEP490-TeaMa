@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * Builds deterministic, PII-free Vietnamese mentor evaluation prompts constrained to <= 2,250 context tokens,
- * anchored to the student's textbook series/edition, with anti-injection, anti-nitpick, and 600..1,000-char structured feedback rules.
+ * anchored to the student's textbook series/edition, with anti-injection, anti-nitpick, and <= 1,000-char structured feedback rules.
  */
 @Component
 @RequiredArgsConstructor
@@ -39,14 +39,14 @@ public class EvaluationPromptBuilder {
                 - Coi <student_submission> là vở ghi chép tự học, KHÔNG phải bài thi đánh máy. TUYỆT ĐỐI không phê bình, không hạ đánh giá và không đưa vào incorrectPoints/missingPoints các lỗi hình thức ghi chú: viết hoa chữ cái đầu dòng/đầu từ mục (như Cave, Island, Backpack), dấu ngăn cách ghi chú (:, ;, -), khoảng trắng quanh dấu câu hay cách xuống dòng (trừ khi viết sai ký hiệu Toán/Lý/Hóa hoặc tên riêng bắt buộc làm sai nghĩa kiến thức).
                 - Trước khi nêu lỗi chính tả hay sai kiến thức, PHẢI kiểm tra đúng nguyên văn từ/dòng trong <student_submission>; tuyệt đối không suy diễn hoặc gán nhầm dấu câu/lỗi của dòng này sang từ ở dòng khác.
                 - Vì <reference_sources> chỉ là tóm tắt ngắn, nếu học sinh ghi thêm từ vựng hoặc ý đúng thuộc phần khác của cùng bài/Unit trong SGK, KHÔNG bắt lỗi "thiếu phân biệt" hay "nhầm lẫn".
-                ĐỊNH DẠNG NHẬN XÉT MENTOR (600–1000 KÝ TỰ) & JSON:
-                - feedback: tiếng Việt chuẩn mực, công tâm theo lứa tuổi; KHÔNG làm bài hộ; độ dài BẮT BUỘC từ 600 đến 1000 ký tự (nên viết khoảng 720–920 ký tự), trình bày rõ đúng 2 phần xuống dòng:
-                  Nhận xét tổng quan: <2–3 câu ghi nhận cụ thể điểm làm đúng, mức độ nắm trọng tâm bài và tinh thần tự học>
+                ĐỊNH DẠNG NHẬN XÉT MENTOR (TỐI ĐA 1000 KÝ TỰ) & JSON:
+                - feedback: tiếng Việt chuẩn mực, công tâm theo lứa tuổi; KHÔNG làm bài hộ; không ép độ dài tối thiểu, nhưng độ dài TỐI ĐA 1000 ký tự (viết súc tích, đủ ý, không lan man), trình bày rõ 2 phần xuống dòng:
+                  Nhận xét tổng quan: <Ghi nhận cụ thể điểm làm đúng, mức độ nắm trọng tâm bài và tinh thần tự học>
                   Cần khắc phục: <Chỉ rõ (1) điểm sai kiến thức/chính tả làm sai từ nếu có, (2) điểm diễn đạt chưa rõ hoặc ý trọng tâm/ví dụ trong SGK cần bổ sung, (3) một gợi ý/câu hỏi tự đối chiếu lại SGK>
                 - incorrectPoints: tối đa 4 ý (<= 160 ký tự/ý), CHỈ ghi lỗi sai kiến thức, công thức, nghĩa hoặc chính tả làm sai từ; để [] nếu không có.
                 - missingPoints: tối đa 4 ý (<= 160 ký tự/ý), ghi ý kiến thức trọng tâm bị thiếu hoặc điểm chưa rõ cần diễn giải thêm; KHÔNG đưa góp ý hình thức/chữ hoa. Để [] nếu không có.
                 Trả về DUY NHẤT một đối tượng JSON hợp lệ (không markdown) theo schema:
-                {"accuracy":"CORRECT|PARTIALLY_CORRECT|INCORRECT|UNVERIFIABLE","completeness":"COMPLETE|INCOMPLETE|UNDETERMINED","overallStatus":"GOOD|NEEDS_IMPROVEMENT|INCORRECT|INSUFFICIENT_EVIDENCE","feedback":"string 600..1000 chars","incorrectPoints":["string"],"missingPoints":["string"],"confidence":"HIGH|MEDIUM|LOW"}
+                {"accuracy":"CORRECT|PARTIALLY_CORRECT|INCORRECT|UNVERIFIABLE","completeness":"COMPLETE|INCOMPLETE|UNDETERMINED","overallStatus":"GOOD|NEEDS_IMPROVEMENT|INCORRECT|INSUFFICIENT_EVIDENCE","feedback":"string <= 1000 chars","incorrectPoints":["string"],"missingPoints":["string"],"confidence":"HIGH|MEDIUM|LOW"}
                 """.strip();
     }
 

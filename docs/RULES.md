@@ -26,7 +26,7 @@
    - Tuyệt đối không gửi tên thật, email, ID học sinh hoặc lịch sử chat sang Brave/MiMo; chỉ gửi `grade`, `subject`, `taskType`, `lessonTitle`, `studentText`.
    - Tìm kiếm đối chiếu từ **Wikipedia** (`vi.wikipedia.org`) và các website giáo dục/SGK có nội dung về bài học đó (`Kết nối tri thức với cuộc sống` cho các môn chung, `Global Success` cho Tiếng Anh, theo chương trình `GDPT 2018` định danh trên `SearchQuery` và `KnowledgeCache` key), ưu tiên nguồn chính thống và bật `extra_snippets=true`; mỗi lần review bài chỉ gửi **tối đa 3 request vào Brave** và giữ tối đa **3 nguồn** để tiết kiệm credit.
    - Nếu AI lỗi khi xử lý, **retry tối đa 3 lần**. Quá 3 lần vẫn lỗi thì **ngưng retry**, ghi nhận nhận xét fallback báo hệ thống AI lỗi để phụ huynh tự kiểm tra bài làm và chuyển trạng thái qua Guardian như đã review xong (không làm tính năng check thủ công riêng).
-   - Phần nhận xét mentor AI hiển thị cho Student phải có độ dài **tối thiểu 600 ký tự và tối đa 1.000 ký tự** (tính cả dấu câu và khoảng trắng), gồm `Nhận xét tổng quan` và `Cần khắc phục` (điểm sai, điểm chưa rõ, gợi ý rà soát SGK) — không cắt ngang câu chữ ngẫu nhiên (`SRS §11`).
+   - Phần nhận xét mentor AI hiển thị cho Student **không đặt số ký tự tối thiểu, tối đa 1.000 ký tự** (tính cả dấu câu và khoảng trắng), gồm `Nhận xét tổng quan` và `Cần khắc phục` (điểm sai, điểm chưa rõ, gợi ý rà soát SGK) — không cắt ngang câu chữ ngẫu nhiên (`SRS §11`).
 5. **Secret & Cost Protection (`NFR-SEC-02`, `§3.2`):** `CKEY_API_KEY`, `BRAVE_API_KEY`, `JWT_SECRET` chỉ nằm ở Backend; không bao giờ log secret hoặc trả `AIUsageLog` ra Guardian Dashboard thông thường.
 
 ---

@@ -37,7 +37,7 @@
    - `/student/tasks/[taskId]`:
      - Nhập **Tựa bài** + **Nội dung** kèm bộ đếm ký tự realtime `400–3,000` (chuẩn hóa newline + trim), tự động lưu nháp trình duyệt (`localStorage`), **chống dán/kéo-thả văn bản ngoài (`Anti-Paste` trên ô nội dung)**, chặn Submit ngoài biên, không gọi AI khi đang gõ.
      - Trạng thái bất đồng bộ: `Đang AI đánh giá`, `Đã có kết quả` (bao gồm fallback nếu AI lỗi sau 3 lần thử tự động để phụ huynh tự xem bài).
-     - Hiển thị kết quả AI (`Accuracy`, `Completeness`, `overall_status`, nhận xét mentor `600–1.000` ký tự gồm `Nhận xét tổng quan` + `Cần khắc phục`, nguồn URL) và nút **`Viết bản mới (Revision)`** (hiển thị bộ đếm `Phiên bản X/3` — tối đa `v1..v3`).
+     - Hiển thị kết quả AI (`Accuracy`, `Completeness`, `overall_status`, nhận xét mentor `<= 1.000` ký tự gồm `Nhận xét tổng quan` + `Cần khắc phục`, nguồn URL) và nút **`Viết bản mới (Revision)`** (hiển thị bộ đếm `Phiên bản X/3` — tối đa `v1..v3`).
 3. **Guardian Portal (`/guardian/*`):**
    - Header chế độ giám sát + 2 tab (`Bảng theo dõi học tập`, `Thời khóa biểu`) + `<ThemeToggle />`.
    - `/guardian/dashboard`: Tổng quan hoàn thành theo ngày/tuần, bộ lọc ngày & môn học, danh sách bài nộp Review/Preview của Student đã liên kết.

@@ -212,12 +212,12 @@ class AcceptanceAiAndGuardianTest {
         braveServer.verify();
         ckeyServer.verify();
 
-        // All 5 REVIEW tasks evaluated, capped at <= 3 sources and 600..1000 char mentor feedback
+        // All 5 REVIEW tasks evaluated, capped at <= 3 sources and <= 1000 char mentor feedback (no min floor)
         assertEquals(5, h.evaluations.size());
         assertEquals(5, h.usageLogs.size());
         h.evaluations.forEach(ev -> {
-            assertTrue(ev.getFeedback().length() >= 600 && ev.getFeedback().length() <= 1000,
-                    "Expected feedback length 600..1000 but got " + ev.getFeedback().length());
+            assertTrue(!ev.getFeedback().isBlank() && ev.getFeedback().length() <= 1000,
+                    "Expected non-blank feedback <= 1000 chars but got " + ev.getFeedback().length());
             assertTrue(ev.getSources().size() <= 3 && !ev.getSources().isEmpty());
             assertEquals(OverallEvaluationStatus.GOOD, ev.getOverallStatus());
         });

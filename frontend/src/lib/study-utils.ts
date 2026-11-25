@@ -2,7 +2,6 @@ import type { SubjectCode, Weekday } from '@/types';
 
 export const MIN_SUBMISSION_CHARS = 400;
 export const MAX_SUBMISSION_CHARS = 3000;
-export const MIN_FEEDBACK_CHARS = 600;
 export const MAX_FEEDBACK_CHARS = 1000;
 /**
  * Maximum immutable versions per task is 3 (v1 initial + up to 2 revisions: v2, v3).

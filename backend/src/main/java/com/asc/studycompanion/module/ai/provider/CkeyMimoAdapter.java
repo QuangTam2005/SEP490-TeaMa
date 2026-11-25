@@ -176,57 +176,18 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
     }
 
     /**
-     * Ensures AI feedback stays strictly within 600..1,000 characters (including punctuation & spaces)
-     * with clear mentor guidance when raw output is below the minimum threshold.
+     * Enforces maximum 1,000-character bound on AI feedback without imposing any artificial minimum length padding.
      */
     public static String ensureFeedbackBounds(
             String rawFeedback,
             List<String> incorrectPoints,
             List<String> missingPoints
     ) {
-        String clamped = clampFeedbackGracefully(rawFeedback);
-        if (clamped.length() >= StudyTextUtils.MIN_FEEDBACK_CHARS) {
-            return clamped;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        if (!clamped.contains("Nhận xét tổng quan")) {
-            sb.append("Nhận xét tổng quan: ").append(clamped);
-        } else {
-            sb.append(clamped);
-        }
-        if (!clamped.endsWith(".") && !clamped.endsWith("!") && !clamped.endsWith("?")) {
-            sb.append('.');
-        }
-
-        boolean hasNeedsFixHeader = clamped.contains("Cần khắc phục");
-        if (!hasNeedsFixHeader) {
-            sb.append("\nCần khắc phục:");
-        }
-        if (incorrectPoints != null && !incorrectPoints.isEmpty()) {
-            sb.append(" Về điểm sai cần chỉnh: ").append(String.join("; ", incorrectPoints)).append('.');
-        }
-        if (missingPoints != null && !missingPoints.isEmpty()) {
-            sb.append(" Phần diễn đạt chưa rõ hoặc ý nên bổ sung: ").append(String.join("; ", missingPoints)).append('.');
-        }
-
-        List<String> guidanceClauses = List.of(
-                " Con hãy đối chiếu lại từng định nghĩa, từ khóa trọng tâm và ví dụ minh họa trong sách giáo khoa để rà soát độ chính xác của bài làm.",
-                " Khi tự học, hãy thử tự đặt câu hỏi vì sao hoặc lấy thêm một ví dụ ngắn bằng lời của mình để làm rõ ý chưa đầy đủ và ghi nhớ kiến thức vững hơn.",
-                " Sau khi chỉnh sửa, con có thể đọc lướt lại mạch bài một lượt xem các ý chính đã liên kết rõ ràng và khớp với trọng tâm bài học trên lớp chưa nhé."
-        );
-        for (String clause : guidanceClauses) {
-            if (sb.length() >= StudyTextUtils.MIN_FEEDBACK_CHARS) {
-                break;
-            }
-            sb.append(clause);
-        }
-        return clampFeedbackGracefully(sb.toString());
+        return clampFeedbackGracefully(rawFeedback);
     }
 
     /**
-     * Enforces <= 1,000 chars without abruptly cutting mid-word or mid-sentence when possible,
-     * while preserving at least 600 characters when input exceeds 1,000 chars.
+     * Enforces <= 1,000 chars without abruptly cutting mid-word or mid-sentence when input exceeds 1,000 chars.
      */
     public static String clampFeedbackGracefully(String rawFeedback) {
         if (rawFeedback == null) {
@@ -238,12 +199,12 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
         }
         String slice = trimmed.substring(0, StudyTextUtils.MAX_FEEDBACK_CHARS);
         int lastSentence = Math.max(slice.lastIndexOf('.'), Math.max(slice.lastIndexOf('!'), slice.lastIndexOf('?')));
-        if (lastSentence >= StudyTextUtils.MIN_FEEDBACK_CHARS) {
+        if (lastSentence >= 500) {
             return slice.substring(0, lastSentence + 1).trim();
         }
         String ellipsisWindow = trimmed.substring(0, StudyTextUtils.MAX_FEEDBACK_CHARS - 3);
         int lastSpace = ellipsisWindow.lastIndexOf(' ');
-        if (lastSpace >= StudyTextUtils.MIN_FEEDBACK_CHARS + 50) {
+        if (lastSpace >= 550) {
             return ellipsisWindow.substring(0, lastSpace).trim() + "...";
         }
         return ellipsisWindow.trim() + "...";

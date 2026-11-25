@@ -61,7 +61,7 @@ flowchart TB
 
     subgraph External ["External Providers (Server-to-Server HTTPS)"]
         Brave["Brave Search API (Max 3 sources, extra_snippets=true / <= 2,250 ctx tokens)"]
-        CKEY["MiMo v2.6 Flash via CKEY (JSON Schema 600..1,000 chars feedback)"]
+        CKEY["MiMo v2.6 Flash via CKEY (JSON Schema <= 1,000 chars feedback)"]
     end
 
     Postgres[("PostgreSQL 16 (14 Core Tables)")]
@@ -129,4 +129,4 @@ flowchart TB
    - Checks `KnowledgeCache` (by `policyVersion + textbookSeries + textbookEdition + grade + subject + lessonTitle`).
    - On cache miss, calls **Brave Search API** (`extra_snippets=true`, subject-routed to `Global Success` for `ENG`, literature curriculum portals for `LIT`, and KNTT + Wikipedia for other subjects; up to 3 official/educational sources, `<= 2,250` tokens budget).
    - Builds PII-free prompt (`grade`, `subject`, `textbookSeries`, `textbookEdition`, `taskType`, `lessonTitle`, `studentText`, `sourcesContext`) and calls **MiMo v2.6 Flash via CKEY** once.
-   - Validates JSON enum contract (`accuracy`, `completeness`, `overall_status`, `confidence`, valid `sources`, structured Vietnamese mentor feedback `600..1,000` chars). Retries transient `timeout`/`429`/`5xx` with exponential backoff + jitter; caps formatting retry at 1; transitions cleanly to `EVALUATION_FAILED` when retries exhaust without ever losing `StudySubmission`.
+   - Validates JSON enum contract (`accuracy`, `completeness`, `overall_status`, `confidence`, valid `sources`, structured Vietnamese mentor feedback `<= 1,000` chars without minimum floor). Retries transient `timeout`/`429`/`5xx` with exponential backoff + jitter; caps formatting retry at 1; transitions cleanly to `EVALUATION_FAILED` when retries exhaust without ever losing `StudySubmission`.
