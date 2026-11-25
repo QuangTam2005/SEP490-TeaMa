@@ -34,3 +34,13 @@ export interface UpdateStudentProfileRequest {
   grade: number;
   displayName?: string;
 }
+
+export interface UpdateProfileRequest {
+  fullName: string;
+  grade?: number | null;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}

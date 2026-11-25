@@ -8,8 +8,10 @@ import {
 import type { AuthService } from '@/services/auth.service';
 import type {
   AuthResponse,
+  ChangePasswordRequest,
   LoginRequest,
   RegisterRequest,
+  UpdateProfileRequest,
   UpdateStudentProfileRequest,
   UserResponse,
 } from '@/types';
@@ -179,5 +181,41 @@ export const authMockService: AuthService = {
       },
       { requireRole: 'STUDENT' }
     );
+  },
+
+  async updateProfile(request: UpdateProfileRequest): Promise<UserResponse> {
+    return runMockOperation(() => {
+      const { simulatedRole } = getMockRuntimeState();
+      const target =
+        usersDb.find(
+          (u) =>
+            u.role === simulatedRole &&
+            u.email.toLowerCase() === activeUserEmail.toLowerCase()
+        ) ?? usersDb.find((u) => u.role === simulatedRole);
+      if (!target) {
+        throw new ApiClientError({
+          status: 404,
+          errorCode: 'AUTH_006',
+          message: 'Không tìm thấy tài khoản.',
+        });
+      }
+      target.fullName = request.fullName.trim();
+      if (target.role === 'STUDENT' && request.grade) {
+        target.grade = request.grade;
+      }
+      return { ...target };
+    });
+  },
+
+  async changePassword(request: ChangePasswordRequest): Promise<void> {
+    return runMockOperation(() => {
+      if (request.currentPassword === 'wrongpass') {
+        throw new ApiClientError({
+          status: 401,
+          errorCode: 'AUTH_002',
+          message: 'Mật khẩu hiện tại không chính xác.',
+        });
+      }
+    });
   },
 };

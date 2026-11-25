@@ -5,7 +5,7 @@ import {
   runMockOperation,
 } from '@/mocks/mock-runtime';
 import type { LinkService } from '@/services/link.service';
-import type { LinkCodeResponse } from '@/types';
+import type { LinkCodeResponse, LinkedChildResponse } from '@/types';
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -129,5 +129,34 @@ export const linkMockService: LinkService = {
       },
       { requireRole: 'GUARDIAN' }
     );
+  },
+
+  async getLinkedChildren(): Promise<LinkedChildResponse[]> {
+    return runMockOperation(
+      () =>
+        guardianLinkState && guardianLinkState.status === 'ACTIVE'
+          ? [
+              {
+                studentId: 10,
+                studentUserId: 1,
+                displayName: guardianLinkState.linkedUserName ?? 'Nguyễn Minh Khôi',
+                grade: 6,
+                linkedAt: new Date().toISOString(),
+              },
+            ]
+          : [],
+      { requireRole: 'GUARDIAN', emptyFallback: [] }
+    );
+  },
+
+  async unlink(): Promise<void> {
+    return runMockOperation(() => {
+      const { simulatedRole } = getMockRuntimeState();
+      if (simulatedRole === 'GUARDIAN') {
+        guardianLinkState = null;
+      } else {
+        studentLinkState = null;
+      }
+    });
   },
 };

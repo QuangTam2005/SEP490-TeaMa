@@ -1,7 +1,9 @@
 import type {
   AuthResponse,
+  ChangePasswordRequest,
   LoginRequest,
   RegisterRequest,
+  UpdateProfileRequest,
   UpdateStudentProfileRequest,
   UserResponse,
 } from '@/types';
@@ -13,4 +15,6 @@ export interface AuthService {
   updateStudentProfile(
     request: UpdateStudentProfileRequest
   ): Promise<UserResponse>;
+  updateProfile(request: UpdateProfileRequest): Promise<UserResponse>;
+  changePassword(request: ChangePasswordRequest): Promise<void>;
 }

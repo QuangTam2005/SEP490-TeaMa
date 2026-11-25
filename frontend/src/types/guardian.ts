@@ -9,8 +9,16 @@ import type { SubjectCode } from './timetable';
 export interface LinkCodeResponse {
   linkCode: string;
   expiresAt: string;
-  status: 'PENDING' | 'ACTIVE';
+  status: 'PENDING' | 'ACTIVE' | 'REVOKED';
   linkedUserName: string | null;
+}
+
+export interface LinkedChildResponse {
+  studentId: number;
+  studentUserId: number;
+  displayName: string;
+  grade: number;
+  linkedAt: string;
 }
 
 export interface GuardianTaskItem {

@@ -95,7 +95,7 @@
 
 ### Task 12 — Student History, Streak, Auto-Save Draft & Profile UI *(3 subtasks)*
 - [x] `[TASK-FEAT.2a]` *(3 SP)* Xây dựng Backend `GET /api/student/plans/history` & `GET /api/student/streak` trong `StudyPlanService`/`StudyPlanController` & unit tests
-- [ ] `[TASK-FEAT.2b]` *(3 SP)* Xây dựng giao diện `/profile` (sửa họ tên, khối lớp, đổi mật khẩu, ngắt liên kết / danh sách liên kết) & gắn điều hướng trên `StudentShell`/`GuardianShell`
+- [x] `[TASK-FEAT.2b]` *(3 SP)* Xây dựng giao diện `/profile` (sửa họ tên, khối lớp, đổi mật khẩu, ngắt liên kết / danh sách liên kết) & gắn điều hướng trên `StudentShell`/`GuardianShell`
 - [ ] `[TASK-FEAT.2c]` *(3 SP)* Xây dựng `/student/history`, hiển thị Streak trên `/student/today`, và lưu nháp tự động `localStorage` trong `TaskWorkspaceView`
 
 ### Task 13 — Guardian Weekly Overview, Excel Export & Parent Note *(3 subtasks)*

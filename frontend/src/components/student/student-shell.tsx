@@ -9,6 +9,7 @@ import {
   KeyRound,
   LogOut,
   Menu,
+  UserCircle,
   X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -95,6 +96,19 @@ export function StudentShell({ children }: StudentShellProps) {
 
           <div className="flex items-center gap-2">
             <Link
+              href="/profile"
+              className={cn(
+                'hidden h-10 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition-colors sm:inline-flex',
+                pathname.startsWith('/profile')
+                  ? 'border-brand-strong bg-brand-soft text-brand-strong dark:text-sky-300'
+                  : 'bg-background text-foreground hover:bg-muted'
+              )}
+            >
+              <UserCircle className="h-3.5 w-3.5 text-brand-strong dark:text-sky-400" strokeWidth={1.75} />
+              <span>Tài khoản</span>
+            </Link>
+
+            <Link
               href="/link-student"
               className="hidden h-10 items-center gap-1.5 rounded-lg border bg-background px-3 text-xs font-semibold text-foreground transition-colors hover:bg-muted sm:inline-flex"
             >
@@ -156,6 +170,15 @@ export function StudentShell({ children }: StudentShellProps) {
                   </Link>
                 );
               })}
+
+              <Link
+                href="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex h-11 items-center gap-2.5 rounded-lg border px-3.5 text-sm font-medium text-foreground hover:bg-muted"
+              >
+                <UserCircle className="h-4 w-4 text-brand-strong" strokeWidth={1.75} />
+                <span>Hồ sơ & Mật khẩu</span>
+              </Link>
 
               <Link
                 href="/link-student"
