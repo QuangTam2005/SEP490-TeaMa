@@ -5,7 +5,7 @@ import type {
 } from '@/types';
 
 export interface TimetableService {
-  getSubjects(): Promise<SubjectResponse[]>;
+  getSubjects(grade?: number): Promise<SubjectResponse[]>;
   getTimetable(): Promise<TimetableResponse>;
   updateTimetable(request: UpdateTimetableRequest): Promise<TimetableResponse>;
 }

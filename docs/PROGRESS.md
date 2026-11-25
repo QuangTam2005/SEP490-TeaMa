@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 6 Completed (`[TASK-INT.1]`–`[TASK-INT.2b]` Done; automated `AC-01`–`AC-20` suite & production build verified; ready for live Docker/PostgreSQL staging run with `.env`)  
+**Current Phase:** Phase 7 In Progress (`[TASK-FEAT.1a]`–`[TASK-FEAT.1b]` Done; expanding Smart Otter production features & `850–3,000` char standard)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -59,7 +59,8 @@
 - **[FIX] `KnowledgeCache` `v2` policy bump & Wikipedia topic cleanup (`0b2cf7a`):** Bumped `KnowledgeCache.CURRENT_POLICY_VERSION` to `"v2"` to invalidate stale `v1` cached textbook-publisher URLs, stripped lesson-number prefixes (e.g. `Bài 11: `) from Wikipedia queries, and filtered out meta Wikipedia publisher articles (`Kết nối tri thức với cuộc sống`, `Nhà xuất bản Giáo dục Việt Nam`) in `BraveSearchAdapter`.
 - **[POLISH] Removed internal technical badges from UI (`79c1c64`):** Removed `Chỉ xem · Dữ liệu gốc`, `Bản gốc chỉ xem`, `Lưu bất biến`, and `Phiên bản vX` badges/labels across `GuardianDashboardView`, `SubmissionDetailView`, `TaskWorkspaceView`, and `TimetableView` for a cleaner student/parent experience. Verified `typecheck`, `lint`, `build`, and rebuilt `asc-frontend`.
 - **[OPS] Production VPS DevOps Hardening (`69d06e2`):** Isolated `docker-compose.yml` under project name `smart-otter` (`asc_network`, `asc_postgres_data`, removed public `5432`/`8080` host ports to coexist safely with `skillswap-backend`, bound `frontend` to `127.0.0.1:${FRONTEND_HOST_PORT:-3100}:3000`), added CPU/RAM limits (`2.25 vCPU` / `3.75 GB RAM`), JSON log rotation, non-root `spring` user + container-aware `JAVA_TOOL_OPTIONS` in `backend/Dockerfile`, `GET /api/healthcheck` (`HealthcheckController` + `SecurityConfig` permitAll), graceful shutdown (`30s`) + `forward-headers-strategy: framework`, `backend/.dockerignore`, PA1 proxy-first `NEXT_PUBLIC_API_URL=` in `frontend/Dockerfile` & `.env.example`, and 6 operational guides under `docs/deployment/`.
-- **[DONE] `[TASK-FEAT.1a]`:** Updated `PRD.md`, `DESIGN.md`, `RULES.md`, `ARCHITECTURE.md`, and `TASKS.md` (added Phase 7 `Task 11–14`); upgraded `StudyTextUtils`, `ErrorCode` (+ `SYS_429` rate-limit code), `EvaluationPromptBuilder` token budget, `study-utils.ts`, and `TaskWorkspaceView` placeholder from `850–2,000` to `850–3,000` characters.
+- **[DONE] `[TASK-FEAT.1a]` (`8ff10db`):** Updated `PRD.md`, `DESIGN.md`, `RULES.md`, `ARCHITECTURE.md`, and `TASKS.md` (added Phase 7 `Task 11–14`); upgraded `StudyTextUtils`, `ErrorCode` (+ `SYS_429` rate-limit code), `EvaluationPromptBuilder` token budget, `study-utils.ts`, and `TaskWorkspaceView` placeholder from `850–2,000` to `850–3,000` characters.
+- **[DONE] `[TASK-FEAT.1b]`:** Created Flyway `V3__expand_features_and_subjects.sql` (`char_count BETWEEN 850 AND 3000`, `min_grade`/`max_grade` on `subjects` with 12 curriculum subjects for Grades `1–12`, plus `guardian_acknowledged_at`/`guardian_note`/`guardian_acknowledged_by_user_id` on `study_tasks`), updated `SubjectCode`/`Subject`/`SubjectResponse`/`SubjectController` (`?grade=` filter) & `StudyTask` entity, updated `TimetableView`/`GuardianDashboardView`/`timetable.mock-service.ts`, and verified `.\mvnw.cmd test` (`81/81` passing) plus `npm run typecheck && npm run lint && npm run build`.
 
 ---
 

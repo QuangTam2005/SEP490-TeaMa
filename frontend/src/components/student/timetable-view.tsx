@@ -15,10 +15,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
 import {
-  GRADE_6_SUBJECTS,
+  ALL_SUBJECTS,
   GRADE_OPTIONS,
   WEEKDAYS,
   formatViDate,
+  getSubjectsForGrade,
 } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
@@ -43,6 +44,34 @@ export function TimetableView() {
   const isStudentMode = IS_MOCK_MODE
     ? runtime.simulatedRole === 'STUDENT'
     : user?.role === 'STUDENT';
+
+  const activeGrade = isStudentMode ? (user?.grade ?? 6) : undefined;
+  const subjectsQuery = useQuery({
+    queryKey: ['subjects', activeGrade ?? 'all'],
+    queryFn: () => timetableService.getSubjects(activeGrade),
+  });
+
+  const baseSubjects =
+    subjectsQuery.data && subjectsQuery.data.length > 0
+      ? subjectsQuery.data.map((item) => ({
+          code: item.code,
+          name: item.name,
+        }))
+      : (activeGrade ? getSubjectsForGrade(activeGrade) : ALL_SUBJECTS).map((item) => ({
+          code: item.code,
+          name: item.name,
+        }));
+
+  const selectedExtraCodes = new Set<SubjectCode>();
+  draftMap.forEach((entry) => selectedExtraCodes.add(entry.subjectCode));
+  const displayedSubjects = [
+    ...baseSubjects,
+    ...ALL_SUBJECTS.filter(
+      (s) =>
+        selectedExtraCodes.has(s.code) &&
+        !baseSubjects.some((b) => b.code === s.code)
+    ).map((s) => ({ code: s.code, name: s.name })),
+  ];
 
   const gradeMutation = useMutation({
     mutationFn: (grade: number) => authService.updateStudentProfile({ grade }),
@@ -208,7 +237,7 @@ export function TimetableView() {
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {GRADE_6_SUBJECTS.map((subject) => (
+                      {displayedSubjects.map((subject) => (
                         <tr key={subject.code}>
                           <td className="px-4 py-3 font-semibold text-foreground">
                             {subject.name}
@@ -263,7 +292,7 @@ export function TimetableView() {
                     <CardTitle className="text-base">{day.label}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2.5">
-                    {GRADE_6_SUBJECTS.map((subject) => {
+                    {displayedSubjects.map((subject) => {
                       const selected = draftMap.has(
                         makeCellKey(day.value, subject.code)
                       );

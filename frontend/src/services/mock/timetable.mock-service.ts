@@ -1,4 +1,4 @@
-import { GRADE_6_SUBJECTS } from '@/lib/study-utils';
+import { ALL_SUBJECTS } from '@/lib/study-utils';
 import { buildInitialTimetable } from '@/mocks/fixtures/study-seed';
 import {
   getMockRuntimeState,
@@ -23,13 +23,17 @@ export function getCurrentMockTimetable(): TimetableResponse {
 }
 
 export const timetableMockService: TimetableService = {
-  async getSubjects(): Promise<SubjectResponse[]> {
+  async getSubjects(grade?: number): Promise<SubjectResponse[]> {
     return runMockOperation(
       () =>
-        GRADE_6_SUBJECTS.map((item, index) => ({
+        ALL_SUBJECTS.filter(
+          (item) => !grade || (grade >= item.minGrade && grade <= item.maxGrade)
+        ).map((item, index) => ({
           id: index + 1,
           code: item.code,
           name: item.name,
+          minGrade: item.minGrade,
+          maxGrade: item.maxGrade,
         })),
       { emptyFallback: [] }
     );

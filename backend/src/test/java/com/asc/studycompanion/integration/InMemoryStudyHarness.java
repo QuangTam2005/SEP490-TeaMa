@@ -253,11 +253,18 @@ final class InMemoryStudyHarness {
 
     private void seedSubjects() {
         subjects.addAll(List.of(
-                Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").isActive(true).build(),
-                Subject.builder().id(2L).code(SubjectCode.LIT).name("Ngữ văn").isActive(true).build(),
-                Subject.builder().id(3L).code(SubjectCode.ENG).name("Tiếng Anh").isActive(true).build(),
-                Subject.builder().id(4L).code(SubjectCode.SCI).name("Khoa học tự nhiên").isActive(true).build(),
-                Subject.builder().id(5L).code(SubjectCode.HISGEO).name("Lịch sử & Địa lí").isActive(true).build()
+                Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").minGrade(1).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(2L).code(SubjectCode.LIT).name("Ngữ văn").minGrade(1).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(3L).code(SubjectCode.ENG).name("Tiếng Anh").minGrade(1).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(4L).code(SubjectCode.SCI).name("Khoa học tự nhiên").minGrade(1).maxGrade(9).isActive(true).build(),
+                Subject.builder().id(5L).code(SubjectCode.HISGEO).name("Lịch sử – Địa lý").minGrade(1).maxGrade(9).isActive(true).build(),
+                Subject.builder().id(6L).code(SubjectCode.PHY).name("Vật lý").minGrade(10).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(7L).code(SubjectCode.CHEM).name("Hóa học").minGrade(10).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(8L).code(SubjectCode.BIO).name("Sinh học").minGrade(10).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(9L).code(SubjectCode.HIST).name("Lịch sử").minGrade(10).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(10L).code(SubjectCode.GEO).name("Địa lý").minGrade(10).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(11L).code(SubjectCode.INFO).name("Tin học").minGrade(3).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(12L).code(SubjectCode.CIVICS).name("Giáo dục công dân").minGrade(6).maxGrade(12).isActive(true).build()
         ));
     }
 

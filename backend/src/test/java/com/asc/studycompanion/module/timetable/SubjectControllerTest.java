@@ -36,20 +36,36 @@ class SubjectControllerTest {
     }
 
     @Test
-    void returnsAllFiveActiveGrade6Subjects() throws Exception {
-        when(subjectRepository.findAllByIsActiveTrueOrderByIdAsc()).thenReturn(List.of(
-                Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").isActive(true).build(),
-                Subject.builder().id(2L).code(SubjectCode.LIT).name("Ngữ văn").isActive(true).build(),
-                Subject.builder().id(3L).code(SubjectCode.ENG).name("Tiếng Anh").isActive(true).build(),
-                Subject.builder().id(4L).code(SubjectCode.SCI).name("Khoa học tự nhiên").isActive(true).build(),
-                Subject.builder().id(5L).code(SubjectCode.HISGEO).name("Lịch sử – Địa lý").isActive(true).build()
-        ));
+    void returnsAllActiveSubjectsAndFiltersByGradeWhenRequested() throws Exception {
+        List<Subject> seeded = List.of(
+                Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").minGrade(1).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(4L).code(SubjectCode.SCI).name("Khoa học tự nhiên").minGrade(1).maxGrade(9).isActive(true).build(),
+                Subject.builder().id(6L).code(SubjectCode.PHY).name("Vật lý").minGrade(10).maxGrade(12).isActive(true).build(),
+                Subject.builder().id(11L).code(SubjectCode.INFO).name("Tin học").minGrade(3).maxGrade(12).isActive(true).build()
+        );
+        when(subjectRepository.findAllByIsActiveTrueOrderByIdAsc()).thenReturn(seeded);
 
         mockMvc.perform(get("/api/subjects"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.length()").value(5))
+                .andExpect(jsonPath("$.data.length()").value(4))
                 .andExpect(jsonPath("$.data[0].code").value("MATH"))
-                .andExpect(jsonPath("$.data[4].code").value("HISGEO"));
+                .andExpect(jsonPath("$.data[0].minGrade").value(1))
+                .andExpect(jsonPath("$.data[0].maxGrade").value(12))
+                .andExpect(jsonPath("$.data[2].code").value("PHY"));
+
+        mockMvc.perform(get("/api/subjects").param("grade", "6"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[1].code").value("SCI"));
+
+        mockMvc.perform(get("/api/subjects").param("grade", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[1].code").value("PHY"));
+
+        mockMvc.perform(get("/api/subjects").param("grade", "13"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VAL_001"));
     }
 }

@@ -40,4 +40,12 @@ public class Subject {
     @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = Boolean.TRUE;
+
+    @Builder.Default
+    @Column(name = "min_grade", nullable = false)
+    private Integer minGrade = 1;
+
+    @Builder.Default
+    @Column(name = "max_grade", nullable = false)
+    private Integer maxGrade = 12;
 }

@@ -7,7 +7,11 @@ import type {
 } from '@/types';
 
 export const timetableHttpService: TimetableService = {
-  getSubjects: () => apiGet<SubjectResponse[]>('/api/subjects'),
+  getSubjects: (grade?: number) =>
+    apiGet<SubjectResponse[]>(
+      '/api/subjects',
+      grade ? { params: { grade } } : undefined
+    ),
   getTimetable: () => apiGet<TimetableResponse>('/api/student/timetable'),
   updateTimetable: (request: UpdateTimetableRequest) =>
     apiPut<TimetableResponse>('/api/student/timetable', request),

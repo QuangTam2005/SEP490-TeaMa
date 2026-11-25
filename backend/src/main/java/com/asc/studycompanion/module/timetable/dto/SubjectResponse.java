@@ -8,6 +8,8 @@ import com.asc.studycompanion.module.timetable.entity.SubjectCode;
 public record SubjectResponse(
         Long id,
         SubjectCode code,
-        String name
+        String name,
+        Integer minGrade,
+        Integer maxGrade
 ) {
 }

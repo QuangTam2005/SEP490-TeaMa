@@ -5,5 +5,12 @@ public enum SubjectCode {
     LIT,
     ENG,
     SCI,
-    HISGEO
+    HISGEO,
+    PHY,
+    CHEM,
+    BIO,
+    HIST,
+    GEO,
+    INFO,
+    CIVICS
 }

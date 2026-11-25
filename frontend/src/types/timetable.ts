@@ -1,4 +1,16 @@
-export type SubjectCode = 'MATH' | 'LIT' | 'ENG' | 'SCI' | 'HISGEO';
+export type SubjectCode =
+  | 'MATH'
+  | 'LIT'
+  | 'ENG'
+  | 'SCI'
+  | 'HISGEO'
+  | 'PHY'
+  | 'CHEM'
+  | 'BIO'
+  | 'HIST'
+  | 'GEO'
+  | 'INFO'
+  | 'CIVICS';
 
 /**
  * ISO weekday: 1 = Monday .. 7 = Sunday
@@ -9,6 +21,8 @@ export interface SubjectResponse {
   id: number;
   code: SubjectCode;
   name: string;
+  minGrade: number;
+  maxGrade: number;
 }
 
 export interface TimetableEntryDto {

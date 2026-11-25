@@ -104,7 +104,17 @@ class AcceptanceCoreFlowsTest {
         h.mockMvc.perform(get("/api/subjects")
                         .header("Authorization", "Bearer " + studentJwt))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(5));
+                .andExpect(jsonPath("$.data.length()").value(12));
+
+        h.mockMvc.perform(get("/api/subjects").param("grade", "8")
+                        .header("Authorization", "Bearer " + studentJwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(7));
+
+        h.mockMvc.perform(get("/api/subjects").param("grade", "10")
+                        .header("Authorization", "Bearer " + studentJwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(10));
 
         // AC-03: Register Guardian & Strange Guardian, test 8-char Link Code flow
         MvcResult guardianReg = h.mockMvc.perform(post("/api/auth/register")

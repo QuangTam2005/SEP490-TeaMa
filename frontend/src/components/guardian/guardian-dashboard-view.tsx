@@ -25,7 +25,7 @@ import {
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { StatusBadge } from '@/components/shared/status-badge';
 import {
-  GRADE_6_SUBJECTS,
+  ALL_SUBJECTS,
   formatViDate,
   getNextTargetDateIso,
 } from '@/lib/study-utils';
@@ -36,7 +36,7 @@ import type { GuardianTaskItem, SubjectCode } from '@/types';
 
 const SUBJECT_FILTERS: { code: SubjectCode | 'ALL'; label: string }[] = [
   { code: 'ALL', label: 'Tất cả môn' },
-  ...GRADE_6_SUBJECTS.map((s) => ({ code: s.code, label: s.name })),
+  ...ALL_SUBJECTS.map((s) => ({ code: s.code, label: s.name })),
 ];
 
 export function GuardianDashboardView() {

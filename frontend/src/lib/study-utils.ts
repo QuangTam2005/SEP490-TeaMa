@@ -14,17 +14,41 @@ export const GRADE_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
   label: `Lớp ${index + 1}`,
 }));
 
+export interface SubjectCatalogItem {
+  code: SubjectCode;
+  name: string;
+  shortLabel: string;
+  minGrade: number;
+  maxGrade: number;
+}
+
+export const ALL_SUBJECTS: SubjectCatalogItem[] = [
+  { code: 'MATH', name: 'Toán', shortLabel: 'Toán', minGrade: 1, maxGrade: 12 },
+  { code: 'LIT', name: 'Ngữ văn', shortLabel: 'Văn', minGrade: 1, maxGrade: 12 },
+  { code: 'ENG', name: 'Tiếng Anh', shortLabel: 'Anh', minGrade: 1, maxGrade: 12 },
+  { code: 'SCI', name: 'Khoa học tự nhiên', shortLabel: 'KHTN', minGrade: 1, maxGrade: 9 },
+  { code: 'HISGEO', name: 'Lịch sử – Địa lý', shortLabel: 'Sử - Địa', minGrade: 1, maxGrade: 9 },
+  { code: 'PHY', name: 'Vật lý', shortLabel: 'Lý', minGrade: 10, maxGrade: 12 },
+  { code: 'CHEM', name: 'Hóa học', shortLabel: 'Hóa', minGrade: 10, maxGrade: 12 },
+  { code: 'BIO', name: 'Sinh học', shortLabel: 'Sinh', minGrade: 10, maxGrade: 12 },
+  { code: 'HIST', name: 'Lịch sử', shortLabel: 'Sử', minGrade: 10, maxGrade: 12 },
+  { code: 'GEO', name: 'Địa lý', shortLabel: 'Địa', minGrade: 10, maxGrade: 12 },
+  { code: 'INFO', name: 'Tin học', shortLabel: 'Tin', minGrade: 3, maxGrade: 12 },
+  { code: 'CIVICS', name: 'Giáo dục công dân', shortLabel: 'GDCD', minGrade: 6, maxGrade: 12 },
+];
+
 export const GRADE_6_SUBJECTS: {
   code: SubjectCode;
   name: string;
   shortLabel: string;
-}[] = [
-  { code: 'MATH', name: 'Toán', shortLabel: 'Toán' },
-  { code: 'LIT', name: 'Ngữ văn', shortLabel: 'Văn' },
-  { code: 'ENG', name: 'Tiếng Anh', shortLabel: 'Anh' },
-  { code: 'SCI', name: 'Khoa học tự nhiên', shortLabel: 'KHTN' },
-  { code: 'HISGEO', name: 'Lịch sử – Địa lý', shortLabel: 'Sử - Địa' },
-];
+}[] = ALL_SUBJECTS.filter((s) => 6 >= s.minGrade && 6 <= s.maxGrade);
+
+export function getSubjectsForGrade(grade: number | null | undefined): SubjectCatalogItem[] {
+  const safeGrade = grade && grade >= 1 && grade <= 12 ? grade : 6;
+  return ALL_SUBJECTS.filter(
+    (s) => safeGrade >= s.minGrade && safeGrade <= s.maxGrade
+  );
+}
 
 export const WEEKDAYS: { value: Weekday; label: string; shortLabel: string }[] = [
   { value: 1, label: 'Thứ Hai', shortLabel: 'T2' },
@@ -54,7 +78,7 @@ export function isValidStudyLength(raw: string): boolean {
 }
 
 export function getSubjectName(code: SubjectCode): string {
-  return GRADE_6_SUBJECTS.find((s) => s.code === code)?.name ?? code;
+  return ALL_SUBJECTS.find((s) => s.code === code)?.name ?? code;
 }
 
 /**

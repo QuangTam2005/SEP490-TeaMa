@@ -65,4 +65,13 @@ public class StudyTask extends BaseTimestampEntity {
     @Builder.Default
     @Column(name = "revision_count", nullable = false)
     private Integer revisionCount = 0;
+
+    @Column(name = "guardian_acknowledged_at")
+    private java.time.Instant guardianAcknowledgedAt;
+
+    @Column(name = "guardian_note", length = 300)
+    private String guardianNote;
+
+    @Column(name = "guardian_acknowledged_by_user_id")
+    private Long guardianAcknowledgedByUserId;
 }
