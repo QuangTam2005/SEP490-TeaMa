@@ -176,14 +176,48 @@ public class CkeyMimoAdapter implements AiEvaluationProvider {
     }
 
     /**
-     * Enforces maximum 1,000-character bound on AI feedback without imposing any artificial minimum length padding.
+     * Sanitizes accidental JSON literal leaks (e.g. "Cần khắc phục: []") and enforces <= 1,000 chars
+     * without imposing any artificial minimum length padding.
      */
     public static String ensureFeedbackBounds(
             String rawFeedback,
             List<String> incorrectPoints,
             List<String> missingPoints
     ) {
-        return clampFeedbackGracefully(rawFeedback);
+        String sanitized = sanitizeMentorFeedback(rawFeedback, incorrectPoints, missingPoints);
+        return clampFeedbackGracefully(sanitized);
+    }
+
+    private static String sanitizeMentorFeedback(
+            String rawFeedback,
+            List<String> incorrectPoints,
+            List<String> missingPoints
+    ) {
+        if (rawFeedback == null) {
+            return "";
+        }
+        String text = rawFeedback.trim();
+        if (text.contains("Cần khắc phục:") && !text.startsWith("Nhận xét tổng quan")) {
+            text = "Nhận xét tổng quan: " + text;
+        }
+        if (text.matches("(?s).*Cần khắc phục:\\s*(?:\\[\\s*\\]|null|không có\\.?).*")) {
+            String replacement;
+            if ((incorrectPoints != null && !incorrectPoints.isEmpty())
+                    || (missingPoints != null && !missingPoints.isEmpty())) {
+                List<String> combined = new ArrayList<>();
+                if (incorrectPoints != null) {
+                    combined.addAll(incorrectPoints);
+                }
+                if (missingPoints != null) {
+                    combined.addAll(missingPoints);
+                }
+                replacement = "Cần khắc phục: Con hãy lưu ý bổ sung và chỉnh sửa: " + String.join("; ", combined) + ".";
+            } else {
+                replacement = "Cần khắc phục: Bài làm chưa ghi nhận lỗi sai kiến thức; con có thể đọc lại sách giáo khoa để đào sâu thêm ý nghĩa và chuẩn bị câu hỏi thảo luận trên lớp nhé.";
+            }
+            text = text.replaceAll("(?i)Cần khắc phục:\\s*(?:\\[\\s*\\]|null|không có\\.?)", java.util.regex.Matcher.quoteReplacement(replacement));
+        }
+        return text.replaceAll("(?m)\\s*\\[\\s*\\]\\s*$", "").trim();
     }
 
     /**

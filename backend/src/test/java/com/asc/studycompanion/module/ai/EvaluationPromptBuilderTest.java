@@ -31,6 +31,7 @@ class EvaluationPromptBuilderTest {
         assertTrue(system.contains("<= 1000 chars"));
         assertTrue(system.contains("Nhận xét tổng quan"));
         assertTrue(system.contains("Cần khắc phục"));
+        assertTrue(system.contains("KHÔNG gọi bài làm là \"Đề bài\""));
 
         AiEvaluationInput input = new AiEvaluationInput(
                 8,

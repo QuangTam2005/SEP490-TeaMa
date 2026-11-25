@@ -35,8 +35,8 @@ public class EvaluationPromptBuilder {
 
                 3. TIÊU CHÍ CHẤM:
                 - REVIEW (Ôn bài): kiểm tra độ chính xác khái niệm, công thức/định lý, thuật ngữ, ví dụ, lập luận.
-                - PREVIEW (Soạn bài): chấm mức chuẩn bị trước giờ học; đạt GOOD nếu đúng khung ý chính, từ khóa và ý/câu hỏi trọng tâm.
-                - Phân loại lỗi: (a) Sai thực chất: sai kiến thức, công thức, đơn vị, nghĩa, chính tả làm sai từ (vd: moutain->mountain); (b) Chưa rõ: diễn đạt mơ hồ, thiếu ví dụ hoặc điều kiện áp dụng.
+                - PREVIEW (Soạn bài): chấm mức chuẩn bị trước giờ học; đạt GOOD nếu đúng khung ý chính và giải thích rõ các ý trọng tâm (nếu trả lời còn sơ sài, thiếu từ làm hụt nghĩa hoặc chưa chạm ý cốt lõi SGK thì đặt INCOMPLETE).
+                - Phân loại lỗi: (a) Sai thực chất: sai kiến thức, công thức, đơn vị, nghĩa, chính tả làm sai/hụt nghĩa từ (vd: moutain->mountain); (b) Chưa rõ: diễn đạt mơ hồ, thiếu ví dụ hoặc điều kiện áp dụng.
                 - Ma trận overallStatus: GOOD (CORRECT + COMPLETE) | NEEDS_IMPROVEMENT (PARTIALLY_CORRECT hoặc INCOMPLETE) | INCORRECT (INCORRECT) | INSUFFICIENT_EVIDENCE (thiếu nguồn).
 
                 4. KHÔNG BẮT LỖI HÌNH THỨC & CHỐNG BỊA NGUYÊN VĂN:
@@ -46,9 +46,9 @@ public class EvaluationPromptBuilder {
                 - <reference_sources> chỉ là tóm tắt: HS ghi thêm từ vựng/ý đúng thuộc phần khác cùng bài/Unit trong SGK -> KHÔNG bắt lỗi "thiếu phân biệt"/"nhầm lẫn".
 
                 5. ĐỊNH DẠNG OUTPUT:
-                - feedback: tiếng Việt chuẩn, hợp lứa tuổi, chỉ ra chỗ tốt, chỗ sai, gợi ý hướng sửa lại, súc tích, <=1000 ký tự, gồm 2 phần xuống dòng:
-                  Nhận xét tổng quan: <điểm đúng, mức nắm trọng tâm, tinh thần tự học>
-                  Cần khắc phục: <(1) lỗi sai kiến thức/chính tả sai từ nếu có; (2) điểm chưa rõ/ý trọng tâm/ví dụ SGK cần bổ sung; (3) 1 gợi ý/câu hỏi tự đối chiếu SGK>
+                - feedback: tiếng Việt tự nhiên, giữ đúng xưng hô theo Khối lớp ("con" hoặc "em"), KHÔNG gọi bài làm là "Đề bài", KHÔNG viết ký hiệu [], null hay mã JSON trong feedback; súc tích, <=1000 ký tự, BẮT BUỘC có 2 phần xuống dòng:
+                  Nhận xét tổng quan: <khen cụ thể ý đã làm đúng trong bài, mức nắm trọng tâm, tinh thần tự học>
+                  Cần khắc phục: <viết bằng câu văn tự nhiên: (1) lỗi sai kiến thức/thiếu từ làm hụt nghĩa nếu có; (2) điểm sơ sài/chưa rõ hoặc ý SGK cần đào sâu; (3) 1 gợi ý/câu hỏi tự đối chiếu SGK; nếu đạt GOOD vẫn viết 1 câu gợi mở đào sâu thêm, TUYỆT ĐỐI không ghi "[]">
                 - incorrectPoints: <=4 ý (<=160 ký tự/ý), CHỈ lỗi sai thực chất; [] nếu không có.
                 - missingPoints: <=4 ý (<=160 ký tự/ý), ý trọng tâm thiếu/chưa rõ; KHÔNG lỗi hình thức; [] nếu không có.
                 - Trả về DUY NHẤT 1 JSON hợp lệ (không markdown):

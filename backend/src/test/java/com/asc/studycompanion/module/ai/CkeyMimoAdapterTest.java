@@ -127,6 +127,22 @@ class CkeyMimoAdapterTest {
                 """.formatted(concise.replace("\n", "\\n"));
         AiEvaluationResult result = adapter.parseAndValidateJson(shortJson, 200, 80, "mimo-v2-flash");
         assertEquals(concise, result.feedback());
+
+        String leakedBracketsJson = """
+                {
+                  "accuracy": "CORRECT",
+                  "completeness": "COMPLETE",
+                  "overallStatus": "GOOD",
+                  "feedback": "Con đã trả lời đúng ý chính bài đọc.\\nCần khắc phục: []",
+                  "incorrectPoints": [],
+                  "missingPoints": [],
+                  "confidence": "HIGH"
+                }
+                """;
+        AiEvaluationResult cleaned = adapter.parseAndValidateJson(leakedBracketsJson, 200, 80, "mimo-v2-flash");
+        assertTrue(cleaned.feedback().startsWith("Nhận xét tổng quan: "));
+        assertTrue(!cleaned.feedback().contains("[]"));
+        assertTrue(cleaned.feedback().contains("Cần khắc phục: Bài làm chưa ghi nhận lỗi sai kiến thức"));
     }
 
     @Test
