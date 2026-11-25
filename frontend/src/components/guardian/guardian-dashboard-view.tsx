@@ -259,7 +259,7 @@ export function GuardianDashboardView() {
     },
     {
       key: 'evaluation',
-      header: 'Kết quả AI',
+      header: 'AI Đánh giá',
       render: (row) =>
         row.evaluation ? (
           <div className="flex flex-wrap gap-1.5">

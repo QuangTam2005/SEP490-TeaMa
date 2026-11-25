@@ -107,7 +107,7 @@
 - [x] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
 - [x] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`
 
-### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(11 subtasks)*
+### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(12 subtasks)*
 - [x] `[TASK-FEAT.5a]` *(2 SP)* Xây dựng hệ thống chống copy/dán vào ô nội dung bài làm (`anti-paste.ts`, `TaskWorkspaceView`: chặn `paste`/`drop`/`contextmenu`/`Ctrl+V`/`beforeinput` & bulk-insert `delta > 30` giữ nguyên bộ gõ Telex/VNI) & đồng bộ `docs/`
 - [x] `[TASK-FEAT.5b]` *(2 SP)* Tối ưu layout responsive màn hình rộng 24 inch (`max-w-[1600px]` cho `StudentShell`/`GuardianShell`/`AuthLayout`/`LinkStudentView`, `lg:` nav breakpoint chống dồn header, `2xl:grid-cols-2`/`8:4` cho `NextDayPlanView`/`StudyHistoryView`/`TaskWorkspaceView`/`SubmissionDetailView`/`ProfileView`)
 - [x] `[TASK-FEAT.5c]` *(2 SP)* Cập nhật logic tính chuỗi học (`StudyPlanService.getStreak`) bỏ qua các ngày nghỉ không có môn trên thời khóa biểu `ACTIVE` (ví dụ T7, CN trống lịch) mà vẫn ngắt chuỗi khi bỏ lỡ ngày có lịch học & bổ sung unit tests (`StudyPlanServiceTest`)
@@ -119,6 +119,7 @@
 - [x] `[TASK-FEAT.5i]` *(1 SP)* Sửa lỗi tràn khung giao diện khi học sinh nhập chuỗi ký tự liên tiếp không khoảng trắng (`.......`) trên `SubmissionDetailView`, `TaskWorkspaceView` và `GuardianDashboardView` bằng `min-w-0`, `overflow-hidden`, `break-words [overflow-wrap:anywhere]`
 - [x] `[TASK-FEAT.5j]` *(1 SP)* Tinh chỉnh badge trạng thái (`StatusBadge`: `SKIPPED` $\rightarrow$ `Bỏ qua`, `BLOCKED` $\rightarrow$ `Chưa mở`, `whitespace-nowrap`) và loại bỏ icon ở các badge kết quả AI & badge `Đã xem` trên `GuardianDashboardView`
 - [x] `[TASK-FEAT.5k]` *(1 SP)* Tinh chỉnh prompt đánh giá AI (`EvaluationPromptBuilder`): cấm bắt lỗi vặt hình thức ghi chép (chữ hoa đầu dòng như `Cave`, dấu ngăn cách ghi chú `:`, `;`), buộc kiểm tra đúng nguyên văn trước khi chỉ lỗi để không gán nhầm sang từ khác (như `forest`), và không bác bỏ từ vựng/ý đúng thuộc phần khác trong cùng bài/Unit SGK (`EvaluationPromptBuilderTest`)
+- [x] `[TASK-FEAT.5l]` *(1 SP)* Đổi tiêu đề cột `"Kết quả AI"` thành `"AI Đánh giá"` trên `GuardianDashboardView`
 
 ---
 
