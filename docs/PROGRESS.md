@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 4 In Progress (`[TASK-BE.4a]` Completed — Next-Day Study Plan Generator)  
+**Current Phase:** Phase 4 In Progress (`[TASK-BE.4b]` Completed — Task Detail & `BR-12` Text Utils)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -39,7 +39,8 @@
 - **[DONE] `[TASK-BE.2c]` (`74de111`):** Implemented `StudyAccessGuard` (anti-IDOR enforcement for Student ownership and active Guardian links, returning `AUTH_004` / `GRD_001`) and `Subject` + `SubjectRepository` + `SubjectController` (`GET /api/subjects` for the 5 fixed Grade 6 subjects), backed by `StudyAccessGuardTest` & `SubjectControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 40, Failures: 0`).
 - **[DONE] Domain Rule Sync (`v1.1` / `v1.2`, `c4eb11b`):** Synced all 6 stakeholder adjustments across `docs/`, `backend/` (`V1`–`V2` grade `1–12` + `v1..v3`, `PUT /api/student/profile`, `StudyAccessGuard.resolveStudentProfileForTimetable`), and `frontend/` (Student grade selector in `/register` & `/student/timetable`, `/guardian/timetable` edit page, KNTT + Wikipedia sources, AI 3-retry fallback forwarding to Guardian, `v1..v3` max cap). Verified `.\mvnw.cmd clean test` (`Tests run: 42, Failures: 0`) and `npm run typecheck && npm run lint && npm run build` (`11` routes compiled).
 - **[DONE] `[TASK-BE.3]` (`63f08df`):** Implemented versioned `timetable` module (`Timetable`, `TimetableEntry`, `TimetableStatus`, `TimetableRepository`, `TimetableService`, `TimetableController` at `GET/PUT /api/student/timetable`), preserving historical versions while archiving superseded active timetables and permitting both owning `STUDENT` and linked `GUARDIAN` edits, backed by `TimetableServiceTest` & `TimetableControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 46, Failures: 0`).
-- **[DONE] `[TASK-BE.4a]`:** Implemented `StudyPlan`, `StudyTask`, `StudyTaskType`, `StudyTaskStatus`, `OverallEvaluationStatus`, `StudyPlanService` (`Asia/Ho_Chi_Minh` next-day planning: single `REVIEW` + `PREVIEW` pair per distinct subject, empty schedule handling, preserving submitted plans across timetable updates), and `GET /api/student/plans/next-day`, backed by `StudyPlanServiceTest` & `StudyPlanControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 50, Failures: 0`).
+- **[DONE] `[TASK-BE.4a]` (`47a850c`):** Implemented `StudyPlan`, `StudyTask`, `StudyTaskType`, `StudyTaskStatus`, `OverallEvaluationStatus`, `StudyPlanService` (`Asia/Ho_Chi_Minh` next-day planning: single `REVIEW` + `PREVIEW` pair per distinct subject, empty schedule handling, preserving submitted plans across timetable updates), and `GET /api/student/plans/next-day`, backed by `StudyPlanServiceTest` & `StudyPlanControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 50, Failures: 0`).
+- **[DONE] `[TASK-BE.4b]`:** Implemented `StudyTextUtils` (`\r\n` $\rightarrow$ `\n`, `.trim()`, strict `[850, 2000]` `BR-12` bounds), AI read-models (`AIEvaluation`, `SourceReference`, `AccuracyLevel`, `CompletenessLevel`, `ConfidenceLevel`), `StudySubmission` + `StudySubmissionRepository`, and `StudyTaskService`/`StudyTaskController` (`GET /api/student/tasks/{taskId}`), backed by `StudyTextUtilsTest` & `StudyTaskControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 53, Failures: 0`).
 
 ---
 
