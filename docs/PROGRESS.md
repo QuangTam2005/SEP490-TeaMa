@@ -1,6 +1,6 @@
 # PROJECT PROGRESS LOG (PROGRESS.md)
 **Project:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Current Phase:** Phase 5 In Progress (`[TASK-BE.6b]` Completed — Async Worker with 3-Retry Fallback)  
+**Current Phase:** Phase 5 Completed (`[TASK-BE.5a]`–`[TASK-BE.6c]`) $\rightarrow$ Ready for Phase 6 (`API Integration & Acceptance Verification`)  
 **Last Updated:** 2026-11-25  
 
 ---
@@ -46,10 +46,10 @@
 - **[DONE] `[TASK-BE.5a]` (`1067b13`):** Implemented `AiProperties`, `AiClientConfig` (`braveRestClient` / `ckeyRestClient` with bounded timeouts), `SearchProvider`, and `BraveSearchAdapter` targeting **"Kết nối tri thức với cuộc sống"** textbook + **Wikipedia** (`vi.wikipedia.org`) dynamically scoped by student grade (`1–12`), capped at max 3 compact sources, backed by `BraveSearchAdapterTest`. Verified `.\mvnw.cmd test` (`Tests run: 61, Failures: 0`).
 - **[DONE] `[TASK-BE.5b]` (`6682a54`):** Implemented `AiEvaluationProvider`, `EvaluationPromptBuilder` (zero PII, ~2,048 token context budget, KNTT/Wikipedia instruction), and `CkeyMimoAdapter` (OpenAI-compatible MiMo v2.6 Flash client, strict JSON Schema parser, graceful `<= 600`-char feedback clamping, token usage capture), backed by `EvaluationPromptBuilderTest` & `CkeyMimoAdapterTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 64, Failures: 0`).
 - **[DONE] `[TASK-BE.6a]` (`a4c5e86`):** Implemented `KnowledgeCache`, `KnowledgeCacheRepository`, and `KnowledgeCacheService` with grade/subject/title key normalization, `cacheAllowed` policy gating, and 7-day TTL storage/lookup, backed by `KnowledgeCacheServiceTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 66, Failures: 0`).
-- **[DONE] `[TASK-BE.6b]`:** Implemented `AIUsageLog`, `SchedulingConfig`, and `EvaluationJobWorker` (polling due `PENDING` jobs, `KnowledgeCache` hit optimization, exponential backoff up to 3 attempts, 3rd-failure fallback `AIEvaluation` notice transitioning to `EVALUATED` for Guardian inspection, and cost/token telemetry persistence), backed by `EvaluationJobWorkerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 68, Failures: 0`).
+- **[DONE] `[TASK-BE.6b]` (`5391cfe`):** Implemented `AIUsageLog`, `SchedulingConfig`, and `EvaluationJobWorker` (polling due `PENDING` jobs, `KnowledgeCache` hit optimization, exponential backoff up to 3 attempts, 3rd-failure fallback `AIEvaluation` notice transitioning to `EVALUATED` for Guardian inspection, and cost/token telemetry persistence), backed by `EvaluationJobWorkerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 68, Failures: 0`).
+- **[DONE] `[TASK-BE.6c]`:** Implemented read-only `guardian` module (`GuardianService`, `GuardianController`, `GuardianDashboardResponse`, `GuardianSubmissionDetailResponse`) providing date/subject filtering, dynamic student grade display, immutable `v1..v3` submission history, AI evaluation summaries & sources, anti-IDOR `GuardianLink` enforcement, and zero `AIUsageLog` exposure, backed by `GuardianServiceTest` & `GuardianControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 71, Failures: 0`).
 
 ---
 
-## 3. Next Steps Queue (Phase 5 — Brave Search + CKEY/MiMo AI Pipeline & Guardian Backend)
-1. **Task 8:** `[TASK-BE.5a]` *(3 SP)* Brave Search Adapter (`Kết nối tri thức với cuộc sống` + `Wikipedia`, max 2–3 sources) + `[TASK-BE.5b]` *(5 SP)* PII-free Prompt Builder & CKEY/MiMo Adapter + `[TASK-BE.6a]` *(2 SP)* `KnowledgeCache`.
-2. **Task 9:** `[TASK-BE.6b]` *(5 SP)* Async `EvaluationJob` Worker (3-retry fallback forwarding to Guardian + `AIUsageLog`) + `[TASK-BE.6c]` *(3 SP)* Guardian Read-Only Dashboard & Submission Inspector APIs.
+## 3. Next Steps Queue (Phase 6 — API Integration & Acceptance Verification)
+1. **Task 10:** `[TASK-INT.1]` *(2 SP)* Flip `NEXT_PUBLIC_DATA_MODE=api` & verify full REST contract alignment + `[TASK-INT.2a]` *(2 SP)* E2E smoke test (`AC-01`–`AC-10`) + `[TASK-INT.2b]` *(3 SP)* PoC AI quality across all 5 subjects & `AC-11`–`AC-20`.
