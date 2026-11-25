@@ -53,10 +53,16 @@ public class BraveSearchAdapter implements SearchProvider {
             "x.com",
             "wattpad.com",
             "scribd.com",
-            // Un-crawlable JS SPAs / admin circulars lacking server-rendered lesson text
+            // Un-crawlable JS SPAs, admin circulars, and Cloudflare/timeout/anti-bot-blocked sites
             "hanhtrangso.nxbgd.vn",
             "hoc10.vn",
-            "moet.gov.vn"
+            "moet.gov.vn",
+            "olm.vn",
+            "hoc247.net",
+            "haylamdo.com",
+            "thuvienhoclieu.com",
+            "hocmai.vn",
+            "baitap123.com"
     );
 
     // Server-rendered Vietnamese K12 curriculum portals verified crawlable (HTTP 200, no Cloudflare JS wall, no SPA shell)
