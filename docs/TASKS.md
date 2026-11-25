@@ -81,5 +81,5 @@
 
 ### Task 10 — Tích hợp Full-Stack & Nghiệm thu 20 tiêu chí SRS *(3 subtasks)*
 - [x] `[TASK-INT.1]` *(2 SP)* Chuyển `NEXT_PUBLIC_DATA_MODE=api`, rà soát CORS/JWT & khớp hợp đồng REST trên toàn bộ route Frontend
-- [ ] `[TASK-INT.2a]` *(2 SP)* Kiểm thử E2E luồng Auth, Link Code, Timetable Versioning và nộp bài `REVIEW` $\rightarrow$ `PREVIEW` (`AC-01`–`AC-10`)
+- [x] `[TASK-INT.2a]` *(2 SP)* Kiểm thử E2E luồng Auth, Link Code, Timetable Versioning và nộp bài `REVIEW` $\rightarrow$ `PREVIEW` (`AC-01`–`AC-10`)
 - [ ] `[TASK-INT.2b]` *(3 SP)* Chạy PoC kiểm định chất lượng đánh giá AI trên đủ 5 môn lớp 6, kiểm tra Guardian Read-Only & các tiêu chí còn lại (`AC-11`–`AC-20`)
