@@ -66,6 +66,7 @@ public class EvaluationJobWorker {
     private final AiProperties aiProperties;
 
     @Scheduled(fixedDelayString = "${app.ai.worker-poll-ms:3000}")
+    @Transactional
     public void pollAndExecuteDueJobs() {
         List<EvaluationJob> dueJobs = evaluationJobRepository
                 .findTop5ByStatusAndNextRetryAtLessThanEqualOrderByCreatedAtAsc(
