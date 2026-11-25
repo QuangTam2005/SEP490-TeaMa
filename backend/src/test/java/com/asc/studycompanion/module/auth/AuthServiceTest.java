@@ -81,15 +81,16 @@ class AuthServiceTest {
     }
 
     @Test
-    void registerStudentProvisionsProfileAndHashesPassword() {
+    void registerStudentProvisionsProfileWithChosenGradeAndHashesPassword() {
         RegisterRequest request = new RegisterRequest(
-                "  HocSinh.Lop6@Gmail.com ",
+                "  HocSinh.Lop7@Gmail.com ",
                 "secret123",
                 "  Nguyen Minh Khoi  ",
-                UserRole.STUDENT
+                UserRole.STUDENT,
+                7
         );
 
-        when(userRepository.existsByEmailIgnoreCase("hocsinh.lop6@gmail.com")).thenReturn(false);
+        when(userRepository.existsByEmailIgnoreCase("hocsinh.lop7@gmail.com")).thenReturn(false);
         when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
             u.setId(10L);
@@ -105,7 +106,7 @@ class AuthServiceTest {
         verify(userRepository).saveAndFlush(userCaptor.capture());
         User saved = userCaptor.getValue();
 
-        assertEquals("hocsinh.lop6@gmail.com", saved.getEmail());
+        assertEquals("hocsinh.lop7@gmail.com", saved.getEmail());
         assertEquals("Nguyen Minh Khoi", saved.getFullName());
         assertEquals(UserRole.STUDENT, saved.getRole());
         assertNotEquals("secret123", saved.getPasswordHash());
@@ -113,12 +114,26 @@ class AuthServiceTest {
 
         ArgumentCaptor<StudentProfile> profileCaptor = ArgumentCaptor.forClass(StudentProfile.class);
         verify(studentProfileRepository).saveAndFlush(profileCaptor.capture());
-        assertEquals(6, profileCaptor.getValue().getGrade());
+        assertEquals(7, profileCaptor.getValue().getGrade());
         assertEquals("Asia/Ho_Chi_Minh", profileCaptor.getValue().getTimezone());
 
         assertNotNull(response.accessToken());
-        assertEquals(6, response.user().grade());
+        assertEquals(7, response.user().grade());
         assertNull(response.user().linkedStudentName());
+    }
+
+    @Test
+    void registerStudentWithoutGradeFailsValidation() {
+        RegisterRequest request = new RegisterRequest(
+                "missing-grade@gmail.com",
+                "secret123",
+                "Nguyen Minh Khoi",
+                UserRole.STUDENT,
+                null
+        );
+
+        AppException ex = assertThrows(AppException.class, () -> authService.register(request));
+        assertEquals(ErrorCode.VALIDATION_FAILED, ex.getErrorCode());
     }
 
     @Test
@@ -127,7 +142,8 @@ class AuthServiceTest {
                 "phuhuynh@yahoo.com",
                 "secret123",
                 "Nguyen Thu Hang",
-                UserRole.GUARDIAN
+                UserRole.GUARDIAN,
+                null
         );
 
         when(userRepository.existsByEmailIgnoreCase("phuhuynh@yahoo.com")).thenReturn(false);
@@ -148,7 +164,7 @@ class AuthServiceTest {
 
     @Test
     void registerThrowsConflictWhenEmailAlreadyExists() {
-        RegisterRequest request = new RegisterRequest("dup@outlook.com", "secret123", "User", UserRole.STUDENT);
+        RegisterRequest request = new RegisterRequest("dup@outlook.com", "secret123", "User", UserRole.STUDENT, 6);
         when(userRepository.existsByEmailIgnoreCase("dup@outlook.com")).thenReturn(true);
 
         AppException ex = assertThrows(AppException.class, () -> authService.register(request));
@@ -157,7 +173,7 @@ class AuthServiceTest {
 
     @Test
     void registerTranslatesConcurrentDataIntegrityViolationToConflict() {
-        RegisterRequest request = new RegisterRequest("race@yahoo.com", "secret123", "User", UserRole.GUARDIAN);
+        RegisterRequest request = new RegisterRequest("race@yahoo.com", "secret123", "User", UserRole.GUARDIAN, null);
         when(userRepository.existsByEmailIgnoreCase("race@yahoo.com")).thenReturn(false);
         when(userRepository.saveAndFlush(any(User.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate key"));

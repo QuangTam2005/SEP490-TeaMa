@@ -415,9 +415,10 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5 text-xs font-medium text-muted-foreground">
-                  <span>Ngày học: {formatViDate(detail.targetDate)}</span>
+                  <span>Ngày học trên lớp: {formatViDate(detail.targetDate)}</span>
                   <span className="rounded-md border bg-muted/50 px-2.5 py-1 font-semibold text-foreground">
-                    Đã sửa: {task.revisionCount}/{task.maxRevisions} lần
+                    Phiên bản: {submissions.length}/3 (đã sửa{' '}
+                    {task.revisionCount}/{task.maxRevisions} lần)
                   </span>
                 </div>
               </div>
@@ -611,9 +612,10 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                         <div className="whitespace-pre-wrap rounded-lg border bg-muted/25 p-4 text-sm leading-relaxed text-foreground">
                           {activeSubmission.content}
                         </div>
-                        {task.revisionCount >= MAX_POST_EVAL_REVISIONS ? (
+                        {submissions.length >= 3 ||
+                        task.revisionCount >= MAX_POST_EVAL_REVISIONS ? (
                           <p className="text-xs text-muted-foreground">
-                            Con đã dùng hết {MAX_POST_EVAL_REVISIONS} lần sửa cho bài này.
+                            Con đã nộp đủ tối đa 3 phiên bản (v1–v3) cho bài này.
                           </p>
                         ) : null}
                       </CardContent>

@@ -1,9 +1,10 @@
-import { apiGet, apiPost } from '@/lib/api-client';
+import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 import type { AuthService } from '@/services/auth.service';
 import type {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
+  UpdateStudentProfileRequest,
   UserResponse,
 } from '@/types';
 
@@ -15,4 +16,7 @@ export const authHttpService: AuthService = {
     apiPost<AuthResponse>('/api/auth/register', request),
 
   getCurrentUser: () => apiGet<UserResponse>('/api/auth/me'),
+
+  updateStudentProfile: (request: UpdateStudentProfileRequest) =>
+    apiPut<UserResponse>('/api/student/profile', request),
 };

@@ -118,10 +118,12 @@ export function GuardianDashboardView() {
     },
     {
       key: 'revisions',
-      header: 'Số lần sửa',
+      header: 'Phiên bản',
       align: 'center',
       mono: true,
-      render: (row) => <span>{row.revisionCount}/3</span>,
+      render: (row) => (
+        <span>{row.currentSubmissionId ? `${Math.min(row.revisionCount + 1, 3)}/3` : '0/3'}</span>
+      ),
     },
     {
       key: 'action',

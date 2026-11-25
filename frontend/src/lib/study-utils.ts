@@ -3,7 +3,16 @@ import type { SubjectCode, Weekday } from '@/types';
 export const MIN_SUBMISSION_CHARS = 850;
 export const MAX_SUBMISSION_CHARS = 2000;
 export const MAX_FEEDBACK_CHARS = 600;
-export const MAX_POST_EVAL_REVISIONS = 3;
+/**
+ * Maximum immutable versions per task is 3 (v1 initial + up to 2 revisions: v2, v3).
+ */
+export const MAX_SUBMISSION_VERSIONS = 3;
+export const MAX_POST_EVAL_REVISIONS = 2;
+
+export const GRADE_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
+  value: index + 1,
+  label: `Lớp ${index + 1}`,
+}));
 
 export const GRADE_6_SUBJECTS: {
   code: SubjectCode;

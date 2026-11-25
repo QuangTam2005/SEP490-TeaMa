@@ -181,12 +181,41 @@ function buildMockAiEvaluation(
     sources: [
       {
         id: nextEvaluationId * 10 + 1,
-        title: `${subjectName} lớp 6 – Tóm tắt kiến thức trọng tâm (${lessonTitle})`,
-        url: 'https://loigiaihay.com/lop-6',
-        snippet: `Kiến thức cơ bản môn ${subjectName} lớp 6 bám sát chương trình GDPT 2018.`,
+        title: `${subjectName} Kết nối tri thức với cuộc sống – ${lessonTitle}`,
+        url: 'https://loigiaihay.com/ket-noi-tri-thuc',
+        snippet: `Tài liệu SGK Kết nối tri thức với cuộc sống môn ${subjectName} (${lessonTitle}).`,
+        retrievedAt: new Date().toISOString(),
+      },
+      {
+        id: nextEvaluationId * 10 + 2,
+        title: `Wikipedia – ${lessonTitle}`,
+        url: 'https://vi.wikipedia.org',
+        snippet: `Kiến thức chuẩn Wikipedia liên quan đến bài "${lessonTitle}".`,
         retrievedAt: new Date().toISOString(),
       },
     ],
+    evaluatedAt: new Date().toISOString(),
+  };
+}
+
+function buildFallbackSystemErrorEvaluation(
+  submissionId: number
+): AIEvaluationResponse {
+  return {
+    id: nextEvaluationId++,
+    submissionId,
+    accuracy: 'UNVERIFIABLE',
+    completeness: 'UNDETERMINED',
+    overallStatus: 'INSUFFICIENT_EVIDENCE',
+    feedback:
+      'Hệ thống AI đang gặp lỗi sau 3 lần thử đối chiếu tự động. Phụ huynh vui lòng tự kiểm tra trực tiếp bài làm của con nhé.'.slice(
+        0,
+        MAX_FEEDBACK_CHARS
+      ),
+    incorrectPoints: [],
+    missingPoints: [],
+    confidence: 'LOW',
+    sources: [],
     evaluatedAt: new Date().toISOString(),
   };
 }
@@ -212,9 +241,12 @@ function scheduleAsyncEvaluation(
     }
 
     if (latestScenario === 'evaluation_failed') {
-      detail.task.status = 'EVALUATION_FAILED';
-      targetSub.lastError =
-        'Kết nối tới dịch vụ tìm kiếm hoặc AI tạm thời gián đoạn. Con hãy bấm "Thử đánh giá lại" nhé.';
+      // After 3 automatic retries fail, stop retrying and forward to Guardian as reviewed with error notice
+      const fallbackEval = buildFallbackSystemErrorEvaluation(submissionId);
+      targetSub.evaluation = fallbackEval;
+      targetSub.lastError = null;
+      detail.task.status = 'EVALUATED';
+      detail.task.latestEvaluationStatus = fallbackEval.overallStatus;
       return;
     }
 
@@ -346,12 +378,13 @@ export const studyMockService: StudyService = {
         const isRevision = detail.submissions.length > 0;
         if (
           isRevision &&
-          detail.task.revisionCount >= MAX_POST_EVAL_REVISIONS
+          (detail.submissions.length >= 3 ||
+            detail.task.revisionCount >= MAX_POST_EVAL_REVISIONS)
         ) {
           throw new ApiClientError({
             status: 409,
             errorCode: 'STUDY_005',
-            message: `Con đã sửa bài đủ ${MAX_POST_EVAL_REVISIONS} lần cho nhiệm vụ này rồi.`,
+            message: 'Con đã nộp đủ tối đa 3 phiên bản (v1–v3) cho nhiệm vụ này rồi.',
           });
         }
 

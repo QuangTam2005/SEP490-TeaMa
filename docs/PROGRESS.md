@@ -9,10 +9,10 @@
 
 | Document | Version | Status | Summary |
 | :--- | :---: | :---: | :--- |
-| [`docs/PRD.md`](./PRD.md) | `v1.0` | ✅ Baseline | `AI Study Companion – Grade 6`: 5 fixed subjects, `REVIEW` $\rightarrow$ `PREVIEW`, `850–2,000` chars, max `3` post-evaluation revisions, Brave Search + MiMo v2.6 Flash via CKEY, 1-time 8-char Guardian Link. |
+| [`docs/PRD.md`](./PRD.md) | `v1.1` | ✅ Baseline | `AI Study Companion`: Student tự chọn khối (`1–12`), `REVIEW` $\rightarrow$ `PREVIEW` (ngày hôm trước chuẩn bị cho lịch ngày mai), `850–2,000` chars, tối đa `v1..v3`, Brave (SGK Kết nối tri thức + Wikipedia) + MiMo/CKEY (retry 3 lần fallback cho Guardian). |
 | [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) | `v1.0` | ✅ Baseline | Modular Monolith (`com.asc.studycompanion`, Spring Boot 3.4 / Java 21) + Next.js 14 App Router + PostgreSQL 16 + Brave/CKEY Adapter Orchestration. |
-| [`docs/DESIGN.md`](./DESIGN.md) | `v1.1` | ✅ Baseline | Minimal-Text Student & Guardian UI/UX (**Ocean Blue** `#0284C7` / `#0369A1` + White `#FFFFFF`, Light/Dark Top Bar, `>= 44px` THCS tap targets), 14-table PostgreSQL ERD (`SRS §7.1`), and REST API Contracts. |
-| [`docs/RULES.md`](./RULES.md) | `v1.0` | ✅ Baseline | Domain & Engineering Red Lines (`BR-01..BR-24`, zero PII to AI, identical `BR-12` char counter, `ddl-auto=validate`, anti-IDOR, Atomic Commits). |
+| [`docs/DESIGN.md`](./DESIGN.md) | `v1.2` | ✅ Baseline | Minimal-Text Student & Guardian UI/UX (**Ocean Blue** `#0284C7` / `#0369A1` + White `#FFFFFF`, `/guardian/timetable`, `v1..v3`), 14-table PostgreSQL ERD, and REST API Contracts. |
+| [`docs/RULES.md`](./RULES.md) | `v1.1` | ✅ Baseline | Domain & Engineering Red Lines (`BR-01..BR-24`, zero PII, KNTT+Wiki grounding, 3-retry AI fallback, `v1..v3` cap, `BR-12` char counter, `ddl-auto=validate`, anti-IDOR). |
 | [`docs/TASKS.md`](./TASKS.md) | `v2.2` | ✅ Active | Backlog cấu trúc `<= 3 subtasks / Task`, mỗi subtask chỉ `2 / 3 / 5 SP` (`Phase 0`–`Phase 6`). |
 
 ---
@@ -36,10 +36,11 @@
 - **[DONE] `[TASK-BE.1a]` (`cd59bfc`) & `[TASK-BE.1b]` (`687854e`):** Created Flyway `V1__init_auth_and_curriculum_schema.sql` & `V2__init_study_and_ai_schema.sql` covering all 14 PostgreSQL tables (`users`, `student_profiles`, `guardian_links`, 5 seeded `subjects`, `timetables`, `timetable_entries`, `study_plans`, `study_tasks`, `study_submissions`, `ai_evaluations`, `source_references`, `evaluation_jobs`, `ai_usage_logs`, `knowledge_cache`).
 - **[DONE] `[TASK-BE.2a]` (`786409a`):** Upgraded `auth` module with `UserRole` (`STUDENT`/`GUARDIAN`), `UserStatus`, `StudentProfile`, `GuardianLink`, `ROLE_*` `UserPrincipal`, auto-provisioning `StudentProfile` on Student registration, open email validation, active `GuardianLink` lookup in `GET /api/auth/me` & `login`, and CORS `"Idempotency-Key"` header. Verified `.\mvnw.cmd clean test` (`Tests run: 31, Failures: 0`).
 - **[DONE] `[TASK-BE.2b]` (`35b6f45`):** Implemented `LinkService` & `LinkController` (`GET /api/links/current`, `POST /api/links/code`, `POST /api/links/accept`) with 8-character unambiguous one-time code generation (`24h` expiry, auto-revoke stale pending codes, `AUTH_007`/`AUTH_008` guards) and `LinkServiceTest` + `LinkControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 36, Failures: 0`).
-- **[DONE] `[TASK-BE.2c]`:** Implemented `StudyAccessGuard` (anti-IDOR enforcement for Student ownership and active Guardian links, returning `AUTH_004` / `GRD_001`) and `Subject` + `SubjectRepository` + `SubjectController` (`GET /api/subjects` for the 5 fixed Grade 6 subjects), backed by `StudyAccessGuardTest` & `SubjectControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 40, Failures: 0`).
+- **[DONE] `[TASK-BE.2c]` (`74de111`):** Implemented `StudyAccessGuard` (anti-IDOR enforcement for Student ownership and active Guardian links, returning `AUTH_004` / `GRD_001`) and `Subject` + `SubjectRepository` + `SubjectController` (`GET /api/subjects` for the 5 fixed Grade 6 subjects), backed by `StudyAccessGuardTest` & `SubjectControllerTest`. Verified `.\mvnw.cmd clean test` (`Tests run: 40, Failures: 0`).
+- **[DONE] Domain Rule Sync (`v1.1` / `v1.2`):** Synced all 6 stakeholder adjustments across `docs/`, `backend/` (`V1`–`V2` grade `1–12` + `v1..v3`, `PUT /api/student/profile`, `StudyAccessGuard.resolveStudentProfileForTimetable`), and `frontend/` (Student grade selector in `/register` & `/student/timetable`, `/guardian/timetable` edit page, KNTT + Wikipedia sources, AI 3-retry fallback forwarding to Guardian, `v1..v3` max cap). Verified `.\mvnw.cmd clean test` (`Tests run: 42, Failures: 0`) and `npm run typecheck && npm run lint && npm run build` (`11` routes compiled).
 
 ---
 
 ## 3. Next Steps Queue (Phase 4 — Timetable, Study Plan & Submission Backend)
-1. **Task 6:** `[TASK-BE.3]` *(3 SP)* Versioned Timetable CRUD + `[TASK-BE.4a]` *(3 SP)* Next-Day `StudyPlan`/`StudyTask` Generator (`Asia/Ho_Chi_Minh`).
-2. **Task 7:** `[TASK-BE.4b]` *(2 SP)* Task detail & `BR-12` text utils + `[TASK-BE.4c]` *(5 SP)* `POST /api/student/tasks/{taskId}/submissions` (`REVIEW`-before-`PREVIEW`, max 3 revisions, `Idempotency-Key`, atomic `EvaluationJob`) + `[TASK-BE.4d]` *(2 SP)* Retry evaluation endpoint.
+1. **Task 6:** `[TASK-BE.3]` *(3 SP)* Versioned Timetable CRUD (`STUDENT` + linked `GUARDIAN`) & `PUT /api/student/profile` + `[TASK-BE.4a]` *(3 SP)* Next-Day `StudyPlan`/`StudyTask` Generator (`Asia/Ho_Chi_Minh`).
+2. **Task 7:** `[TASK-BE.4b]` *(2 SP)* Task detail & `BR-12` text utils + `[TASK-BE.4c]` *(5 SP)* `POST /api/student/tasks/{taskId}/submissions` (`REVIEW`-before-`PREVIEW`, max `v1..v3`, `Idempotency-Key`, atomic `EvaluationJob`) + `[TASK-BE.4d]` *(2 SP)* Retry evaluation endpoint.

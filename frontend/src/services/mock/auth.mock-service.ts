@@ -10,6 +10,7 @@ import type {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
+  UpdateStudentProfileRequest,
   UserResponse,
 } from '@/types';
 
@@ -116,12 +117,21 @@ export const authMockService: AuthService = {
         });
       }
 
+      if (request.role === 'STUDENT' && !request.grade) {
+        throw new ApiClientError({
+          status: 400,
+          errorCode: 'VAL_001',
+          message: 'Học sinh cần chọn khối lớp (1–12).',
+          fieldErrors: { grade: 'Vui lòng chọn khối lớp của con' },
+        });
+      }
+
       const newUser: UserResponse = {
         id: nextUserId++,
         email: normalized,
         fullName: request.fullName.trim(),
         role: request.role,
-        grade: request.role === 'STUDENT' ? 6 : null,
+        grade: request.role === 'STUDENT' ? request.grade ?? 6 : null,
         linkedStudentName: null,
         createdAt: new Date().toISOString(),
       };
@@ -141,5 +151,33 @@ export const authMockService: AuthService = {
       }
       return usersDb.find((u) => u.role === simulatedRole) ?? usersDb[0];
     });
+  },
+
+  async updateStudentProfile(
+    request: UpdateStudentProfileRequest
+  ): Promise<UserResponse> {
+    return runMockOperation(
+      () => {
+        const student =
+          usersDb.find(
+            (u) =>
+              u.role === 'STUDENT' &&
+              u.email.toLowerCase() === activeUserEmail.toLowerCase()
+          ) ?? usersDb.find((u) => u.role === 'STUDENT');
+        if (!student) {
+          throw new ApiClientError({
+            status: 404,
+            errorCode: 'AUTH_006',
+            message: 'Không tìm thấy hồ sơ học sinh.',
+          });
+        }
+        student.grade = request.grade;
+        if (request.displayName?.trim()) {
+          student.fullName = request.displayName.trim();
+        }
+        return { ...student };
+      },
+      { requireRole: 'STUDENT' }
+    );
   },
 };

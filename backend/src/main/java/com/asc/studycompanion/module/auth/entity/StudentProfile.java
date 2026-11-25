@@ -29,7 +29,8 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "student_profiles")
 public class StudentProfile extends BaseTimestampEntity {
 
-    public static final int DEFAULT_GRADE = 6;
+    public static final int MIN_GRADE = 1;
+    public static final int MAX_GRADE = 12;
     public static final String DEFAULT_TIMEZONE = "Asia/Ho_Chi_Minh";
 
     @Id
@@ -43,9 +44,8 @@ public class StudentProfile extends BaseTimestampEntity {
     @Column(name = "display_name", nullable = false, length = 150)
     private String displayName;
 
-    @Builder.Default
     @Column(name = "grade", nullable = false)
-    private Integer grade = DEFAULT_GRADE;
+    private Integer grade;
 
     @Builder.Default
     @Column(name = "timezone", nullable = false, length = 64)

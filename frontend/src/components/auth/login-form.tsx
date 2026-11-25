@@ -176,7 +176,7 @@ export function LoginForm() {
               }
             >
               <GraduationCap className="h-4 w-4" strokeWidth={1.75} />
-              Học sinh lớp 6
+              Học sinh
             </Button>
             <Button
               type="button"

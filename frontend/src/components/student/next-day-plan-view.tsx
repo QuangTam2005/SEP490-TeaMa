@@ -70,7 +70,8 @@ function TaskActionButton({
 
         {task.revisionCount > 0 ? (
           <p className="text-xs text-muted-foreground">
-            Số lần sửa: {task.revisionCount}/{task.maxRevisions}
+            Phiên bản: {Math.min(task.revisionCount + 1, 3)}/3 (đã sửa{' '}
+            {task.revisionCount}/{task.maxRevisions} lần)
           </p>
         ) : null}
       </div>

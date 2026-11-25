@@ -258,7 +258,7 @@ export function LinkStudentView() {
                       <div className="flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                         <ShieldCheck className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                         <span>
-                          Học sinh đang theo dõi: {linkData.linkedUserName} (Lớp 6)
+                          Học sinh đang theo dõi: {linkData.linkedUserName}
                         </span>
                       </div>
                       <Button asChild className="h-11 w-full">

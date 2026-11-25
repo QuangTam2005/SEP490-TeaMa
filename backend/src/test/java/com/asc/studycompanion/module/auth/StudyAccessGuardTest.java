@@ -81,6 +81,28 @@ class StudyAccessGuardTest {
     }
 
     @Test
+    void timetableResolutionAllowsBothOwnedStudentAndLinkedGuardian() {
+        User studentUser = User.builder().id(1L).role(UserRole.STUDENT).build();
+        User guardianUser = User.builder().id(2L).role(UserRole.GUARDIAN).build();
+        StudentProfile profile = StudentProfile.builder().id(10L).user(studentUser).grade(8).displayName("Khoi").build();
+        GuardianLink activeLink = GuardianLink.builder()
+                .id(5L)
+                .guardianUser(guardianUser)
+                .student(profile)
+                .status(GuardianLinkStatus.ACTIVE)
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(studentUser));
+        when(studentProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(guardianUser));
+        when(guardianLinkRepository.findFirstByGuardianUserIdAndStatusOrderByLinkedAtDesc(2L, GuardianLinkStatus.ACTIVE))
+                .thenReturn(Optional.of(activeLink));
+
+        assertEquals(10L, guard.resolveStudentProfileForTimetable(1L).getId());
+        assertEquals(10L, guard.resolveStudentProfileForTimetable(2L).getId());
+    }
+
+    @Test
     void unlinkedGuardianReceivesGrd001Error() {
         User guardianUser = User.builder().id(3L).role(UserRole.GUARDIAN).build();
         when(userRepository.findById(3L)).thenReturn(Optional.of(guardianUser));

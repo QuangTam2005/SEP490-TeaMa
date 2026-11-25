@@ -5,6 +5,7 @@ import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.module.auth.dto.AuthResponse;
 import com.asc.studycompanion.module.auth.dto.LoginRequest;
 import com.asc.studycompanion.module.auth.dto.RegisterRequest;
+import com.asc.studycompanion.module.auth.dto.UpdateStudentProfileRequest;
 import com.asc.studycompanion.module.auth.dto.UserResponse;
 import com.asc.studycompanion.module.auth.entity.GuardianLink;
 import com.asc.studycompanion.module.auth.entity.GuardianLinkStatus;
@@ -42,6 +43,13 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        if (request.role() == UserRole.STUDENT && request.grade() == null) {
+            throw new AppException(
+                    ErrorCode.VALIDATION_FAILED,
+                    "Học sinh cần chọn khối lớp (1–12)"
+            );
+        }
+
         String normalizedEmail = request.email().toLowerCase(Locale.ROOT);
         if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -67,7 +75,7 @@ public class AuthService {
             StudentProfile profile = StudentProfile.builder()
                     .user(savedUser)
                     .displayName(savedUser.getFullName())
-                    .grade(StudentProfile.DEFAULT_GRADE)
+                    .grade(request.grade())
                     .timezone(StudentProfile.DEFAULT_TIMEZONE)
                     .build();
             studentProfileRepository.saveAndFlush(profile);
@@ -75,6 +83,28 @@ public class AuthService {
         }
 
         return buildAuthResponse(savedUser, grade, null);
+    }
+
+    @Transactional
+    public UserResponse updateStudentProfile(Long studentUserId, UpdateStudentProfileRequest request) {
+        User user = userRepository.findById(studentUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (user.getRole() != UserRole.STUDENT) {
+            throw new AppException(ErrorCode.ACCESS_DENIED);
+        }
+
+        StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        profile.setGrade(request.grade());
+        if (request.displayName() != null) {
+            profile.setDisplayName(request.displayName());
+            user.setFullName(request.displayName());
+            userRepository.save(user);
+        }
+        studentProfileRepository.save(profile);
+
+        return userMapper.toResponse(user, profile.getGrade(), null);
     }
 
     @Transactional(readOnly = true)
@@ -115,7 +145,7 @@ public class AuthService {
         if (user.getRole() == UserRole.STUDENT) {
             grade = studentProfileRepository.findByUserId(user.getId())
                     .map(StudentProfile::getGrade)
-                    .orElse(StudentProfile.DEFAULT_GRADE);
+                    .orElse(null);
         } else if (user.getRole() == UserRole.GUARDIAN) {
             linkedStudentName = guardianLinkRepository
                     .findFirstByGuardianUserIdAndStatusOrderByLinkedAtDesc(user.getId(), GuardianLinkStatus.ACTIVE)

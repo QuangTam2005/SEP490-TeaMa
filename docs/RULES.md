@@ -17,14 +17,16 @@
 
 ## 2. Domain & AI Pipeline Red Lines (`SRS BR-01..BR-24`)
 1. **Identical Character Counter (`BR-12`):** Cả Frontend và Backend phải dùng cùng quy tắc chuẩn hóa `\r\n` $\rightarrow$ `\n`, `.trim()` hai đầu, sau đó đếm toàn bộ ký tự (gồm khoảng trắng và dấu câu bên trong) và khóa chặt trong `[850, 2000]` cho cả `REVIEW` và `PREVIEW`.
-2. **Strict Task Sequencing & Revision Cap (`BR-08`, `O-04`):**
+2. **Strict Task Sequencing & Version Cap (`BR-08`, `v1..v3`):**
    - `PREVIEW` chỉ được mở khóa sau khi `REVIEW` cùng môn/ngày đã được Submit và lưu thành công.
-   - Sau khi `EVALUATED`, Student được phép nộp bản cập nhật mới (**Revision**), **tối đa 3 lần cập nhật** cho mỗi nhiệm vụ (`version <= 4`); cấm sửa trong lúc đang `EVALUATING`; mọi phiên bản đã Submit đều bất biến (`BR-21`).
+   - Sau khi `EVALUATED`, Student được phép nộp bản cập nhật mới (**Revision**), **tối đa 3 phiên bản tổng cộng (`v1`, `v2`, `v3` $\rightarrow$ `revisionCount <= 2`)** cho mỗi nhiệm vụ; cấm sửa trong lúc đang `EVALUATING`; mọi phiên bản đã Submit đều bất biến (`BR-21`).
+   - Student tự chọn khối lớp của mình (`1–12`), không hard-code khối 6; cả Student và Guardian đã liên kết đều có thể cập nhật Thời khóa biểu tuần.
 3. **Save Before AI & No AI While Typing (`BR-13`, `BR-14`):** Tuyệt đối không gọi Brave Search hoặc MiMo khi đang nhập liệu. Backend bắt buộc lưu `StudySubmission` và `EvaluationJob` vào PostgreSQL trước khi gọi API ngoài; sử dụng `Idempotency-Key` chống trùng job.
-4. **AI Privacy & Grounding (`BR-17`, `BR-18`, `BR-23`):**
-   - Tuyệt đối không gửi tên thật, email, ID học sinh hoặc lịch sử chat sang Brave/MiMo; chỉ gửi `grade=6`, `subject`, `taskType`, `lessonTitle`, `studentText`.
-   - Khi nguồn thiếu hoặc mâu thuẫn, trả `UNVERIFIABLE` / `UNDETERMINED` / `INSUFFICIENT_EVIDENCE` — cấm bịa URL hoặc kết luận sai.
-   - Phần nhận xét hiển thị cho Student (kèm ý sai/thiếu nếu hiển thị chung) **không vượt quá 600 ký tự** — không cắt ngang câu chữ ngẫu nhiên (`SRS §11`).
+4. **AI Privacy, KNTT + Wikipedia Grounding & 3-Retry Fallback (`BR-17`, `BR-18`, `BR-23`):**
+   - Tuyệt đối không gửi tên thật, email, ID học sinh hoặc lịch sử chat sang Brave/MiMo; chỉ gửi `grade`, `subject`, `taskType`, `lessonTitle`, `studentText`.
+   - Ưu tiên đối chiếu theo sách chuẩn **Kết nối tri thức với cuộc sống** và **Wikipedia**, giới hạn tối đa **2–3 nguồn** để tránh tốn token.
+   - Nếu AI lỗi khi xử lý, **retry tối đa 3 lần**. Quá 3 lần vẫn lỗi thì **ngưng retry**, ghi nhận nhận xét fallback báo hệ thống AI lỗi để phụ huynh tự kiểm tra bài làm và chuyển trạng thái qua Guardian như đã review xong (không làm tính năng check thủ công riêng).
+   - Phần nhận xét hiển thị cho Student **không vượt quá 600 ký tự** — không cắt ngang câu chữ ngẫu nhiên (`SRS §11`).
 5. **Secret & Cost Protection (`NFR-SEC-02`, `§3.2`):** `CKEY_API_KEY`, `BRAVE_API_KEY`, `JWT_SECRET` chỉ nằm ở Backend; không bao giờ log secret hoặc trả `AIUsageLog` ra Guardian Dashboard thông thường.
 
 ---

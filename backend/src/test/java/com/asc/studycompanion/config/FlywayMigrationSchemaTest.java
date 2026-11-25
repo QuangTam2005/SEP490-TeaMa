@@ -46,7 +46,8 @@ class FlywayMigrationSchemaTest {
         assertTrue(sql.contains("CREATE TABLE knowledge_cache"));
 
         assertTrue(sql.contains("BETWEEN 850 AND 2000"));
-        assertTrue(sql.contains("BETWEEN 1 AND 4"));
+        assertTrue(sql.contains("BETWEEN 1 AND 3"));
+        assertTrue(sql.contains("BETWEEN 1 AND 12"));
         assertTrue(sql.contains("feedback VARCHAR(600)"));
     }
 }

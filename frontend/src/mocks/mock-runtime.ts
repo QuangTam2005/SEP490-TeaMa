@@ -119,6 +119,7 @@ export function useMockRuntime(): MockRuntimeState {
 
 export interface MockOperationOptions<T> {
   requireRole?: UserRole;
+  requireRoles?: UserRole[];
   emptyFallback?: T;
   validationErrors?: ValidationErrorMap;
   ignoreGlobalScenario?: boolean;
@@ -139,6 +140,14 @@ export async function runMockOperation<T>(
   await sleep(delayMs);
 
   if (options.requireRole && simulatedRole !== options.requireRole) {
+    throw new ApiClientError({
+      status: 403,
+      errorCode: 'AUTH_004',
+      message: 'Vai trò hiện tại không có quyền thực hiện thao tác này.',
+    });
+  }
+
+  if (options.requireRoles && !options.requireRoles.includes(simulatedRole)) {
     throw new ApiClientError({
       status: 403,
       errorCode: 'AUTH_004',

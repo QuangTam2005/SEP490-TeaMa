@@ -42,7 +42,7 @@ public enum ErrorCode {
     SUBMISSION_NOT_FOUND("STUDY_002", HttpStatus.NOT_FOUND, "Không tìm thấy bài nộp"),
     REVIEW_REQUIRED_BEFORE_PREVIEW("STUDY_003", HttpStatus.BAD_REQUEST, "Em cần nộp bài Ôn bài cũ (Review) trước khi mở Soạn bài mới (Preview)"),
     CONTENT_LENGTH_OUT_OF_RANGE("STUDY_004", HttpStatus.BAD_REQUEST, "Nội dung bài viết phải từ 850 đến 2.000 ký tự"),
-    MAX_REVISIONS_EXCEEDED("STUDY_005", HttpStatus.BAD_REQUEST, "Em đã sử dụng hết tối đa 3 lần chỉnh sửa cho nhiệm vụ này"),
+    MAX_REVISIONS_EXCEEDED("STUDY_005", HttpStatus.BAD_REQUEST, "Em đã sử dụng hết tối đa 3 phiên bản (v1–v3) cho nhiệm vụ này"),
     SUBMISSION_EVALUATING_LOCKED("STUDY_006", HttpStatus.CONFLICT, "Bài làm đang được AI đánh giá, vui lòng đợi hoàn tất trước khi gửi bản mới"),
 
     // AI Evaluation & Provider Errors

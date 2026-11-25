@@ -109,8 +109,8 @@ export function SubmissionDetailView({
                   </h1>
                   <p className="text-xs text-muted-foreground">
                     Học sinh: <strong>{detail.studentName}</strong> · Ngày học:{' '}
-                    {formatViDate(detail.targetDate)} · Đã sửa:{' '}
-                    {detail.revisionCount}/3 lần
+                    {formatViDate(detail.targetDate)} · Phiên bản:{' '}
+                    {detail.versions.length}/3
                   </p>
                 </div>
               </div>

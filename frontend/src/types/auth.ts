@@ -27,4 +27,10 @@ export interface RegisterRequest {
   password: string;
   fullName: string;
   role: UserRole;
+  grade?: number | null;
+}
+
+export interface UpdateStudentProfileRequest {
+  grade: number;
+  displayName?: string;
 }

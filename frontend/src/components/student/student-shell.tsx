@@ -68,7 +68,8 @@ export function StudentShell({ children }: StudentShellProps) {
               </span>
             </Link>
             <Badge variant="brand" className="hidden sm:inline-flex">
-              {user?.fullName ?? 'Nguyễn Minh Khôi'} · Lớp 6
+              {user?.fullName ?? 'Nguyễn Minh Khôi'}
+              {user?.grade ? ` · Lớp ${user.grade}` : ''}
             </Badge>
           </div>
 

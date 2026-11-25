@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   BookOpen,
+  CalendarDays,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -17,6 +18,19 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { useAuthStore } from '@/store/auth-store';
 import { cn } from '@/lib/utils';
+
+const GUARDIAN_NAV_ITEMS = [
+  {
+    href: '/guardian/dashboard',
+    label: 'Bảng theo dõi học tập',
+    icon: LayoutDashboard,
+  },
+  {
+    href: '/guardian/timetable',
+    label: 'Thời khóa biểu',
+    icon: CalendarDays,
+  },
+] as const;
 
 interface GuardianShellProps {
   children: ReactNode;
@@ -64,18 +78,25 @@ export function GuardianShell({ children }: GuardianShellProps) {
             aria-label="Điều hướng phụ huynh"
             className="hidden items-center gap-1.5 md:flex"
           >
-            <Link
-              href="/guardian/dashboard"
-              className={cn(
-                'inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm transition-colors',
-                pathname.startsWith('/guardian')
-                  ? 'bg-brand-soft font-semibold text-brand-strong dark:text-sky-300'
-                  : 'font-medium text-muted-foreground hover:bg-muted hover:text-foreground'
-              )}
-            >
-              <LayoutDashboard className="h-4 w-4" strokeWidth={1.75} />
-              <span>Bảng theo dõi học tập</span>
-            </Link>
+            {GUARDIAN_NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const active = pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm transition-colors',
+                    active
+                      ? 'bg-brand-soft font-semibold text-brand-strong dark:text-sky-300'
+                      : 'font-medium text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  <Icon className="h-4 w-4" strokeWidth={1.75} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -124,14 +145,26 @@ export function GuardianShell({ children }: GuardianShellProps) {
         {mobileMenuOpen ? (
           <div className="border-t bg-card px-4 py-3 md:hidden">
             <div className="space-y-2">
-              <Link
-                href="/guardian/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex h-11 items-center gap-2.5 rounded-lg bg-brand-soft px-3.5 text-sm font-semibold text-brand-strong dark:text-sky-300"
-              >
-                <LayoutDashboard className="h-4 w-4" strokeWidth={1.75} />
-                <span>Bảng theo dõi học tập</span>
-              </Link>
+              {GUARDIAN_NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const active = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'flex h-11 items-center gap-2.5 rounded-lg px-3.5 text-sm',
+                      active
+                        ? 'bg-brand-soft font-semibold text-brand-strong dark:text-sky-300'
+                        : 'font-medium text-foreground hover:bg-muted'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" strokeWidth={1.75} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
 
               <Link
                 href="/link-student"

@@ -22,9 +22,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             <span className="text-base font-semibold tracking-tight text-foreground">
               Study Companion
             </span>
-            <span className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px] font-medium text-muted-foreground">
-              Lớp 6
-            </span>
           </Link>
 
           <ThemeToggle />

@@ -1,6 +1,10 @@
 import { GRADE_6_SUBJECTS } from '@/lib/study-utils';
 import { buildInitialTimetable } from '@/mocks/fixtures/study-seed';
-import { registerMockResetHook, runMockOperation } from '@/mocks/mock-runtime';
+import {
+  getMockRuntimeState,
+  registerMockResetHook,
+  runMockOperation,
+} from '@/mocks/mock-runtime';
 import type { TimetableService } from '@/services/timetable.service';
 import type {
   SubjectResponse,
@@ -38,7 +42,7 @@ export const timetableMockService: TimetableService = {
         entries: timetableDb.entries.map((entry) => ({ ...entry })),
       }),
       {
-        requireRole: 'STUDENT',
+        requireRoles: ['STUDENT', 'GUARDIAN'],
         emptyFallback: {
           ...timetableDb,
           entries: [],
@@ -52,10 +56,15 @@ export const timetableMockService: TimetableService = {
   ): Promise<TimetableResponse> {
     return runMockOperation(
       () => {
+        const { simulatedRole } = getMockRuntimeState();
         timetableDb = {
           ...timetableDb,
           version: timetableDb.version + 1,
           updatedAt: new Date().toISOString(),
+          updatedByName:
+            simulatedRole === 'GUARDIAN'
+              ? 'Nguyễn Thu Hằng (Phụ huynh)'
+              : 'Nguyễn Minh Khôi',
           entries: request.entries.map((entry) => ({
             weekday: entry.weekday,
             subjectCode: entry.subjectCode,
@@ -67,7 +76,7 @@ export const timetableMockService: TimetableService = {
           entries: timetableDb.entries.map((entry) => ({ ...entry })),
         };
       },
-      { requireRole: 'STUDENT' }
+      { requireRoles: ['STUDENT', 'GUARDIAN'] }
     );
   },
 };

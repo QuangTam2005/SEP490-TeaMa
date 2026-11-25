@@ -18,12 +18,14 @@ import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
 import {
   GRADE_6_SUBJECTS,
+  GRADE_OPTIONS,
   WEEKDAYS,
   formatViDate,
 } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
-import { timetableService } from '@/services';
+import { IS_MOCK_MODE, authService, timetableService } from '@/services';
+import { useAuthStore } from '@/store/auth-store';
 import type { SubjectCode, TimetableEntryDto, Weekday } from '@/types';
 
 function makeCellKey(weekday: Weekday, subjectCode: SubjectCode): string {
@@ -33,10 +35,27 @@ function makeCellKey(weekday: Weekday, subjectCode: SubjectCode): string {
 export function TimetableView() {
   const queryClient = useQueryClient();
   const runtime = useMockRuntime();
+  const user = useAuthStore((state) => state.user);
+  const syncUser = useAuthStore((state) => state.syncUser);
   const [draftMap, setDraftMap] = useState<Map<string, TimetableEntryDto>>(
     () => new Map()
   );
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const isStudentMode = IS_MOCK_MODE
+    ? runtime.simulatedRole === 'STUDENT'
+    : user?.role === 'STUDENT';
+
+  const gradeMutation = useMutation({
+    mutationFn: (grade: number) => authService.updateStudentProfile({ grade }),
+    onSuccess: (updatedUser) => {
+      syncUser(updatedUser);
+      toast.success(`Đã cập nhật sang Khối ${updatedUser.grade}`);
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
 
   const timetableQuery = useQuery({
     queryKey: ['student-timetable', runtime.resetCounter, runtime.scenario, runtime.simulatedRole],
@@ -139,19 +158,37 @@ export function TimetableView() {
           </p>
         </div>
 
-        <Button
-          type="button"
-          className="h-11 gap-2 px-5 text-sm font-semibold"
-          disabled={saveMutation.isPending || timetableQuery.isLoading}
-          onClick={handleSave}
-        >
-          {saveMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
-          ) : (
-            <Save className="h-4 w-4" strokeWidth={1.75} />
-          )}
-          {hasUnsavedChanges ? 'Lưu thay đổi' : 'Lưu thời khóa biểu'}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {isStudentMode ? (
+            <select
+              aria-label="Chọn khối lớp của con"
+              value={user?.grade ?? 6}
+              disabled={gradeMutation.isPending}
+              onChange={(e) => gradeMutation.mutate(Number(e.target.value))}
+              className="h-11 rounded-lg border bg-background px-3 text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {GRADE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          ) : null}
+
+          <Button
+            type="button"
+            className="h-11 gap-2 px-5 text-sm font-semibold"
+            disabled={saveMutation.isPending || timetableQuery.isLoading}
+            onClick={handleSave}
+          >
+            {saveMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+            ) : (
+              <Save className="h-4 w-4" strokeWidth={1.75} />
+            )}
+            {hasUnsavedChanges ? 'Lưu thay đổi' : 'Lưu thời khóa biểu'}
+          </Button>
+        </div>
       </div>
 
       <QueryStateBoundary
@@ -177,7 +214,7 @@ export function TimetableView() {
                     <thead>
                       <tr className="border-b bg-muted/40">
                         <th className="w-44 px-4 py-3.5 font-semibold text-foreground">
-                          Môn học lớp 6
+                          Môn học
                         </th>
                         {WEEKDAYS.map((day) => (
                           <th

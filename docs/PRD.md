@@ -1,71 +1,62 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
-**Product Name:** AI Study Companion – Grade 6 (`SRS-ASC-G6-001`)  
-**Target Domain:** Hỗ trợ học sinh lớp 6 tự học theo thời khóa biểu & giám sát tiến độ bởi Phụ huynh/Người giám sát (`Guardian`)  
-**Document Version:** 1.0 (Baseline — Synced with `SRS-ASC-G6-001` & MVP Decisions)  
+**Product Name:** AI Study Companion (`SRS-ASC-G6-001` — Updated v1.1)  
+**Target Domain:** Hỗ trợ học sinh (tự chọn khối lớp `1–12`, trọng tâm THCS) tự học theo thời khóa biểu & giám sát bởi Phụ huynh (`Guardian`)  
+**Document Version:** 1.1 (Dynamic Student Grade, `v1..v3` Cap, Guardian Timetable Edit, KNTT + Wikipedia Grounding, AI 3-Retry Fallback)
 
 ---
 
 ## 1. Product Overview & Vision
 ### 1.1 Problem Statement
-Học sinh lớp 6 thường gặp 4 khó khăn trong quá trình tự học hằng ngày:
+Học sinh thường gặp 4 khó khăn trong quá trình tự học hằng ngày:
 1. Dễ quên kiến thức buổi học trước, khó kết nối mạch kiến thức liên môn.
 2. Ít chuẩn bị/đọc trước bài mới trước khi lên lớp.
 3. Có thể hiểu sai hoặc thiếu ý trọng tâm nhưng không tự phát hiện ra.
 4. Người giám sát (`Guardian`) khó nắm được thực chất học sinh đã tự viết/tự hiểu những gì thay vì chỉ nhìn điểm số bề mặt.
 
 ### 1.2 Product Vision
-Xây dựng nền tảng web responsive **AI Study Companion – Grade 6** với định hướng cốt lõi: **Student tự học và tự trình bày; AI kiểm chứng từ nguồn Internet và phản hồi ngắn gọn; Guardian theo dõi minh bạch trên Dashboard**.  
-Ứng dụng **không** làm bài thay học sinh, **không** chấm điểm tổng kết hay xếp hạng thay nhà trường, và **không** mặc định mọi kết quả Internet là đúng khi thiếu căn cứ.
+Xây dựng nền tảng web responsive **AI Study Companion** với định hướng cốt lõi: **Student tự học và tự trình bày; AI kiểm chứng từ SGK Kết nối tri thức với cuộc sống + Wikipedia và phản hồi ngắn gọn; Guardian theo dõi minh bạch trên Dashboard**.  
+Ứng dụng **không** làm bài thay học sinh, **không** chấm điểm tổng kết hay xếp hạng thay nhà trường, và **không** tạo tính năng chấm/duyệt thủ công riêng khi AI lỗi.
 
 ---
 
 ## 2. Target Users & Roles (RBAC)
-1. **Student (Học sinh lớp 6):**
+1. **Student (Học sinh):**
+   - **Tự thiết lập khối lớp của mình (`1–12`)** khi đăng ký hoặc cập nhật hồ sơ học tập (không mặc định cứng khối 6).
    - Nhập và cập nhật **Thời khóa biểu tuần** gồm **5 môn cố định** (`Toán`, `Ngữ văn`, `Tiếng Anh`, `Khoa học tự nhiên`, `Lịch sử – Địa lý`).
-   - Xem kế hoạch học tập cho **ngày lịch kế tiếp** theo múi giờ `Asia/Ho_Chi_Minh`.
+   - Chuẩn bị bài vào **ngày hôm trước** của ngày có lịch học môn (theo múi giờ `Asia/Ho_Chi_Minh`: ví dụ thứ Hai có môn Toán $\rightarrow$ Chủ nhật làm bài ôn/soạn môn Toán).
    - Thực hiện tuần tự cặp nhiệm vụ **Review (Ôn bài cũ)** trước $\rightarrow$ **Preview (Soạn bài mới)** sau, tự viết kiến thức từ `850` đến `2.000` ký tự.
-   - Xem kết quả AI đánh giá (`Accuracy`, `Completeness`, `overall_status`, nhận xét `<= 600` ký tự, nguồn tham khảo) và có thể **cập nhật bản sửa (Revision) tối đa 3 lần** sau khi AI đánh giá xong.
+   - Xem kết quả AI đánh giá (`Accuracy`, `Completeness`, `overall_status`, nhận xét `<= 600` ký tự, nguồn tham khảo) và có thể nộp tối đa **3 phiên bản tổng cộng (`v1`, `v2`, `v3`)** cho mỗi nhiệm vụ.
 2. **Guardian (Người giám sát / Phụ huynh):**
    - Liên kết với hồ sơ Student thông qua **mã liên kết dùng 1 lần (8 ký tự)** (`O-01`).
-   - Xem **Guardian Dashboard** ở chế độ chỉ đọc: tiến độ theo ngày/tuần, lịch sử từng phiên bản bài viết gốc bất biến của Student, đánh giá chi tiết của AI (`incorrect_points`, `missing_points`, URL nguồn & thời điểm truy xuất).
-   - **Không** sửa thời khóa biểu thay Student, **không** nộp bài thay Student, và **không** xem thông số kỹ thuật/chi phí AI (`AIUsageLog`) ở Dashboard thông thường.
+   - Có quyền **xem và cập nhật Thời khóa biểu tuần** cho Student đã liên kết (lưu dưới dạng phiên bản mới, giữ nguyên lịch sử cũ).
+   - Xem **Guardian Dashboard** ở chế độ chỉ đọc bài làm: tiến độ theo ngày/tuần, lịch sử từng phiên bản bài viết gốc bất biến của Student (`v1..v3`), đánh giá chi tiết của AI (`incorrect_points`, `missing_points`, URL nguồn & thời điểm truy xuất). Khi AI lỗi sau 3 lần thử tự động, bài làm vẫn được chuyển sang Guardian kèm thông báo lỗi hệ thống để Phụ huynh tự kiểm tra trực tiếp bài làm của con (không làm tính năng check thủ công riêng).
+   - **Không** nộp bài thay Student và **không** xem thông số kỹ thuật/chi phí AI (`AIUsageLog`).
 
 ---
 
 ## 3. Core Functional Requirements (MVP Scope)
 
-### Module 1: Authentication, Profiles & Student–Guardian Linking (`FR-AUTH`)
-- **FR-AUTH-01..05:** Đăng ký, đăng nhập, đăng xuất và quản lý phiên JWT với tối thiểu 2 vai trò `STUDENT` và `GUARDIAN`. Chấp nhận mọi địa chỉ email hợp lệ (không ràng buộc domain riêng).
-- **FR-AUTH-06 (Student–Guardian 1-Time Link Code — `O-01`):** Hỗ trợ liên kết tài khoản Student–Guardian bằng mã liên kết 8 ký tự dùng 1 lần tạo trực tiếp trên giao diện (không gửi Email/SMS). Guardian chỉ truy cập được dữ liệu của Student đã liên kết hợp lệ.
+### Module 1: Authentication, Grade Setup & Student–Guardian Linking (`FR-AUTH`)
+- **FR-AUTH-01..05:** Đăng ký (`STUDENT` chọn khối lớp `1–12` của mình; `GUARDIAN`), đăng nhập, đăng xuất và quản lý phiên JWT. Chấp nhận mọi địa chỉ email hợp lệ bất kỳ. Student có thể cập nhật lại khối lớp qua `PUT /api/student/profile`.
+- **FR-AUTH-06 (Student–Guardian 1-Time Link Code — `O-01`):** Tạo mã liên kết 8 ký tự dùng 1 lần trên giao diện (hạn 24h, không Email/SMS).
 
-### Module 2: Weekly Timetable & Next-Day Study Plan (`FR-SCH`, `FR-PLAN`)
-- **FR-SCH-01..07 (Weekly Timetable):** Student chọn các ngày trong tuần (`MON`–`SUN`) và gán một hoặc nhiều môn trong **5 môn cố định** (`MATH`, `LIT`, `ENG`, `SCI`, `HISGEO`), kèm ghi chú/tiết học tùy chọn. Lưu thời điểm & người cập nhật dưới dạng phiên bản lịch mới; chỉnh sửa lịch **không xóa hay thay đổi** các `StudyPlan`, `StudySubmission` và `AIEvaluation` lịch sử.
-- **FR-PLAN-01..05 (Next-Day Study Plan):** Xác định ngày mục tiêu mặc định là **ngày lịch kế tiếp** theo múi giờ `Asia/Ho_Chi_Minh`. Mỗi môn trong ngày tạo đúng **1 cặp nhiệm vụ (`REVIEW` + `PREVIEW`)** kể cả khi môn xuất hiện nhiều tiết trong ngày. Nếu ngày kế tiếp không có môn, hiển thị trạng thái rỗng *"Không có môn học theo thời khóa biểu"* (không tự suy đoán ngày học bù).
+### Module 2: Weekly Timetable & Preparation Study Plan (`FR-SCH`, `FR-PLAN`)
+- **FR-SCH-01..07 (Weekly Timetable):** **Student hoặc Guardian đã liên kết** đều có thể chọn các ngày (`MON`–`SUN`) và gán môn trong **5 môn cố định** (`MATH`, `LIT`, `ENG`, `SCI`, `HISGEO`), kèm ghi chú/tiết học. Lưu thời điểm & người cập nhật (`updated_by_user_id`) dưới dạng phiên bản lịch mới; không xóa/sửa các `StudyPlan`, `StudySubmission` và `AIEvaluation` lịch sử.
+- **FR-PLAN-01..05 (Next-Day Preparation Plan):** Ngày chuẩn bị là **hôm nay**, lập kế hoạch cho **ngày lịch kế tiếp** (ngày mai theo `Asia/Ho_Chi_Minh`). Ví dụ thứ Hai có môn Toán theo thời khóa biểu $\rightarrow$ Chủ nhật hệ thống hiển thị môn Toán để bé ôn/soạn. Mỗi môn trong ngày tạo đúng **1 cặp (`REVIEW` + `PREVIEW`)**. Ngày kế tiếp trống lịch hiển thị *"Không có môn học theo thời khóa biểu"*.
 
 ### Module 3: Review & Preview Submissions (`FR-REV`, `FR-PRE`, `O-04`)
-- **FR-REV-01..07 (Review — Ôn bài cũ):** Nhập **Tựa bài cũ** (bắt buộc) và **Nội dung kiến thức chủ đạo** có độ dài `850–2.000` ký tự (tính theo quy tắc chuẩn hóa newline + trim hai đầu, bao gồm khoảng trắng và dấu câu nội bộ). UI hiển thị bộ đếm ký tự realtime và chặn Submit ngoài biên (`849` hoặc `2.001`). Backend lưu bản ghi bất biến trước khi tạo `EvaluationJob`.
-- **FR-PRE-01..07 (Preview — Soạn bài mới):** Chỉ mở khóa sau khi nhiệm vụ `REVIEW` cùng môn/ngày đã được **Submit và lưu thành công** (không bắt buộc chờ AI chạy xong mới được mở Preview). Áp dụng cùng quy tắc tựa bài và `850–2.000` ký tự.
-- **Revision Policy (`O-04`):** Sau khi nhận kết quả AI (`EVALUATED`), Student được phép nộp bản cập nhật (**Revision**), **tối đa 3 lần cập nhật** cho mỗi nhiệm vụ (tối đa 4 phiên bản bất biến: `v1` gốc + `v2..v4` sửa; khóa cập nhật trong lúc đang `EVALUATING` và không ghi đè bản cũ).
+- **FR-REV-01..07 & FR-PRE-01..07:** Tựa bài (bắt buộc) + Nội dung **`850–2.000` ký tự** (chuẩn hóa `\r\n` $\rightarrow$ `\n`, `.trim()`). Cổng tuần tự: `REVIEW` nộp xong mới mở `PREVIEW` cùng môn/ngày (`BR-08`).
+- **Revision Policy (`v1..v3`):** Tối đa **3 phiên bản tổng cộng (`v1` gốc + tối đa 2 lần sửa `v2`, `v3`)** cho mỗi nhiệm vụ. Khóa nộp mới trong lúc đang `EVALUATING`; mọi phiên bản bất biến.
 
 ### Module 4: AI Verification Pipeline & Cost Control (`FR-AI`, `FR-OPS`)
 - **FR-AI-01..15 (Brave Search + MiMo v2.6 Flash via CKEY):**
-  - Chỉ kích hoạt khi Student bấm Submit hợp lệ (tuyệt đối **không** gọi AI khi đang gõ; **không** gửi lịch sử chat).
-  - Kiểm tra `KnowledgeCache` (chỉ lưu nội dung khi điều khoản API cho phép) $\rightarrow$ miss thì gọi **Brave Search API** với truy vấn `Lớp 6 + môn + tựa bài` (+ cụm từ khóa rút gọn), lấy tối đa **3 nguồn**, giới hạn ngân sách ngữ cảnh khoảng **2.048 token**.
-  - Gọi **MiMo v2.6 Flash via CKEY** 1 lượt với prompt cố định, **tuyệt đối không gửi tên thật hay thông tin định danh học sinh** (`BR-23`).
-  - Đánh giá độc lập 2 trục:
-    - `accuracy`: `CORRECT` | `PARTIALLY_CORRECT` | `INCORRECT` | `UNVERIFIABLE`
-    - `completeness`: `COMPLETE` | `INCOMPLETE` | `UNDETERMINED`
-    - `overall_status`: `GOOD` | `NEEDS_IMPROVEMENT` | `INCORRECT` | `INSUFFICIENT_EVIDENCE`
-    - `confidence`: `HIGH` | `MEDIUM` | `LOW`
-  - Nhận xét Tiếng Việt thân thiện trình độ lớp 6, tổng phần hiển thị cho Student **không vượt quá 600 ký tự**; kèm `incorrect_points`, `missing_points` và mảng `sources` (`title`, `url`, `retrieved_at`). Thiếu căn cứ trả `UNVERIFIABLE` / `UNDETERMINED` / `INSUFFICIENT_EVIDENCE`, không bịa nguồn.
-- **FR-OPS-01..07:** Xử lý bất đồng bộ qua `EvaluationJob` queue; hỗ trợ `Idempotency-Key` chống trùng job khi bấm Submit liên tục; retry có exponential backoff với `timeout`/`429`/`5xx`; lưu `AIUsageLog` (tokens, search count, latency, estimated cost) mà không ghi lộ API secret.
+  - Chỉ kích hoạt khi Student bấm Submit hợp lệ (tuyệt đối **không** gọi AI khi đang gõ; **không** gửi PII/tên/email/ID).
+  - Nguồn chuẩn hóa: ưu tiên SGK **Kết nối tri thức với cuộc sống** (đúng `grade` của Student) và **Wikipedia** (`vi.wikipedia.org`), giới hạn ít nguồn (**tối đa `2–3` nguồn**, ngân sách ngữ cảnh tối đa ~`2.048` tokens) để tiết kiệm token.
+  - Đánh giá độc lập `accuracy`, `completeness`, `overall_status`, `confidence`, nhận xét Tiếng Việt thân thiện `<= 600` ký tự, `incorrect_points`, `missing_points`, `sources`.
+- **FR-OPS-01..07 (3-Attempt Retry & Fallback to Guardian):**
+  - Xử lý bất đồng bộ qua `EvaluationJob` + `Idempotency-Key`.
+  - Khi lỗi gọi/parse AI, Worker **retry tự động tối đa 3 lần** (exponential backoff).
+  - **Nếu quá 3 lần vẫn lỗi:** ngưng retry, ghi nhận `AIEvaluation` fallback (`overall_status = INSUFFICIENT_EVIDENCE`, `accuracy = UNVERIFIABLE`, `completeness = UNDETERMINED`, nhận xét thông báo hệ thống AI đang gặp lỗi sau 3 lần thử, phụ huynh vui lòng tự kiểm tra bài làm của con) và chuyển trạng thái task sang `EVALUATED` để hiển thị cho Guardian như đã hoàn tất bước AI review (không tạo chức năng check thủ công riêng).
 
 ### Module 5: Guardian Dashboard (`FR-GRD`)
-- **FR-GRD-01..08:** Xem tổng quan tiến độ hoàn thành theo ngày/tuần, lọc theo ngày và 5 môn học; xem nguyên văn bất biến mọi phiên bản bài viết của Student, trạng thái `EVALUATING`/`EVALUATION_FAILED`/`EVALUATED`, đầy đủ `Accuracy`, `Completeness`, `overall_status`, `feedback`, `incorrect_points`, `missing_points` và URL nguồn tham khảo.
-
----
-
-## 4. Non-Functional Requirements & Out of Scope
-- **Usability & Accessibility:** Giao diện Minimal-Text, chữ đọc rõ ràng cho học sinh lớp 6, tiếng Việt mặc định (`Be Vietnam Pro` + `JetBrains Mono`), responsive trên mobile/tablet/desktop; phản hồi tích cực không mang tính trách phạt (`NFR-ACC-01`).
-- **Security & Privacy:** HTTPS/TLS; secret `CKEY_API_KEY` và `BRAVE_API_KEY` chỉ lưu tại Backend; kiểm tra chéo quyền `User`/`GuardianLink` tại server; không gửi dữ liệu định danh trẻ vị thành niên sang AI/Search (`NFR-PRIV-01..02`).
-- **Out of Scope (MVP 1.0):** Tự tạo đề thi/ngân hàng câu hỏi; chatbot hội thoại tự do; OCR/đọc ảnh chụp sách vở/thời khóa biểu; đồng bộ lịch từ trường; native mobile app; chấm điểm tổng kết/xếp hạng; Email/SMS/Push notification; mở rộng khối lớp 7–9; thanh toán/subscription.
+- **FR-GRD-01..08:** Xem tiến độ theo ngày/tuần, lọc theo ngày và 5 môn, chỉnh sửa Thời khóa biểu tuần cho con, và kiểm tra nguyên văn bất biến mọi phiên bản (`v1..v3`) + đánh giá AI + nguồn đối chiếu (tuyệt đối không lộ `AIUsageLog`).

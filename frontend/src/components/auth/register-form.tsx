@@ -18,6 +18,7 @@ import {
 import { authService, IS_MOCK_MODE } from '@/services';
 import { setSimulatedRole } from '@/mocks/mock-runtime';
 import { useAuthStore } from '@/store/auth-store';
+import { GRADE_OPTIONS } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 
 const registerSchema = z
@@ -33,6 +34,7 @@ const registerSchema = z
       .min(1, 'Email không được để trống')
       .email('Email không đúng định dạng'),
     role: z.enum(['STUDENT', 'GUARDIAN']),
+    grade: z.number().int().min(1).max(12).nullable(),
     password: z
       .string()
       .min(6, 'Mật khẩu phải có ít nhất 6 ký tự')
@@ -42,6 +44,10 @@ const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'],
     message: 'Mật khẩu xác nhận không khớp',
+  })
+  .refine((data) => data.role !== 'STUDENT' || data.grade !== null, {
+    path: ['grade'],
+    message: 'Vui lòng chọn khối lớp của con',
   });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -64,12 +70,14 @@ export function RegisterForm() {
       fullName: '',
       email: '',
       role: 'STUDENT',
+      grade: 6,
       password: '',
       confirmPassword: '',
     },
   });
 
   const selectedRole = watch('role');
+  const selectedGrade = watch('grade');
 
   const onSubmit = async (values: RegisterFormValues) => {
     setFormError(null);
@@ -78,6 +86,7 @@ export function RegisterForm() {
         fullName: values.fullName.trim(),
         email: values.email.trim(),
         role: values.role,
+        grade: values.role === 'STUDENT' ? values.grade : null,
         password: values.password,
       });
       if (IS_MOCK_MODE) {
@@ -130,7 +139,7 @@ export function RegisterForm() {
           <div className="grid grid-cols-2 gap-2">
             {(
               [
-                { value: 'STUDENT', label: 'Học sinh lớp 6' },
+                { value: 'STUDENT', label: 'Học sinh' },
                 { value: 'GUARDIAN', label: 'Phụ huynh / Giám sát' },
               ] as const
             ).map((option) => (
@@ -150,6 +159,36 @@ export function RegisterForm() {
             ))}
           </div>
         </div>
+
+        {selectedRole === 'STUDENT' ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="reg-grade">Khối lớp của con</Label>
+            <select
+              id="reg-grade"
+              value={selectedGrade ?? ''}
+              onChange={(e) =>
+                setValue(
+                  'grade',
+                  e.target.value ? Number(e.target.value) : null,
+                  { shouldValidate: true }
+                )
+              }
+              className="h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">Chọn khối lớp...</option>
+              {GRADE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            {errors.grade ? (
+              <p className="text-xs text-rose-600 dark:text-rose-400">
+                {errors.grade.message}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="space-y-1.5">
           <Label htmlFor="reg-fullName">Họ và tên</Label>

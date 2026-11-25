@@ -82,7 +82,8 @@ class AuthControllerTest {
                   "email": "  hocsinh@gmail.com  ",
                   "password": "password123",
                   "fullName": "  Nguyen Minh Khoi ",
-                  "role": "STUDENT"
+                  "role": "STUDENT",
+                  "grade": 7
                 }
                 """;
 

@@ -54,26 +54,26 @@
 ## Phase 4: Timetable, Study Plan & Submission Backend (`backend/`)
 
 ### Task 6 — Thời khóa biểu phiên bản & Kế hoạch ngày kế tiếp *(2 subtasks)*
-- [ ] `[TASK-BE.3]` *(3 SP)* Xây dựng module `timetable` (`Timetable`, `TimetableEntry`, `GET/PUT /api/student/timetable` tạo phiên bản mới & lưu trữ phiên bản cũ để không làm mất lịch sử `BR-20`) & tests
-- [ ] `[TASK-BE.4a]` *(3 SP)* Xây dựng phần đọc kế hoạch học (`StudyPlan`, `StudyTask`, `GET /api/student/plans/next-day` theo `Asia/Ho_Chi_Minh`, mỗi môn 1 cặp `REVIEW` + `PREVIEW` & xử lý ngày trống `BR-04..BR-07`) & tests
+- [ ] `[TASK-BE.3]` *(3 SP)* Xây dựng module `timetable` (`Timetable`, `TimetableEntry`, `GET/PUT /api/student/timetable` cho phép cả `STUDENT` owner & `GUARDIAN` linked cập nhật phiên bản mới, lưu trữ bản cũ `BR-20`) & `PUT /api/student/profile` (chọn/đổi khối lớp)
+- [ ] `[TASK-BE.4a]` *(3 SP)* Xây dựng phần đọc kế hoạch học (`StudyPlan`, `StudyTask`, `GET /api/student/plans/next-day` theo `Asia/Ho_Chi_Minh`: hôm nay chuẩn bị cho lịch học ngày mai, mỗi môn 1 cặp `REVIEW` + `PREVIEW` & xử lý ngày trống `BR-04..BR-07`) & tests
 
-### Task 7 — Nộp bài Review/Preview, Chuẩn độ dài & Thử lại AI *(3 subtasks)*
+### Task 7 — Nộp bài Review/Preview, Chuẩn độ dài & `v1..v3` *(3 subtasks)*
 - [ ] `[TASK-BE.4b]` *(2 SP)* Xây dựng `GET /api/student/tasks/{taskId}` + `StudyTextUtils` (`\r\n` $\rightarrow$ `\n`, `.trim()`, kiểm tra `850–2,000` ký tự `BR-12`) & unit tests
-- [ ] `[TASK-BE.4c]` *(5 SP)* Xây dựng `POST /api/student/tasks/{taskId}/submissions` (cổng `REVIEW` trước `PREVIEW` `BR-08`, tối đa 3 lần sửa sau đánh giá `O-04`, khóa khi `EVALUATING`, chống trùng `Idempotency-Key` `BR-14`, lưu atomic `StudySubmission` + `PENDING` `EvaluationJob`) & tests
-- [ ] `[TASK-BE.4d]` *(2 SP)* Xây dựng `POST /api/student/submissions/{submissionId}/retry-evaluation` (đưa job `FAILED` về `PENDING`, chặn gọi sai trạng thái) & tests
+- [ ] `[TASK-BE.4c]` *(5 SP)* Xây dựng `POST /api/student/tasks/{taskId}/submissions` (cổng `REVIEW` trước `PREVIEW` `BR-08`, tối đa 3 phiên bản `v1..v3` / `revisionCount <= 2`, khóa khi `EVALUATING`, chống trùng `Idempotency-Key` `BR-14`, lưu atomic `StudySubmission` + `PENDING` `EvaluationJob`) & tests
+- [ ] `[TASK-BE.4d]` *(2 SP)* Xây dựng `POST /api/student/submissions/{submissionId}/retry-evaluation` (hỗ trợ debug/re-trigger trước khi fallback hoàn tất) & tests
 
 ---
 
-## Phase 5: Brave Search + CKEY/MiMo AI Pipeline & Guardian Backend (`backend/`)
+## Phase 5: Brave Search (KNTT + Wikipedia) + CKEY/MiMo AI Pipeline & Guardian Backend (`backend/`)
 
-### Task 8 — Tích hợp Tìm kiếm Brave, Prompt không PII & MiMo/CKEY *(3 subtasks)*
-- [ ] `[TASK-BE.5a]` *(3 SP)* Xây dựng `SearchProvider` (`BraveSearchAdapter`: truy vấn kiến thức lớp 6 tiếng Việt theo `lessonTitle` + `subjectName`, tối đa `3` nguồn + `retrievedAt`, xử lý timeout/lỗi) & WireMock unit tests
-- [ ] `[TASK-BE.5b]` *(5 SP)* Xây dựng PII-free Prompt Builder & `AiEvaluationProvider` (`CkeyMimoAdapter`: ngân sách ~`2,048` token, strict JSON Schema parser + ràng buộc nhận xét `<= 600` ký tự) & unit tests
+### Task 8 — Tích hợp Tìm kiếm KNTT/Wikipedia, Prompt không PII & MiMo/CKEY *(3 subtasks)*
+- [ ] `[TASK-BE.5a]` *(3 SP)* Xây dựng `SearchProvider` (`BraveSearchAdapter`: ưu tiên SGK **Kết nối tri thức với cuộc sống** đúng khối lớp của bé + **Wikipedia**, tối đa `2–3` nguồn tiết kiệm token, timeout/lỗi) & WireMock unit tests
+- [ ] `[TASK-BE.5b]` *(5 SP)* Xây dựng PII-free Prompt Builder & `AiEvaluationProvider` (`CkeyMimoAdapter`: ngân sách token gọn, strict JSON Schema parser + ràng buộc nhận xét `<= 600` ký tự) & unit tests
 - [ ] `[TASK-BE.6a]` *(2 SP)* Xây dựng `KnowledgeCache` service (tra cứu/lưu cache theo `grade` + `subjectCode` + `lessonTitle` đã chuẩn hóa với `cache_allowed` & TTL) & unit tests
 
-### Task 9 — Async Evaluation Worker & Guardian Read-Only APIs *(2 subtasks)*
-- [ ] `[TASK-BE.6b]` *(5 SP)* Xây dựng Async `EvaluationJob` Worker (`@Scheduled`/bounded executor, exponential backoff tối đa `3` lần, ghi `AIUsageLog`, cập nhật trạng thái `EVALUATED` / `EVALUATION_FAILED`) & integration tests
-- [ ] `[TASK-BE.6c]` *(3 SP)* Xây dựng module `guardian` Read-Only (`GET /api/guardian/dashboard` lọc ngày & môn, `GET /api/guardian/submissions/{submissionId}` lịch sử phiên bản + nguồn đối chiếu, tuyệt đối không lộ `AIUsageLog`) & tests
+### Task 9 — Async Worker (3-Retry Fallback) & Guardian Read-Only APIs *(2 subtasks)*
+- [ ] `[TASK-BE.6b]` *(5 SP)* Xây dựng Async `EvaluationJob` Worker (`@Scheduled`/bounded executor, exponential backoff tối đa `3` lần, quá 3 lần ghi `AIEvaluation` fallback báo lỗi hệ thống để phụ huynh tự kiểm tra và chuyển `EVALUATED` qua Guardian, lưu `AIUsageLog`) & integration tests
+- [ ] `[TASK-BE.6c]` *(3 SP)* Xây dựng module `guardian` Read-Only (`GET /api/guardian/dashboard` lọc ngày & môn, `GET /api/guardian/submissions/{submissionId}` lịch sử `v1..v3` + nguồn đối chiếu, không lộ `AIUsageLog`) & tests
 
 ---
 
