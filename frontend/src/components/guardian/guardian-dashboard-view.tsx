@@ -430,11 +430,12 @@ export function GuardianDashboardView() {
     {
       key: 'evaluation',
       header: 'AI Đánh giá',
+      cellClassName: 'whitespace-nowrap',
       render: (row) =>
         row.assignmentMode === 'CUSTOM_DRIVE' ? (
-          <span className="text-xs font-medium text-muted-foreground">
-            Nộp qua Drive (không AI)
-          </span>
+          <Badge variant="secondary" className="whitespace-nowrap">
+            Manual
+          </Badge>
         ) : row.evaluation ? (
           <div className="flex flex-wrap gap-1.5">
             <StatusBadge status={row.evaluation.overallStatus} />
@@ -461,10 +462,11 @@ export function GuardianDashboardView() {
       key: 'action',
       header: 'Thao tác',
       align: 'right',
+      cellClassName: 'whitespace-nowrap',
       render: (row) => {
         if (row.currentSubmissionId) {
           return (
-            <Button asChild size="sm" variant="outline" className="h-9 whitespace-nowrap">
+            <Button asChild size="sm" variant="outline" className="h-8 px-2.5 text-xs whitespace-nowrap">
               <Link href={`/guardian/submissions/${row.currentSubmissionId}`}>
                 Xem bài gốc
               </Link>
@@ -476,12 +478,12 @@ export function GuardianDashboardView() {
             verifyCustomMutation.isPending &&
             verifyCustomMutation.variables?.taskId === row.taskId;
           return (
-            <div className="flex flex-wrap justify-end gap-1.5">
+            <div className="flex flex-nowrap items-center justify-end gap-1.5">
               <Button
                 type="button"
                 size="sm"
                 disabled={isVerifying}
-                className="h-9 whitespace-nowrap"
+                className="h-8 px-2.5 text-xs whitespace-nowrap"
                 onClick={(e) => {
                   e.stopPropagation();
                   verifyCustomMutation.mutate({
@@ -497,7 +499,7 @@ export function GuardianDashboardView() {
                 size="sm"
                 variant="outline"
                 disabled={isVerifying}
-                className="h-9 whitespace-nowrap"
+                className="h-8 px-2.5 text-xs whitespace-nowrap"
                 onClick={(e) => {
                   e.stopPropagation();
                   setVerifyTarget(row);
@@ -514,12 +516,12 @@ export function GuardianDashboardView() {
             reviewSkipMutation.isPending &&
             reviewSkipMutation.variables?.taskId === row.taskId;
           return (
-            <div className="flex flex-wrap justify-end gap-1.5">
+            <div className="flex flex-nowrap items-center justify-end gap-1.5">
               <Button
                 type="button"
                 size="sm"
                 disabled={isReviewing}
-                className="h-9 whitespace-nowrap"
+                className="h-8 px-2.5 text-xs whitespace-nowrap"
                 onClick={(e) => {
                   e.stopPropagation();
                   reviewSkipMutation.mutate({
@@ -535,7 +537,7 @@ export function GuardianDashboardView() {
                 size="sm"
                 variant="outline"
                 disabled={isReviewing}
-                className="h-9 whitespace-nowrap"
+                className="h-8 px-2.5 text-xs whitespace-nowrap"
                 onClick={(e) => {
                   e.stopPropagation();
                   setRejectTarget(row);
@@ -549,7 +551,7 @@ export function GuardianDashboardView() {
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="h-9 whitespace-nowrap"
+                  className="h-8 px-2.5 text-xs whitespace-nowrap"
                   onClick={(e) => {
                     e.stopPropagation();
                     setAssignTarget(row);
@@ -568,20 +570,19 @@ export function GuardianDashboardView() {
             (skipMutation.isPending && skipMutation.variables?.taskId === row.taskId) ||
             (clearCustomMutation.isPending && clearCustomMutation.variables === row.taskId);
           return (
-            <div className="flex flex-wrap justify-end gap-1.5">
+            <div className="flex flex-nowrap items-center justify-end gap-1.5">
               {canAssignCustomTask(row) ? (
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
                   disabled={isBusy}
-                  className="h-9 gap-1 whitespace-nowrap"
+                  className="h-8 px-2.5 text-xs whitespace-nowrap"
                   onClick={(e) => {
                     e.stopPropagation();
                     setAssignTarget(row);
                   }}
                 >
-                  <FolderUp className="h-3.5 w-3.5" />
                   {isCustom ? 'Sửa bài giao' : 'Giao bài thay thế'}
                 </Button>
               ) : null}
@@ -591,7 +592,7 @@ export function GuardianDashboardView() {
                   size="sm"
                   variant="ghost"
                   disabled={isBusy}
-                  className="h-9 whitespace-nowrap text-xs"
+                  className="h-8 px-2 text-xs whitespace-nowrap"
                   onClick={(e) => {
                     e.stopPropagation();
                     clearCustomMutation.mutate(row.taskId);
@@ -606,7 +607,7 @@ export function GuardianDashboardView() {
                   size="sm"
                   variant="outline"
                   disabled={isBusy}
-                  className="h-9 whitespace-nowrap"
+                  className="h-8 px-2.5 text-xs whitespace-nowrap"
                   onClick={(e) => {
                     e.stopPropagation();
                     skipMutation.mutate({
@@ -623,7 +624,7 @@ export function GuardianDashboardView() {
         }
         if (row.assignmentMode === 'CUSTOM_DRIVE' && row.customDriveFolderUrl) {
           return (
-            <Button asChild size="sm" variant="outline" className="h-9 gap-1 whitespace-nowrap">
+            <Button asChild size="sm" variant="outline" className="h-8 gap-1 px-2.5 text-xs whitespace-nowrap">
               <a
                 href={row.customDriveFolderUrl}
                 target="_blank"
