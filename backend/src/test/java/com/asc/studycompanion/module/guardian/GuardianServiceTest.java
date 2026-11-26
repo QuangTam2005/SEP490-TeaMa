@@ -23,23 +23,34 @@ import com.asc.studycompanion.module.study.entity.StudyTaskType;
 import com.asc.studycompanion.module.study.repository.StudyPlanRepository;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
+import com.asc.studycompanion.module.study.service.StudyPlanService;
 import com.asc.studycompanion.module.study.service.StudyTaskService;
 import com.asc.studycompanion.module.timetable.entity.Subject;
 import com.asc.studycompanion.module.timetable.entity.SubjectCode;
+import com.asc.studycompanion.module.timetable.entity.Timetable;
+import com.asc.studycompanion.module.timetable.entity.TimetableEntry;
+import com.asc.studycompanion.module.timetable.entity.TimetableStatus;
+import com.asc.studycompanion.module.timetable.repository.TimetableRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,11 +68,15 @@ class GuardianServiceTest {
     private EvaluationJobRepository evaluationJobRepository;
     @Mock
     private StudyTaskRepository studyTaskRepository;
+    @Mock
+    private TimetableRepository timetableRepository;
 
     private GuardianService guardianService;
+    private StudyPlanService studyPlanService;
 
     @BeforeEach
     void setUp() {
+        Clock fixedClock = Clock.fixed(Instant.parse("2026-11-26T00:40:00Z"), ZoneOffset.UTC);
         StudyTaskService studyTaskService = new StudyTaskService(
                 studyAccessGuard,
                 studyTaskRepository,
@@ -69,6 +84,14 @@ class GuardianServiceTest {
                 aiEvaluationRepository,
                 evaluationJobRepository
         );
+        studyPlanService = new StudyPlanService(
+                studyAccessGuard,
+                studyPlanRepository,
+                timetableRepository,
+                studySubmissionRepository,
+                aiEvaluationRepository
+        );
+        studyPlanService.setClock(fixedClock);
         guardianService = new GuardianService(
                 studyAccessGuard,
                 studyPlanRepository,
@@ -76,8 +99,10 @@ class GuardianServiceTest {
                 aiEvaluationRepository,
                 evaluationJobRepository,
                 studyTaskService,
-                studyTaskRepository
+                studyTaskRepository,
+                studyPlanService
         );
+        guardianService.setClock(fixedClock);
     }
 
     @Test
@@ -243,5 +268,55 @@ class GuardianServiceTest {
                 2L, 103L, new com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest(true, null)
         ));
         assertEquals(ErrorCode.VALIDATION_FAILED, rejectEx.getErrorCode());
+    }
+
+    @Test
+    void dashboardAutoMaterializesNextDayTasksWhenStudentHasNotOpenedWorkspaceYet() {
+        StudentProfile student = StudentProfile.builder()
+                .id(10L)
+                .displayName("Khoi")
+                .grade(7)
+                .timezone("Asia/Ho_Chi_Minh")
+                .build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        Subject lit = Subject.builder().id(2L).code(SubjectCode.LIT).name("Ngữ văn").build();
+        // Fixed clock = 2026-11-26 (Thursday), so default target date = 2026-11-27 (Friday = weekday 5)
+        LocalDate tomorrow = LocalDate.of(2026, 11, 27);
+        Timetable activeTimetable = Timetable.builder()
+                .id(55L)
+                .student(student)
+                .version(1)
+                .status(TimetableStatus.ACTIVE)
+                .entries(List.of(
+                        TimetableEntry.builder().weekday(5).subject(math).build(),
+                        TimetableEntry.builder().weekday(5).subject(lit).build()
+                ))
+                .build();
+
+        when(studyAccessGuard.requireLinkedStudentForGuardian(2L)).thenReturn(student);
+        when(studyPlanRepository.findByStudentIdAndTargetDate(10L, tomorrow)).thenReturn(Optional.empty());
+        when(timetableRepository.findFirstByStudentIdAndStatusOrderByVersionDesc(10L, TimetableStatus.ACTIVE))
+                .thenReturn(Optional.of(activeTimetable));
+        lenient().when(studyPlanRepository.saveAndFlush(any(StudyPlan.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        GuardianDashboardResponse dashboard = guardianService.getDashboard(2L, null, "ALL");
+
+        assertEquals(tomorrow, dashboard.selectedDate());
+        assertEquals(4, dashboard.totalTasks());
+        assertEquals(0, dashboard.completedTasks());
+        assertEquals(4, dashboard.items().size());
+        assertEquals(SubjectCode.MATH, dashboard.items().get(0).subjectCode());
+        assertEquals(StudyTaskType.REVIEW, dashboard.items().get(0).taskType());
+        assertEquals(StudyTaskStatus.NOT_STARTED, dashboard.items().get(0).status());
+        assertEquals(StudyTaskType.PREVIEW, dashboard.items().get(1).taskType());
+        assertEquals(StudyTaskStatus.BLOCKED, dashboard.items().get(1).status());
+
+        // Past dates with no saved plan stay empty rather than retroactively generating tasks
+        LocalDate yesterday = LocalDate.of(2026, 11, 25);
+        when(studyPlanRepository.findByStudentIdAndTargetDate(10L, yesterday)).thenReturn(Optional.empty());
+        GuardianDashboardResponse pastDashboard = guardianService.getDashboard(2L, yesterday, "ALL");
+        assertEquals(0, pastDashboard.totalTasks());
+        verify(studyPlanRepository, times(1)).saveAndFlush(any(StudyPlan.class));
     }
 }

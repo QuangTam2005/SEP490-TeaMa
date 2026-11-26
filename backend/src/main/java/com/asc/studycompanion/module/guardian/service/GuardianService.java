@@ -28,6 +28,7 @@ import com.asc.studycompanion.module.study.entity.StudyTaskType;
 import com.asc.studycompanion.module.study.repository.StudyPlanRepository;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
+import com.asc.studycompanion.module.study.service.StudyPlanService;
 import com.asc.studycompanion.module.study.service.StudyTaskService;
 import com.asc.studycompanion.module.timetable.entity.SubjectCode;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Clock;
+import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -73,11 +76,18 @@ public class GuardianService {
     private final EvaluationJobRepository evaluationJobRepository;
     private final StudyTaskService studyTaskService;
     private final StudyTaskRepository studyTaskRepository;
+    private final StudyPlanService studyPlanService;
 
     @Value("${app.timezone:Asia/Ho_Chi_Minh}")
     private String appTimezone = "Asia/Ho_Chi_Minh";
 
-    @Transactional(readOnly = true)
+    private Clock clock = Clock.systemUTC();
+
+    public void setClock(Clock clock) {
+        this.clock = clock;
+    }
+
+    @Transactional
     public GuardianDashboardResponse getDashboard(
             Long guardianUserId,
             LocalDate requestedDate,
@@ -86,7 +96,7 @@ public class GuardianService {
         return getDashboard(guardianUserId, requestedDate, requestedSubject, null);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public GuardianDashboardResponse getDashboard(
             Long guardianUserId,
             LocalDate requestedDate,
@@ -96,15 +106,18 @@ public class GuardianService {
         StudentProfile student = studentId == null
                 ? studyAccessGuard.requireLinkedStudentForGuardian(guardianUserId)
                 : studyAccessGuard.requireLinkedStudentForGuardian(guardianUserId, studentId);
-        ZoneId zone = ZoneId.of(resolveTimezone(student));
+        ZoneId zone = resolveZoneId(student);
+        LocalDate today = LocalDate.now(clock.withZone(zone));
         LocalDate selectedDate = requestedDate != null
                 ? requestedDate
-                : LocalDate.now(zone).plusDays(1);
+                : today.plusDays(1);
 
         SubjectCode filterSubject = parseSubjectFilter(requestedSubject);
         String selectedSubjectLabel = filterSubject != null ? filterSubject.name() : "ALL";
 
-        Optional<StudyPlan> planOpt = studyPlanRepository.findByStudentIdAndTargetDate(student.getId(), selectedDate);
+        Optional<StudyPlan> planOpt = !selectedDate.isBefore(today)
+                ? studyPlanService.ensurePlanForStudentAndDate(student, selectedDate)
+                : studyPlanRepository.findByStudentIdAndTargetDate(student.getId(), selectedDate);
         if (planOpt.isEmpty()) {
             return new GuardianDashboardResponse(
                     student.getDisplayName(),
@@ -338,7 +351,7 @@ public class GuardianService {
         return new GuardianSkipTaskResponse(task.getId(), task.getStatus(), task.getGuardianNote());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public GuardianWeeklySummaryResponse getWeeklySummary(
             Long guardianUserId,
             LocalDate requestedWeekStart,
@@ -347,11 +360,15 @@ public class GuardianService {
         StudentProfile student = studentId == null
                 ? studyAccessGuard.requireLinkedStudentForGuardian(guardianUserId)
                 : studyAccessGuard.requireLinkedStudentForGuardian(guardianUserId, studentId);
-        ZoneId zone = ZoneId.of(resolveTimezone(student));
+        ZoneId zone = resolveZoneId(student);
+        LocalDate today = LocalDate.now(clock.withZone(zone));
+        LocalDate tomorrow = today.plusDays(1);
         LocalDate weekStart = requestedWeekStart != null
                 ? requestedWeekStart
-                : LocalDate.now(zone).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                : today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate weekEnd = weekStart.plusDays(6);
+
+        ensureUpcomingPlansInRange(student, weekStart, weekEnd, today, tomorrow);
 
         List<StudyPlan> plans = studyPlanRepository
                 .findAllByStudentIdAndTargetDateBetweenOrderByTargetDateDesc(student.getId(), weekStart, weekEnd);
@@ -425,7 +442,7 @@ public class GuardianService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public byte[] exportExcelReport(
             Long guardianUserId,
             LocalDate requestedFrom,
@@ -435,13 +452,16 @@ public class GuardianService {
         StudentProfile student = studentId == null
                 ? studyAccessGuard.requireLinkedStudentForGuardian(guardianUserId)
                 : studyAccessGuard.requireLinkedStudentForGuardian(guardianUserId, studentId);
-        ZoneId zone = ZoneId.of(resolveTimezone(student));
-        LocalDate today = LocalDate.now(zone);
-        LocalDate toDate = requestedTo != null ? requestedTo : today.plusDays(1);
+        ZoneId zone = resolveZoneId(student);
+        LocalDate today = LocalDate.now(clock.withZone(zone));
+        LocalDate tomorrow = today.plusDays(1);
+        LocalDate toDate = requestedTo != null ? requestedTo : tomorrow;
         LocalDate fromDate = requestedFrom != null ? requestedFrom : toDate.minusDays(13);
         if (fromDate.isAfter(toDate)) {
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc");
         }
+
+        ensureUpcomingPlansInRange(student, fromDate, toDate, today, tomorrow);
 
         List<StudyPlan> plans = studyPlanRepository
                 .findAllByStudentIdAndTargetDateBetweenOrderByTargetDateDesc(student.getId(), fromDate, toDate);
@@ -517,9 +537,32 @@ public class GuardianService {
         }
     }
 
+    private void ensureUpcomingPlansInRange(
+            StudentProfile student,
+            LocalDate fromDate,
+            LocalDate toDate,
+            LocalDate today,
+            LocalDate tomorrow
+    ) {
+        if (!today.isBefore(fromDate) && !today.isAfter(toDate)) {
+            studyPlanService.ensurePlanForStudentAndDate(student, today);
+        }
+        if (!tomorrow.isBefore(fromDate) && !tomorrow.isAfter(toDate)) {
+            studyPlanService.ensurePlanForStudentAndDate(student, tomorrow);
+        }
+    }
+
+    private ZoneId resolveZoneId(StudentProfile student) {
+        try {
+            return ZoneId.of(resolveTimezone(student));
+        } catch (DateTimeException ex) {
+            return ZoneId.of(appTimezone);
+        }
+    }
+
     private String resolveTimezone(StudentProfile student) {
         return (student.getTimezone() != null && !student.getTimezone().isBlank())
-                ? student.getTimezone()
+                ? student.getTimezone().trim()
                 : appTimezone;
     }
 }

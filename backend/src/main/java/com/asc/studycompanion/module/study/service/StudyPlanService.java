@@ -84,6 +84,25 @@ public class StudyPlanService {
         int targetWeekday = targetDate.getDayOfWeek().getValue();
         String weekdayLabel = WEEKDAY_LABELS.get(targetWeekday - 1);
 
+        Optional<StudyPlan> planOpt = ensurePlanForStudentAndDate(student, targetDate);
+        if (planOpt.isEmpty()) {
+            return new NextDayStudyPlanResponse(null, targetDate, weekdayLabel, false, List.of());
+        }
+        return toPlanResponse(planOpt.get(), targetDate, weekdayLabel, targetWeekday);
+    }
+
+    /**
+     * Ensures the StudyPlan for the given student and targetDate exists (and is refreshed if still unstarted
+     * and the active timetable changed), allowing both Student and Guardian views to see next-day tasks
+     * immediately after midnight without waiting for the student to open the workspace first.
+     */
+    @Transactional
+    public Optional<StudyPlan> ensurePlanForStudentAndDate(StudentProfile student, LocalDate targetDate) {
+        if (student == null || student.getId() == null || targetDate == null) {
+            return Optional.empty();
+        }
+        int targetWeekday = targetDate.getDayOfWeek().getValue();
+
         Optional<Timetable> activeTimetableOpt = timetableRepository
                 .findFirstByStudentIdAndStatusOrderByVersionDesc(student.getId(), TimetableStatus.ACTIVE);
 
@@ -94,19 +113,19 @@ public class StudyPlanService {
             StudyPlan existingPlan = existingPlanOpt.get();
             if (activeTimetableOpt.isPresent()
                     && canRefreshUnstartedPlan(existingPlan, activeTimetableOpt.get())) {
-                return rebuildUnstartedPlan(existingPlan, activeTimetableOpt.get(), targetWeekday, weekdayLabel);
+                return refreshUnstartedPlan(existingPlan, activeTimetableOpt.get(), targetWeekday);
             }
-            return toPlanResponse(existingPlan, targetDate, weekdayLabel, targetWeekday);
+            return Optional.of(existingPlan);
         }
 
         if (activeTimetableOpt.isEmpty()) {
-            return new NextDayStudyPlanResponse(null, targetDate, weekdayLabel, false, List.of());
+            return Optional.empty();
         }
 
         Timetable activeTimetable = activeTimetableOpt.get();
         Map<SubjectCode, SubjectSlot> subjectSlots = extractDistinctSubjectsForWeekday(activeTimetable, targetWeekday);
         if (subjectSlots.isEmpty()) {
-            return new NextDayStudyPlanResponse(null, targetDate, weekdayLabel, false, List.of());
+            return Optional.empty();
         }
 
         StudyPlan newPlan = StudyPlan.builder()
@@ -132,8 +151,7 @@ public class StudyPlanService {
                     .build());
         }
 
-        StudyPlan savedPlan = persistNewPlanSafely(newPlan, student.getId(), targetDate);
-        return toPlanResponse(savedPlan, targetDate, weekdayLabel, targetWeekday);
+        return Optional.of(persistNewPlanSafely(newPlan, student.getId(), targetDate));
     }
 
     private StudyPlan persistNewPlanSafely(StudyPlan newPlan, Long studentId, LocalDate targetDate) {
@@ -170,11 +188,10 @@ public class StudyPlanService {
         );
     }
 
-    private NextDayStudyPlanResponse rebuildUnstartedPlan(
+    private Optional<StudyPlan> refreshUnstartedPlan(
             StudyPlan plan,
             Timetable activeTimetable,
-            int targetWeekday,
-            String weekdayLabel
+            int targetWeekday
     ) {
         Map<SubjectCode, SubjectSlot> subjectSlots = extractDistinctSubjectsForWeekday(activeTimetable, targetWeekday);
         plan.setTimetable(activeTimetable);
@@ -184,7 +201,7 @@ public class StudyPlanService {
             studyPlanRepository.flush();
             studyPlanRepository.delete(plan);
             studyPlanRepository.flush();
-            return new NextDayStudyPlanResponse(null, plan.getTargetDate(), weekdayLabel, false, List.of());
+            return Optional.empty();
         }
 
         // Flush deletions before inserting replacements so uq_study_tasks_plan_subject_type never collides
@@ -219,8 +236,7 @@ public class StudyPlanService {
                     .build());
         }
 
-        StudyPlan saved = studyPlanRepository.saveAndFlush(plan);
-        return toPlanResponse(saved, saved.getTargetDate(), weekdayLabel, targetWeekday);
+        return Optional.of(studyPlanRepository.saveAndFlush(plan));
     }
 
     @Transactional(readOnly = true)

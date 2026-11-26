@@ -215,8 +215,12 @@ final class InMemoryStudyHarness {
                 aiEvaluationRepository,
                 evaluationJobRepository,
                 studyTaskService,
-                studyTaskRepository
+                studyTaskRepository,
+                studyPlanService
         );
+        if (fixedClock != null) {
+            guardianService.setClock(fixedClock);
+        }
 
         objectMapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
