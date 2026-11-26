@@ -458,4 +458,69 @@ class GuardianServiceTest {
         );
         assertEquals(StudyTaskStatus.EVALUATED, done.status());
     }
+
+    @Test
+    void protectsCustomSubmittedProofDuringRevisionAndEnforcesAntiIdorAndValidation() {
+        StudentProfile student = StudentProfile.builder().id(10L).displayName("Khoi").grade(7).build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        StudyPlan plan = StudyPlan.builder().id(20L).student(student).targetDate(LocalDate.of(2026, 11, 27)).build();
+
+        StudyTask customInRevision = StudyTask.builder()
+                .id(111L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.IN_PROGRESS)
+                .assignmentMode(TaskAssignmentMode.CUSTOM_DRIVE)
+                .customSubmittedAt(Instant.now())
+                .skipRequestStatus(SkipRequestStatus.PENDING)
+                .build();
+
+        when(studyTaskRepository.findById(111L)).thenReturn(Optional.of(customInRevision));
+        when(studySubmissionRepository.existsByTaskId(111L)).thenReturn(false);
+
+        // Even when verifyCustomTask(false) moved status to IN_PROGRESS, customSubmittedAt != null blocks skip/reassign/reviewSkip
+        assertEquals(ErrorCode.VALIDATION_FAILED, assertThrows(AppException.class,
+                () -> guardianService.skipTask(2L, 111L, new com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest(true, null))).getErrorCode());
+        assertEquals(ErrorCode.VALIDATION_FAILED, assertThrows(AppException.class,
+                () -> guardianService.assignCustomTask(2L, 111L,
+                        new GuardianAssignCustomTaskRequest("Đổi đề bài khác", null, "https://drive.google.com/drive/folders/abc", false))).getErrorCode());
+        assertEquals(ErrorCode.VALIDATION_FAILED, assertThrows(AppException.class,
+                () -> guardianService.reviewSkipRequest(2L, 111L, new GuardianSkipReviewRequest(true, "Ok"))).getErrorCode());
+
+        // Validation edge cases on unsubmitted task
+        StudyTask unsubmitted = StudyTask.builder()
+                .id(112L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.NOT_STARTED)
+                .assignmentMode(TaskAssignmentMode.STANDARD_AI)
+                .build();
+        when(studyTaskRepository.findById(112L)).thenReturn(Optional.of(unsubmitted));
+        when(studySubmissionRepository.existsByTaskId(112L)).thenReturn(false);
+
+        assertEquals(ErrorCode.VALIDATION_FAILED, assertThrows(AppException.class,
+                () -> guardianService.assignCustomTask(2L, 112L,
+                        new GuardianAssignCustomTaskRequest("Ngắn", null, "https://drive.google.com/drive/folders/abc", false))).getErrorCode());
+        assertEquals(ErrorCode.VALIDATION_FAILED, assertThrows(AppException.class,
+                () -> guardianService.assignCustomTask(2L, 112L,
+                        new GuardianAssignCustomTaskRequest("Tiêu đề hợp lệ", "a".repeat(501), "https://drive.google.com/drive/folders/abc", false))).getErrorCode());
+        assertEquals(ErrorCode.VALIDATION_FAILED, assertThrows(AppException.class,
+                () -> guardianService.reviewSkipRequest(2L, 112L, new GuardianSkipReviewRequest(true, null))).getErrorCode());
+
+        // Anti-IDOR: unlinked guardian rejected across skip-review & custom-task methods
+        doThrow(new AppException(ErrorCode.GUARDIAN_NOT_LINKED))
+                .when(studyAccessGuard).assertGuardianCanReadStudent(999L, 10L);
+
+        assertEquals(ErrorCode.GUARDIAN_NOT_LINKED, assertThrows(AppException.class,
+                () -> guardianService.reviewSkipRequest(999L, 112L, new GuardianSkipReviewRequest(true, null))).getErrorCode());
+        assertEquals(ErrorCode.GUARDIAN_NOT_LINKED, assertThrows(AppException.class,
+                () -> guardianService.assignCustomTask(999L, 112L,
+                        new GuardianAssignCustomTaskRequest("Bài tập Toán", null, "https://drive.google.com/drive/folders/abc", false))).getErrorCode());
+        assertEquals(ErrorCode.GUARDIAN_NOT_LINKED, assertThrows(AppException.class,
+                () -> guardianService.clearCustomTask(999L, 112L)).getErrorCode());
+        assertEquals(ErrorCode.GUARDIAN_NOT_LINKED, assertThrows(AppException.class,
+                () -> guardianService.verifyCustomTask(999L, 112L, new GuardianVerifyCustomTaskRequest(true, null))).getErrorCode());
+    }
 }

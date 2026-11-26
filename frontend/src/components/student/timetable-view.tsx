@@ -191,6 +191,9 @@ export function TimetableView() {
         saved
       );
       void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-history'] });
       setHasUnsavedChanges(false);
       toast.success('Đã lưu thời khóa biểu');
     },
@@ -252,7 +255,7 @@ export function TimetableView() {
               value={user?.grade ?? 6}
               disabled={gradeMutation.isPending}
               onChange={(e) => gradeMutation.mutate(Number(e.target.value))}
-              className="h-11 rounded-lg border bg-background px-3 text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-11 rounded-lg border bg-background px-3 text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
             >
               {GRADE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -270,7 +273,7 @@ export function TimetableView() {
                   const id = Number(e.target.value);
                   setSelectedStudentId(Number.isFinite(id) ? id : null);
                 }}
-                className="h-11 rounded-lg border bg-background px-3 text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-11 rounded-lg border bg-background px-3 text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
               >
                 {childrenQuery.data.map((child) => (
                   <option key={child.studentId} value={child.studentId}>

@@ -76,7 +76,7 @@ export function SkipRequestDialog({
                   key={preset}
                   type="button"
                   onClick={() => setReason(preset)}
-                  className="rounded-full border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                  className="min-h-[44px] rounded-full border bg-muted/50 px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted sm:min-h-0 sm:py-1.5"
                 >
                   {preset}
                 </button>

@@ -158,7 +158,7 @@ function TaskActionButton({
               variant="outline"
               disabled={isCancellingSkip}
               onClick={() => onCancelSkip(task.id)}
-              className="h-8 bg-background text-xs"
+              className="h-11 bg-background text-xs sm:h-8"
             >
               {isCancellingSkip ? 'Đang hủy...' : 'Hủy xin bỏ qua'}
             </Button>
@@ -251,7 +251,7 @@ function TaskActionButton({
             variant="ghost"
             size="sm"
             onClick={() => onOpenSkipDialog(task)}
-            className="h-9 w-full text-xs text-muted-foreground hover:text-foreground"
+            className="h-11 w-full text-xs text-muted-foreground hover:text-foreground sm:h-9"
           >
             {isRejectedSkip ? 'Gửi lại lý do xin bỏ qua' : 'Xin phụ huynh bỏ qua...'}
           </Button>
@@ -289,6 +289,7 @@ export function NextDayPlanView() {
   const invalidateSkipRelatedQueries = () => {
     void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
     void queryClient.invalidateQueries({ queryKey: ['student-task'] });
+    void queryClient.invalidateQueries({ queryKey: ['student-history'] });
     void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
   };
 
@@ -388,7 +389,7 @@ export function NextDayPlanView() {
                     </span>
                   </div>
 
-                  <Button asChild variant="outline" className="h-10 gap-1.5">
+                  <Button asChild variant="outline" className="h-11 gap-1.5 sm:h-10">
                     <Link href="/student/history">
                       <History className="h-4 w-4" strokeWidth={1.75} />
                       <span>Lịch sử</span>

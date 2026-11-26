@@ -28,10 +28,71 @@ import type {
   GuardianVerifyCustomTaskRequest,
   GuardianWeeklyDaySummary,
   GuardianWeeklySummaryResponse,
+  StudyTaskDetailResponse,
   Weekday,
 } from '@/types';
 
 let mockDefaultDriveUrl: string | null = null;
+
+function assertTaskHasNoSubmissions(
+  detail: StudyTaskDetailResponse,
+  message: string
+): void {
+  if (
+    detail.submissions.length > 0 ||
+    detail.task.status === 'EVALUATING' ||
+    detail.task.status === 'EVALUATED' ||
+    detail.task.status === 'EVALUATION_FAILED' ||
+    detail.task.status === 'SUBMITTED'
+  ) {
+    throw new ApiClientError({
+      status: 400,
+      errorCode: 'VAL_001',
+      message,
+    });
+  }
+}
+
+function toGuardianTaskItem(detail: StudyTaskDetailResponse): GuardianTaskItem {
+  const currentSub =
+    detail.submissions.find((s) => s.isCurrent) ?? detail.submissions[0] ?? null;
+  const evaluation = currentSub?.evaluation ?? null;
+
+  return {
+    taskId: detail.task.id,
+    currentSubmissionId: currentSub?.id ?? null,
+    targetDate: detail.targetDate,
+    subjectCode: detail.task.subjectCode,
+    subjectName: detail.task.subjectName,
+    taskType: detail.task.taskType,
+    status: detail.task.status,
+    lessonTitle: detail.task.currentLessonTitle,
+    revisionCount: detail.task.revisionCount,
+    evaluation: evaluation
+      ? {
+          accuracy: evaluation.accuracy,
+          completeness: evaluation.completeness,
+          overallStatus: evaluation.overallStatus,
+          feedback: evaluation.feedback,
+          evaluatedAt: evaluation.evaluatedAt,
+        }
+      : null,
+    guardianAcknowledgedAt: detail.task.guardianAcknowledgedAt ?? null,
+    guardianNote: detail.task.guardianNote ?? null,
+    skipRequestStatus: detail.task.skipRequestStatus ?? null,
+    skipRequestReason: detail.task.skipRequestReason ?? null,
+    skipRequestedAt: detail.task.skipRequestedAt ?? null,
+    skipReviewedAt: detail.task.skipReviewedAt ?? null,
+    assignmentMode: detail.task.assignmentMode ?? 'STANDARD_AI',
+    customTaskTitle: detail.task.customTaskTitle ?? null,
+    customTaskDescription: detail.task.customTaskDescription ?? null,
+    customDriveFolderUrl: detail.task.customDriveFolderUrl ?? null,
+    customAssignedAt: detail.task.customAssignedAt ?? null,
+    customSubmissionNote: detail.task.customSubmissionNote ?? null,
+    customSubmissionUrl: detail.task.customSubmissionUrl ?? null,
+    customSubmittedAt: detail.task.customSubmittedAt ?? null,
+  };
+}
 
 function resolveMockStudentMeta(studentId?: number): {
   studentId: number;
@@ -55,6 +116,19 @@ export const guardianMockService: GuardianService = {
     return runMockOperation<GuardianDashboardResponse>(
       () => {
         const state = getMockStudyState();
+        if (selectedDate !== state.targetDate) {
+          return {
+            linkedStudentName: meta.name,
+            grade: meta.grade,
+            selectedDate,
+            selectedSubject,
+            totalTasks: 0,
+            completedTasks: 0,
+            evaluatingTasks: 0,
+            items: [],
+            defaultDriveFolderUrl: mockDefaultDriveUrl,
+          };
+        }
         const result = buildGuardianDashboardFromBuckets(
           state.buckets,
           selectedDate,
@@ -78,6 +152,7 @@ export const guardianMockService: GuardianService = {
           completedTasks: 0,
           evaluatingTasks: 0,
           items: [],
+          defaultDriveFolderUrl: mockDefaultDriveUrl,
         },
       }
     );
@@ -147,21 +222,12 @@ export const guardianMockService: GuardianService = {
             if (detail.task.id !== taskId) {
               continue;
             }
-            if (
-              detail.submissions.length > 0 ||
-              detail.task.status === 'EVALUATING' ||
-              detail.task.status === 'EVALUATED' ||
-              detail.task.status === 'EVALUATION_FAILED' ||
-              detail.task.status === 'SUBMITTED'
-            ) {
-              throw new ApiClientError({
-                status: 400,
-                errorCode: 'VAL_001',
-                message: shouldSkip
-                  ? 'Không thể bỏ qua bài học đã được học sinh nộp.'
-                  : 'Không thể khôi phục bài học đã có bài nộp.',
-              });
-            }
+            assertTaskHasNoSubmissions(
+              detail,
+              shouldSkip
+                ? 'Không thể bỏ qua bài học đã được học sinh nộp.'
+                : 'Không thể khôi phục bài học đã có bài nộp.'
+            );
 
             if (shouldSkip) {
               detail.task.status = 'SKIPPED';
@@ -300,45 +366,44 @@ export const guardianMockService: GuardianService = {
         for (const bucket of state.buckets) {
           for (const detail of [bucket.reviewTask, bucket.previewTask]) {
             if (detail.task.id !== taskId) continue;
+            assertTaskHasNoSubmissions(
+              detail,
+              'Không thể giao bài thay thế cho nhiệm vụ đã có bài nộp.'
+            );
+            if (detail.task.status === 'SKIPPED') {
+              if (detail.task.taskType === 'REVIEW') {
+                detail.task.status = 'NOT_STARTED';
+                if (
+                  bucket.previewTask.task.status === 'NOT_STARTED' &&
+                  bucket.previewTask.submissions.length === 0 &&
+                  !bucket.previewTask.task.customSubmittedAt
+                ) {
+                  bucket.previewTask.reviewCompleted = false;
+                  bucket.previewTask.task.status = 'BLOCKED';
+                }
+              } else {
+                const reviewCleared =
+                  bucket.reviewTask.task.status === 'SKIPPED' ||
+                  bucket.reviewTask.submissions.length > 0 ||
+                  Boolean(bucket.reviewTask.task.customSubmittedAt);
+                detail.task.status = reviewCleared ? 'NOT_STARTED' : 'BLOCKED';
+              }
+            }
+            if (detail.task.skipRequestStatus === 'PENDING') {
+              detail.task.skipRequestStatus = null;
+              detail.task.skipRequestReason = null;
+              detail.task.skipRequestedAt = null;
+              detail.task.skipReviewedAt = null;
+            }
             detail.task.assignmentMode = 'CUSTOM_DRIVE';
             detail.task.customTaskTitle = title;
             detail.task.customTaskDescription = request.description?.trim() || null;
             detail.task.customDriveFolderUrl = driveUrl;
             detail.task.customAssignedAt = new Date().toISOString();
-            if (detail.task.status === 'SKIPPED') {
-              detail.task.status = 'NOT_STARTED';
-            }
-            detail.task.skipRequestStatus = null;
-            detail.task.skipRequestReason = null;
             if (request.saveAsDefaultDriveFolder) {
               mockDefaultDriveUrl = driveUrl;
             }
-            return {
-              taskId: detail.task.id,
-              currentSubmissionId: null,
-              targetDate: detail.targetDate,
-              subjectCode: detail.task.subjectCode,
-              subjectName: detail.task.subjectName,
-              taskType: detail.task.taskType,
-              status: detail.task.status,
-              lessonTitle: null,
-              revisionCount: detail.task.revisionCount,
-              evaluation: null,
-              guardianAcknowledgedAt: detail.task.guardianAcknowledgedAt ?? null,
-              guardianNote: detail.task.guardianNote ?? null,
-              skipRequestStatus: null,
-              skipRequestReason: null,
-              skipRequestedAt: null,
-              skipReviewedAt: null,
-              assignmentMode: 'CUSTOM_DRIVE',
-              customTaskTitle: detail.task.customTaskTitle,
-              customTaskDescription: detail.task.customTaskDescription,
-              customDriveFolderUrl: detail.task.customDriveFolderUrl,
-              customAssignedAt: detail.task.customAssignedAt,
-              customSubmissionNote: detail.task.customSubmissionNote ?? null,
-              customSubmissionUrl: detail.task.customSubmissionUrl ?? null,
-              customSubmittedAt: detail.task.customSubmittedAt ?? null,
-            };
+            return toGuardianTaskItem(detail);
           }
         }
         throw new ApiClientError({
@@ -358,6 +423,24 @@ export const guardianMockService: GuardianService = {
         for (const bucket of state.buckets) {
           for (const detail of [bucket.reviewTask, bucket.previewTask]) {
             if (detail.task.id !== taskId) continue;
+            if (detail.task.assignmentMode !== 'CUSTOM_DRIVE') {
+              throw new ApiClientError({
+                status: 400,
+                errorCode: 'VAL_001',
+                message: 'Nhiệm vụ này đang ở chế độ AI mặc định.',
+              });
+            }
+            if (
+              detail.task.customSubmittedAt ||
+              detail.task.status === 'SUBMITTED' ||
+              detail.task.status === 'EVALUATED'
+            ) {
+              throw new ApiClientError({
+                status: 400,
+                errorCode: 'VAL_001',
+                message: 'Không thể gỡ bài giao thay thế sau khi con đã nộp bài.',
+              });
+            }
             detail.task.assignmentMode = 'STANDARD_AI';
             detail.task.customTaskTitle = null;
             detail.task.customTaskDescription = null;
@@ -366,19 +449,7 @@ export const guardianMockService: GuardianService = {
             detail.task.customSubmissionNote = null;
             detail.task.customSubmissionUrl = null;
             detail.task.customSubmittedAt = null;
-            return {
-              taskId: detail.task.id,
-              currentSubmissionId: null,
-              targetDate: detail.targetDate,
-              subjectCode: detail.task.subjectCode,
-              subjectName: detail.task.subjectName,
-              taskType: detail.task.taskType,
-              status: detail.task.status,
-              lessonTitle: null,
-              revisionCount: detail.task.revisionCount,
-              evaluation: null,
-              assignmentMode: 'STANDARD_AI',
-            };
+            return toGuardianTaskItem(detail);
           }
         }
         throw new ApiClientError({
@@ -402,6 +473,17 @@ export const guardianMockService: GuardianService = {
         for (const bucket of state.buckets) {
           for (const detail of [bucket.reviewTask, bucket.previewTask]) {
             if (detail.task.id !== taskId) continue;
+            if (
+              detail.task.assignmentMode !== 'CUSTOM_DRIVE' ||
+              detail.task.status !== 'SUBMITTED'
+            ) {
+              throw new ApiClientError({
+                status: 400,
+                errorCode: 'VAL_001',
+                message:
+                  'Chỉ có thể xác nhận bài giao thay thế đang chờ kiểm tra trên Drive.',
+              });
+            }
             if (request.approved) {
               detail.task.status = 'EVALUATED';
               detail.task.guardianAcknowledgedAt = new Date().toISOString();
@@ -410,28 +492,7 @@ export const guardianMockService: GuardianService = {
               detail.task.status = 'IN_PROGRESS';
               detail.task.guardianNote = note;
             }
-            return {
-              taskId: detail.task.id,
-              currentSubmissionId: null,
-              targetDate: detail.targetDate,
-              subjectCode: detail.task.subjectCode,
-              subjectName: detail.task.subjectName,
-              taskType: detail.task.taskType,
-              status: detail.task.status,
-              lessonTitle: null,
-              revisionCount: detail.task.revisionCount,
-              evaluation: null,
-              guardianAcknowledgedAt: detail.task.guardianAcknowledgedAt ?? null,
-              guardianNote: detail.task.guardianNote ?? null,
-              assignmentMode: detail.task.assignmentMode ?? 'CUSTOM_DRIVE',
-              customTaskTitle: detail.task.customTaskTitle ?? null,
-              customTaskDescription: detail.task.customTaskDescription ?? null,
-              customDriveFolderUrl: detail.task.customDriveFolderUrl ?? null,
-              customAssignedAt: detail.task.customAssignedAt ?? null,
-              customSubmissionNote: detail.task.customSubmissionNote ?? null,
-              customSubmissionUrl: detail.task.customSubmissionUrl ?? null,
-              customSubmittedAt: detail.task.customSubmittedAt ?? null,
-            };
+            return toGuardianTaskItem(detail);
           }
         }
         throw new ApiClientError({

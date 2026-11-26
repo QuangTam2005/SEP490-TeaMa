@@ -483,6 +483,17 @@ export const studyMockService: StudyService = {
           for (const detail of [bucket.reviewTask, bucket.previewTask]) {
             const sub = detail.submissions.find((s) => s.id === submissionId);
             if (sub) {
+              if (
+                detail.task.status === 'EVALUATED' ||
+                detail.task.status === 'EVALUATING'
+              ) {
+                throw new ApiClientError({
+                  status: 409,
+                  errorCode: 'AI_004',
+                  message:
+                    'Bài nộp này đã hoàn tất hoặc đang trong quá trình đánh giá.',
+                });
+              }
               sub.lastError = null;
               detail.task.status = 'EVALUATING';
               scheduleAsyncEvaluation(detail, sub.id);
@@ -656,6 +667,35 @@ export const studyMockService: StudyService = {
             message: 'Nhiệm vụ này đang ở chế độ AI mặc định.',
           });
         }
+        if (detail.task.status === 'SKIPPED') {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Nhiệm vụ này đã được phụ huynh đánh dấu bỏ qua.',
+          });
+        }
+        if (
+          detail.task.status === 'EVALUATED' ||
+          detail.task.status === 'SUBMITTED'
+        ) {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Con đã xác nhận nộp bài này lên Drive rồi.',
+          });
+        }
+        if (
+          detail.task.taskType === 'PREVIEW' &&
+          bucket.reviewTask.task.status !== 'SKIPPED' &&
+          !bucket.reviewTask.task.customSubmittedAt &&
+          bucket.reviewTask.submissions.length === 0
+        ) {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'STUDY_003',
+            message: 'Con cần nộp bài Ôn bài cũ trước khi làm Soạn bài mới nhé.',
+          });
+        }
         const note = request.submissionNote.trim();
         if (note.length < 5 || note.length > 300) {
           throw new ApiClientError({
@@ -664,8 +704,25 @@ export const studyMockService: StudyService = {
             message: 'Ghi chú nộp bài phải từ 5 đến 300 ký tự.',
           });
         }
+        const rawFileUrl = request.driveFileUrl?.trim() || null;
+        if (rawFileUrl) {
+          let isValidHttps = false;
+          try {
+            const parsed = new URL(rawFileUrl);
+            isValidHttps = parsed.protocol === 'https:' && Boolean(parsed.hostname);
+          } catch {
+            isValidHttps = false;
+          }
+          if (!isValidHttps) {
+            throw new ApiClientError({
+              status: 400,
+              errorCode: 'VAL_001',
+              message: 'Link file Google Drive không hợp lệ (cần bắt đầu bằng https://).',
+            });
+          }
+        }
         detail.task.customSubmissionNote = note;
-        detail.task.customSubmissionUrl = request.driveFileUrl?.trim() || null;
+        detail.task.customSubmissionUrl = rawFileUrl;
         detail.task.customSubmittedAt = new Date().toISOString();
         detail.task.status = 'SUBMITTED';
         detail.task.skipRequestStatus = null;

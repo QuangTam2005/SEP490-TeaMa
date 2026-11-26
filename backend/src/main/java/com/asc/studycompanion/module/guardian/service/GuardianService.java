@@ -348,6 +348,7 @@ public class GuardianService {
 
     private void assertTaskHasNoSubmission(StudyTask task, String message) {
         boolean hasSubmission = studySubmissionRepository.existsByTaskId(task.getId())
+                || task.getCustomSubmittedAt() != null
                 || task.getStatus() == StudyTaskStatus.SUBMITTED
                 || task.getStatus() == StudyTaskStatus.EVALUATING
                 || task.getStatus() == StudyTaskStatus.EVALUATED

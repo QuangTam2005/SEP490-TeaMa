@@ -76,6 +76,8 @@ export function SubmissionDetailView({
       });
       void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
       void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-task'] });
+      void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
       toast.success('Đã xác nhận xem bài và gửi lời nhắn động viên cho con');
     },
     onError: (err) => {

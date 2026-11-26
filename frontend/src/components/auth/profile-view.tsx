@@ -250,7 +250,7 @@ export function ProfileView() {
                   id="profile-grade"
                   value={grade}
                   onChange={(e) => setGrade(Number(e.target.value))}
-                  className="flex h-11 w-full rounded-lg border bg-background px-3 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-11 w-full rounded-lg border bg-background px-3 text-base font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
                 >
                   {GRADE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>

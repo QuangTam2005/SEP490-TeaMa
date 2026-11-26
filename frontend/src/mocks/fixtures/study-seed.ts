@@ -20,7 +20,7 @@ import type {
 } from '@/types';
 
 /**
- * Ensures seeded text stays cleanly inside BR-12 (850-2,000 normalized chars).
+ * Ensures seeded text stays cleanly inside BR-12 (400-3,000 normalized chars).
  */
 const MATH_REVIEW_V1_CONTENT = [
   'Hôm nay em ôn tập lại kiến thức về ước chung, ước chung lớn nhất (ƯCLN) và bội chung nhỏ nhất (BCNN) trong chương trình Toán lớp 6.',

@@ -103,4 +103,42 @@ class FlywayMigrationSchemaTest {
         assertTrue(sql.contains("ai_evaluations"));
         assertTrue(sql.contains("VARCHAR(1000)"));
     }
+
+    @Test
+    void v7MigrationAddsStudentSkipRequestColumnsAndCheckConstraint() throws IOException {
+        ClassPathResource resource = new ClassPathResource("db/migration/V7__student_skip_requests.sql");
+        assertTrue(resource.exists(), "V7 migration must exist on classpath");
+
+        String sql = resource.getContentAsString(StandardCharsets.UTF_8);
+        assertTrue(sql.contains("ALTER TABLE study_tasks"));
+        assertTrue(sql.contains("skip_request_status VARCHAR(20) NULL"));
+        assertTrue(sql.contains("skip_request_reason VARCHAR(300) NULL"));
+        assertTrue(sql.contains("skip_requested_at TIMESTAMPTZ NULL"));
+        assertTrue(sql.contains("skip_reviewed_at TIMESTAMPTZ NULL"));
+        assertTrue(sql.contains("skip_reviewed_by_user_id BIGINT NULL"));
+        assertTrue(sql.contains("study_tasks_skip_request_status_check"));
+        assertTrue(sql.contains("'PENDING', 'APPROVED', 'REJECTED'"));
+    }
+
+    @Test
+    void v8MigrationAddsGuardianDefaultDriveAndCustomTaskColumns() throws IOException {
+        ClassPathResource resource = new ClassPathResource("db/migration/V8__guardian_custom_tasks_and_drive.sql");
+        assertTrue(resource.exists(), "V8 migration must exist on classpath");
+
+        String sql = resource.getContentAsString(StandardCharsets.UTF_8);
+        assertTrue(sql.contains("ALTER TABLE guardian_links"));
+        assertTrue(sql.contains("default_drive_folder_url VARCHAR(500) NULL"));
+        assertTrue(sql.contains("ALTER TABLE study_tasks"));
+        assertTrue(sql.contains("assignment_mode VARCHAR(30) NOT NULL DEFAULT 'STANDARD_AI'"));
+        assertTrue(sql.contains("custom_task_title VARCHAR(200) NULL"));
+        assertTrue(sql.contains("custom_task_description VARCHAR(500) NULL"));
+        assertTrue(sql.contains("custom_drive_folder_url VARCHAR(500) NULL"));
+        assertTrue(sql.contains("custom_assigned_by_user_id BIGINT NULL"));
+        assertTrue(sql.contains("custom_assigned_at TIMESTAMPTZ NULL"));
+        assertTrue(sql.contains("custom_submission_note VARCHAR(300) NULL"));
+        assertTrue(sql.contains("custom_submission_url VARCHAR(500) NULL"));
+        assertTrue(sql.contains("custom_submitted_at TIMESTAMPTZ NULL"));
+        assertTrue(sql.contains("study_tasks_assignment_mode_check"));
+        assertTrue(sql.contains("'STANDARD_AI', 'CUSTOM_DRIVE'"));
+    }
 }

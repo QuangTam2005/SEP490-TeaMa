@@ -178,7 +178,7 @@ export function RegisterForm() {
                   { shouldValidate: true }
                 )
               }
-              className="h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-11 w-full rounded-md border bg-background px-3 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
             >
               <option value="">Chọn khối lớp...</option>
               {GRADE_OPTIONS.map((opt) => (

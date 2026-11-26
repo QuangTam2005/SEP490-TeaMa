@@ -241,5 +241,76 @@ class GuardianControllerTest {
         mockMvc.perform(delete("/api/guardian/tasks/101/custom-task"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.assignmentMode").value("STANDARD_AI"));
+
+        // Negative validation (400 VAL_001) on new skip-review & custom-task endpoints
+        mockMvc.perform(post("/api/guardian/tasks/101/skip-request/review")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"note\":\"Thiếu trường approved\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VAL_001"));
+
+        mockMvc.perform(post("/api/guardian/tasks/101/custom-task")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Ngắn\",\"driveFolderUrl\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VAL_001"));
+
+        mockMvc.perform(post("/api/guardian/tasks/101/custom-task/verify")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"note\":\"Thiếu trường approved\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VAL_001"));
+
+        // Anti-IDOR / role checks (403 GRD_001 & AUTH_004)
+        when(guardianService.reviewSkipRequest(eq(2L), eq(101L), any()))
+                .thenThrow(new AppException(ErrorCode.GUARDIAN_NOT_LINKED));
+        mockMvc.perform(post("/api/guardian/tasks/101/skip-request/review")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"approved\":true}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("GRD_001"));
+
+        when(guardianService.assignCustomTask(eq(2L), eq(101L), any()))
+                .thenThrow(new AppException(ErrorCode.GUARDIAN_NOT_LINKED));
+        mockMvc.perform(post("/api/guardian/tasks/101/custom-task")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Bài tập Toán\",\"driveFolderUrl\":\"https://drive.google.com/drive/folders/abc\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("GRD_001"));
+
+        when(guardianService.clearCustomTask(2L, 101L))
+                .thenThrow(new AppException(ErrorCode.ACCESS_DENIED));
+        mockMvc.perform(delete("/api/guardian/tasks/101/custom-task"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_004"));
+
+        when(guardianService.verifyCustomTask(eq(2L), eq(101L), any()))
+                .thenThrow(new AppException(ErrorCode.ACCESS_DENIED));
+        mockMvc.perform(post("/api/guardian/tasks/101/custom-task/verify")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"approved\":true}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_004"));
+
+        // Unauthenticated requests return 401 AUTH_001
+        SecurityContextHolder.clearContext();
+        mockMvc.perform(post("/api/guardian/tasks/101/skip-request/review")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"approved\":true}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_001"));
+        mockMvc.perform(post("/api/guardian/tasks/101/custom-task")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Bài tập Toán\",\"driveFolderUrl\":\"https://drive.google.com/drive/folders/abc\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_001"));
+        mockMvc.perform(delete("/api/guardian/tasks/101/custom-task"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_001"));
+        mockMvc.perform(post("/api/guardian/tasks/101/custom-task/verify")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"approved\":true}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_001"));
     }
 }

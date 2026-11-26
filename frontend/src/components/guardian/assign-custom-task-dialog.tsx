@@ -99,7 +99,7 @@ export function AssignCustomTaskDialog({
                   key={preset}
                   type="button"
                   onClick={() => setTitle(preset)}
-                  className="rounded-full border bg-muted/50 px-3 py-1 text-left text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                  className="min-h-[44px] rounded-full border bg-muted/50 px-3 py-2 text-left text-xs font-medium text-foreground transition-colors hover:bg-muted sm:min-h-0 sm:py-1"
                 >
                   {preset}
                 </button>

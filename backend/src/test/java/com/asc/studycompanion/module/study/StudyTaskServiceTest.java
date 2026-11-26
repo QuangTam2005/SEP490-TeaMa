@@ -180,4 +180,66 @@ class StudyTaskServiceTest {
         assertNotNull(res.customSubmittedAt());
         assertEquals(StudyTaskStatus.NOT_STARTED, preview.getStatus());
     }
+
+    @Test
+    void enforcesAntiIdorReviewGateAndHttpsDriveUrlValidationOnSkipAndCustomTasks() {
+        StudentProfile student = StudentProfile.builder().id(10L).displayName("Khoi").grade(6).build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        StudyPlan plan = StudyPlan.builder().id(20L).student(student).targetDate(LocalDate.of(2026, 11, 27)).build();
+
+        StudyTask reviewUnfinished = StudyTask.builder()
+                .id(201L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.NOT_STARTED)
+                .assignmentMode(TaskAssignmentMode.CUSTOM_DRIVE)
+                .build();
+        StudyTask previewCustom = StudyTask.builder()
+                .id(202L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.PREVIEW)
+                .status(StudyTaskStatus.BLOCKED)
+                .assignmentMode(TaskAssignmentMode.CUSTOM_DRIVE)
+                .build();
+
+        // Anti-IDOR: another student cannot requestSkip, cancelSkipRequest, or submitCustomTask
+        when(studyTaskRepository.findById(201L)).thenReturn(Optional.of(reviewUnfinished));
+        doThrow(new AppException(ErrorCode.ACCESS_DENIED))
+                .when(studyAccessGuard).assertStudentOwner(999L, 10L);
+
+        assertEquals(ErrorCode.ACCESS_DENIED, assertThrows(AppException.class,
+                () -> studyTaskService.requestSkip(999L, 201L, new StudentSkipRequestDto("Xin nghỉ hôm nay"))).getErrorCode());
+        assertEquals(ErrorCode.ACCESS_DENIED, assertThrows(AppException.class,
+                () -> studyTaskService.cancelSkipRequest(999L, 201L)).getErrorCode());
+        assertEquals(ErrorCode.ACCESS_DENIED, assertThrows(AppException.class,
+                () -> studyTaskService.submitCustomTask(999L, 201L, new StudentCustomSubmitRequest("Con đã nộp", null))).getErrorCode());
+
+        // PREVIEW custom-drive task blocked until REVIEW is completed
+        when(studyTaskRepository.findById(202L)).thenReturn(Optional.of(previewCustom));
+        when(studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(20L, 1L, StudyTaskType.REVIEW))
+                .thenReturn(Optional.of(reviewUnfinished));
+        when(studySubmissionRepository.existsByTaskId(201L)).thenReturn(false);
+
+        AppException previewGateEx = assertThrows(AppException.class,
+                () -> studyTaskService.submitCustomTask(1L, 202L, new StudentCustomSubmitRequest("Con đã soạn bài mới", null)));
+        assertEquals(ErrorCode.REVIEW_REQUIRED_BEFORE_PREVIEW, previewGateEx.getErrorCode());
+
+        // HTTPS-only and <= 500 chars validation on optional driveFileUrl
+        AppException httpEx = assertThrows(AppException.class,
+                () -> studyTaskService.submitCustomTask(1L, 201L,
+                        new StudentCustomSubmitRequest("Con đã nộp bài", "http://drive.google.com/file/d/abc")));
+        assertEquals(ErrorCode.VALIDATION_FAILED, httpEx.getErrorCode());
+
+        AppException tooLongUrlEx = assertThrows(AppException.class,
+                () -> studyTaskService.submitCustomTask(1L, 201L,
+                        new StudentCustomSubmitRequest("Con đã nộp bài", "https://drive.google.com/" + "a".repeat(480))));
+        assertEquals(ErrorCode.VALIDATION_FAILED, tooLongUrlEx.getErrorCode());
+
+        AppException badSchemeEx = assertThrows(AppException.class,
+                () -> studyTaskService.submitCustomTask(1L, 201L,
+                        new StudentCustomSubmitRequest("Con đã nộp bài", "javascript:alert(1)")));
+        assertEquals(ErrorCode.VALIDATION_FAILED, badSchemeEx.getErrorCode());
+    }
 }

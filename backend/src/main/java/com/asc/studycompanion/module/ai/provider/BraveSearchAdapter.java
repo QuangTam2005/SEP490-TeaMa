@@ -128,7 +128,7 @@ public class BraveSearchAdapter implements SearchProvider {
         String lessonWebQuery = buildLessonWebQuery(query);
         if (!lessonWebQuery.isBlank() && requestsSent < MAX_BRAVE_REQUESTS) {
             requestsSent++;
-            List<SearchSnippet> webHits = executeBraveRequest(apiKey, lessonWebQuery, maxSources + 3, true, query);
+            List<SearchSnippet> webHits = executeBraveRequest(apiKey, lessonWebQuery, maxSources + 3, query);
             int webLimit = Math.max(1, maxSources - 1);
             collectDistinctSnippets(webHits, webLimit, collected, sparePool, seenUrls);
         }
@@ -138,7 +138,7 @@ public class BraveSearchAdapter implements SearchProvider {
         if (!secondaryQuery.isBlank() && requestsSent < MAX_BRAVE_REQUESTS && collected.size() < maxSources) {
             requestsSent++;
             try {
-                List<SearchSnippet> secondaryHits = executeBraveRequest(apiKey, secondaryQuery, maxSources + 1, false, query);
+                List<SearchSnippet> secondaryHits = executeBraveRequest(apiKey, secondaryQuery, maxSources + 1, query);
                 collectDistinctSnippets(secondaryHits, maxSources - collected.size(), collected, sparePool, seenUrls);
             } catch (AppException ex) {
                 if (collected.isEmpty() && sparePool.isEmpty()) {
@@ -156,7 +156,7 @@ public class BraveSearchAdapter implements SearchProvider {
             String contentQuery = buildContentExcerptQuery(query, coreKeywords);
             requestsSent++;
             try {
-                List<SearchSnippet> contentHits = executeBraveRequest(apiKey, contentQuery, maxSources + 2, false, query);
+                List<SearchSnippet> contentHits = executeBraveRequest(apiKey, contentQuery, maxSources + 2, query);
                 collectDistinctSnippets(contentHits, maxSources - collected.size(), collected, sparePool, seenUrls);
             } catch (AppException ex) {
                 if (collected.isEmpty() && sparePool.isEmpty()) {
@@ -312,7 +312,6 @@ public class BraveSearchAdapter implements SearchProvider {
             String apiKey,
             String searchText,
             int count,
-            boolean failOnException,
             SearchQuery query
     ) {
         URI uri = UriComponentsBuilder.fromUriString(aiProperties.getBrave().getBaseUrl())
@@ -335,9 +334,6 @@ public class BraveSearchAdapter implements SearchProvider {
                     .body(BraveApiResponse.class);
         } catch (RestClientException ex) {
             log.warn("Brave Search request failed for query [{}]: {}", searchText, ex.getMessage());
-            if (failOnException) {
-                throw new AppException(ErrorCode.AI_PROVIDER_UNAVAILABLE, "Không thể kết nối công cụ tìm kiếm");
-            }
             throw new AppException(ErrorCode.AI_PROVIDER_UNAVAILABLE, "Không thể kết nối công cụ tìm kiếm");
         }
 

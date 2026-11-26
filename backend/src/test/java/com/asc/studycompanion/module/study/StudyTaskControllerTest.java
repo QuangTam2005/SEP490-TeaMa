@@ -178,5 +178,62 @@ class StudyTaskControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("SUBMITTED"))
                 .andExpect(jsonPath("$.data.assignmentMode").value("CUSTOM_DRIVE"));
+
+        // Negative validation on custom-submission (short note & >500-char URL)
+        mockMvc.perform(post("/api/student/tasks/101/custom-submission")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"submissionNote\":\"ok\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VAL_001"));
+
+        mockMvc.perform(post("/api/student/tasks/101/custom-submission")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"submissionNote\":\"Con đã tải ảnh lên Drive\",\"driveFileUrl\":\"https://drive.google.com/" + "a".repeat(480) + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VAL_001"));
+
+        // Anti-IDOR / wrong role 403 AUTH_004 propagated cleanly on skip-request & custom-submission
+        UserPrincipal guardian = new UserPrincipal(2L, "g@gmail.com", "h", "Hang", UserRole.GUARDIAN);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(guardian, null, guardian.getAuthorities())
+        );
+        when(studyTaskService.requestSkip(eq(2L), eq(101L), any(StudentSkipRequestDto.class)))
+                .thenThrow(new AppException(ErrorCode.ACCESS_DENIED));
+        when(studyTaskService.cancelSkipRequest(2L, 101L))
+                .thenThrow(new AppException(ErrorCode.ACCESS_DENIED));
+        when(studyTaskService.submitCustomTask(eq(2L), eq(101L), any(StudentCustomSubmitRequest.class)))
+                .thenThrow(new AppException(ErrorCode.ACCESS_DENIED));
+
+        mockMvc.perform(post("/api/student/tasks/101/skip-request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Làm bài tập thầy cô giao\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_004"));
+
+        mockMvc.perform(delete("/api/student/tasks/101/skip-request"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_004"));
+
+        mockMvc.perform(post("/api/student/tasks/101/custom-submission")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"submissionNote\":\"Con đã tải ảnh lên Drive\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_004"));
+
+        // Unauthenticated requests on skip/custom endpoints return 401 AUTH_001
+        SecurityContextHolder.clearContext();
+        mockMvc.perform(post("/api/student/tasks/101/skip-request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Làm bài tập thầy cô giao\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_001"));
+        mockMvc.perform(delete("/api/student/tasks/101/skip-request"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_001"));
+        mockMvc.perform(post("/api/student/tasks/101/custom-submission")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"submissionNote\":\"Con đã tải ảnh lên Drive\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("AUTH_001"));
     }
 }

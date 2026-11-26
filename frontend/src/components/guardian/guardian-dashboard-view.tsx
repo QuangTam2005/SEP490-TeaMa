@@ -186,15 +186,20 @@ export function GuardianDashboardView() {
       (IS_MOCK_MODE || Boolean(selectedStudentId)),
   });
 
+  const invalidateAllPlanAndGuardianQueries = () => {
+    void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+    void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+    void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+    void queryClient.invalidateQueries({ queryKey: ['student-task'] });
+    void queryClient.invalidateQueries({ queryKey: ['student-history'] });
+    void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
+  };
+
   const skipMutation = useMutation({
     mutationFn: ({ taskId, skipped }: { taskId: number; skipped: boolean }) =>
       guardianService.skipTask(taskId, { skipped }),
     onSuccess: (res) => {
-      void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
-      void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
-      void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
-      void queryClient.invalidateQueries({ queryKey: ['student-task'] });
-      void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
+      invalidateAllPlanAndGuardianQueries();
       toast.success(
         res.status === 'SKIPPED'
           ? 'Đã đánh dấu bỏ qua bài học cho con'
@@ -217,11 +222,7 @@ export function GuardianDashboardView() {
       note?: string;
     }) => guardianService.reviewSkipRequest(taskId, { approved, note }),
     onSuccess: (res) => {
-      void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
-      void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
-      void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
-      void queryClient.invalidateQueries({ queryKey: ['student-task'] });
-      void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
+      invalidateAllPlanAndGuardianQueries();
       setRejectTarget(null);
       setRejectNote('');
       toast.success(
@@ -234,14 +235,6 @@ export function GuardianDashboardView() {
       toast.error(extractApiErrorMessage(err));
     },
   });
-
-  const invalidateAllPlanAndGuardianQueries = () => {
-    void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
-    void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
-    void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
-    void queryClient.invalidateQueries({ queryKey: ['student-task'] });
-    void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
-  };
 
   const assignCustomMutation = useMutation({
     mutationFn: ({
@@ -759,7 +752,7 @@ export function GuardianDashboardView() {
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9"
+                className="h-11 w-11 sm:h-9 sm:w-9"
                 aria-label="Tuần trước"
                 onClick={() => setWeekStart((prev) => shiftIsoDate(prev, -7))}
               >
@@ -769,7 +762,7 @@ export function GuardianDashboardView() {
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9"
+                className="h-11 w-11 sm:h-9 sm:w-9"
                 aria-label="Tuần sau"
                 onClick={() => setWeekStart((prev) => shiftIsoDate(prev, 7))}
               >
@@ -1154,7 +1147,7 @@ export function GuardianDashboardView() {
                               clearCustomMutation.isPending &&
                               clearCustomMutation.variables === item.taskId
                             }
-                            className="h-10 w-full justify-center"
+                            className="h-11 w-full justify-center"
                             onClick={() => clearCustomMutation.mutate(item.taskId)}
                           >
                             Gỡ bài giao thay thế

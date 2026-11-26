@@ -220,11 +220,14 @@ public class StudyTaskService {
             return null;
         }
         String trimmed = rawUrl.trim();
+        if (trimmed.length() > 500) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Link file Google Drive tối đa 500 ký tự");
+        }
         try {
             URI uri = URI.create(trimmed);
             String scheme = uri.getScheme();
             if (scheme == null
-                    || (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme))
+                    || !"https".equalsIgnoreCase(scheme)
                     || uri.getHost() == null
                     || uri.getHost().isBlank()) {
                 throw new AppException(ErrorCode.VALIDATION_FAILED, "Link file Google Drive không hợp lệ (cần bắt đầu bằng https://)");

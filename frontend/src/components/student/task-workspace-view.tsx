@@ -257,6 +257,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
   const canUseDraftKey = IS_MOCK_MODE || Boolean(userId);
   const draftKey = `asc_draft_${userId ?? 'guest'}_${taskId}`;
   const initializedTaskRef = useRef<number | null>(null);
+  const initializedCustomTaskRef = useRef<number | null>(null);
   const restoredDraftKeyRef = useRef<string | null>(null);
   const lastPasteToastRef = useRef(0);
   const pasteBannerTimerRef = useRef<number | null>(null);
@@ -287,6 +288,17 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
     const detail = taskQuery.data;
     if (!detail) {
       return;
+    }
+
+    if (
+      detail.task.assignmentMode === 'CUSTOM_DRIVE' &&
+      detail.task.status !== 'SUBMITTED' &&
+      detail.task.status !== 'EVALUATED' &&
+      initializedCustomTaskRef.current !== taskId
+    ) {
+      initializedCustomTaskRef.current = taskId;
+      setCustomNote(detail.task.customSubmissionNote ?? '');
+      setCustomFileUrl(detail.task.customSubmissionUrl ?? '');
     }
 
     const isFirstTaskInit = initializedTaskRef.current !== taskId;
@@ -440,6 +452,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['student-task', taskId] });
       void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-history'] });
       void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
       setSkipTarget(null);
       toast.success('Đã gửi yêu cầu xin bỏ qua tới phụ huynh');
@@ -455,6 +468,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['student-task', taskId] });
       void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-history'] });
       void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
       toast.success('Đã hủy yêu cầu xin bỏ qua');
     },
@@ -472,6 +486,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['student-task', taskId] });
       void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-history'] });
       void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
       void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
       void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
@@ -529,7 +544,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
       <div>
         <Link
           href="/student/today"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border bg-card px-3.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          className="inline-flex h-11 items-center gap-2 rounded-lg border bg-card px-3.5 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:h-10"
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
           Quay lại Bài học ngày mai
@@ -619,7 +634,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                         variant="outline"
                         disabled={cancelSkipMutation.isPending}
                         onClick={() => cancelSkipMutation.mutate(task.id)}
-                        className="h-9 bg-background text-xs"
+                        className="h-11 bg-background text-xs sm:h-9"
                       >
                         {cancelSkipMutation.isPending ? 'Đang hủy...' : 'Hủy xin bỏ qua'}
                       </Button>
@@ -668,8 +683,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
             const trimmedFileUrl = customFileUrl.trim();
             const customFileUrlValid =
               trimmedFileUrl.length === 0 ||
-              trimmedFileUrl.startsWith('https://') ||
-              trimmedFileUrl.startsWith('http://');
+              trimmedFileUrl.startsWith('https://');
             const canSubmitCustom =
               trimmedCustomNote.length >= 5 &&
               trimmedCustomNote.length <= 300 &&
@@ -700,7 +714,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                         type="button"
                         size="sm"
                         variant="outline"
-                        className="h-9"
+                        className="h-11 sm:h-9"
                         onClick={() => setSkipTarget(task)}
                       >
                         Xin phụ huynh bỏ qua
@@ -827,7 +841,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                               />
                               {!customFileUrlValid ? (
                                 <p className="text-xs text-rose-600 dark:text-rose-400">
-                                  Link file phải bắt đầu bằng https:// hoặc http://
+                                  Link file phải bắt đầu bằng https://
                                 </p>
                               ) : null}
                             </div>
@@ -921,7 +935,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="h-9"
+                      className="h-11 sm:h-9"
                       onClick={() => setSkipTarget(task)}
                     >
                       {task.skipRequestStatus === 'REJECTED'
@@ -946,7 +960,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                     variant="outline"
                     disabled={cancelSkipMutation.isPending}
                     onClick={() => cancelSkipMutation.mutate(task.id)}
-                    className="h-9 shrink-0 bg-background"
+                    className="h-11 shrink-0 bg-background sm:h-9"
                   >
                     {cancelSkipMutation.isPending ? 'Đang hủy...' : 'Hủy xin bỏ qua'}
                   </Button>
@@ -1011,7 +1025,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                       {canRevise && !isComposing ? (
                         <Button
                           type="button"
-                          className="h-10 gap-1.5"
+                          className="h-11 gap-1.5 sm:h-10"
                           onClick={() => handleStartRevision(submissions[0])}
                         >
                           <PencilLine className="h-4 w-4" strokeWidth={1.75} />
