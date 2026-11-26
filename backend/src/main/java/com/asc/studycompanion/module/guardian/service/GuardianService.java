@@ -720,6 +720,8 @@ public class GuardianService {
                             : null;
 
                     boolean isCustomDrive = task.getAssignmentMode() == TaskAssignmentMode.CUSTOM_DRIVE;
+                    boolean hasCustomDriveUrl = task.getCustomDriveFolderUrl() != null
+                            && !task.getCustomDriveFolderUrl().isBlank();
                     String lessonCellValue = currentSub != null
                             ? currentSub.getLessonTitle()
                             : (isCustomDrive && task.getCustomTaskTitle() != null
@@ -728,7 +730,9 @@ public class GuardianService {
                     String evalCellValue = eval != null
                             ? eval.getOverallStatus().name()
                             : (isCustomDrive
-                                    ? (task.getStatus() == StudyTaskStatus.EVALUATED ? "PH đã xác nhận (Drive)" : "Nộp qua Google Drive")
+                                    ? (task.getStatus() == StudyTaskStatus.EVALUATED
+                                            ? (hasCustomDriveUrl ? "PH đã xác nhận (Drive)" : "PH đã xác nhận (Thủ công)")
+                                            : (hasCustomDriveUrl ? "Nộp qua Google Drive" : "Nhiệm vụ PH giao (Thủ công)"))
                                     : "-");
 
                     Row row = sheet.createRow(rowIdx++);

@@ -114,3 +114,16 @@ export function formatViDate(isoDate: string): string {
   }
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
+
+export function isValidHttpsUrl(rawUrl: string): boolean {
+  const trimmed = rawUrl.trim();
+  if (trimmed.length === 0 || trimmed.length > 500) {
+    return false;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'https:' && parsed.hostname.length > 0;
+  } catch {
+    return false;
+  }
+}

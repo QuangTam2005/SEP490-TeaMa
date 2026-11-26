@@ -243,10 +243,14 @@ export function GuardianDashboardView() {
       taskId: number;
       payload: GuardianAssignCustomTaskRequest;
     }) => guardianService.assignCustomTask(taskId, payload),
-    onSuccess: () => {
+    onSuccess: (res) => {
       invalidateAllPlanAndGuardianQueries();
       setAssignTarget(null);
-      toast.success('Đã giao nhiệm vụ thay thế kèm thư mục Google Drive');
+      toast.success(
+        res.customDriveFolderUrl
+          ? 'Đã giao nhiệm vụ thay thế kèm thư mục Google Drive'
+          : 'Đã giao nhiệm vụ thay thế cho con'
+      );
     },
     onError: (err) => {
       toast.error(extractApiErrorMessage(err));
@@ -280,8 +284,12 @@ export function GuardianDashboardView() {
       setVerifyNote('');
       toast.success(
         res.status === 'EVALUATED'
-          ? 'Đã xác nhận con hoàn thành bài nộp trên Drive'
-          : 'Đã gửi lời nhắc con bổ sung bài trên Drive'
+          ? res.customDriveFolderUrl
+            ? 'Đã xác nhận con hoàn thành bài nộp trên Drive'
+            : 'Đã xác nhận con hoàn thành nhiệm vụ'
+          : res.customDriveFolderUrl
+            ? 'Đã gửi lời nhắc con bổ sung bài trên Drive'
+            : 'Đã gửi lời nhắc con thực hiện lại nhiệm vụ'
       );
     },
     onError: (err) => {
@@ -988,9 +996,25 @@ export function GuardianDashboardView() {
                         <p className="break-words font-medium text-foreground [overflow-wrap:anywhere]">
                           {item.customTaskTitle}
                         </p>
-                        {item.customSubmissionNote ? (
+                        {item.customSubmissionNote || item.customSubmissionUrl ? (
                           <p className="break-words text-sky-900 dark:text-sky-200 [overflow-wrap:anywhere]">
-                            Con nộp: &ldquo;{item.customSubmissionNote}&rdquo;
+                            {item.customSubmissionNote ? (
+                              <>Con nộp: &ldquo;{item.customSubmissionNote}&rdquo;</>
+                            ) : null}
+                            {item.customSubmissionUrl ? (
+                              <>
+                                {item.customSubmissionNote ? ' · ' : null}
+                                <a
+                                  href={item.customSubmissionUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-0.5 font-semibold underline"
+                                >
+                                  Link bài
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </>
+                            ) : null}
                           </p>
                         ) : null}
                       </div>

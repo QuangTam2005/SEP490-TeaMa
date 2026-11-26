@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { isValidHttpsUrl } from '@/lib/study-utils';
 import type {
   GuardianAssignCustomTaskRequest,
   GuardianTaskItem,
@@ -68,10 +69,7 @@ export function AssignCustomTaskDialog({
   const trimmedDesc = description.trim();
   const trimmedUrl = driveFolderUrl.trim();
   const isUrlValid =
-    trimmedUrl.length === 0 ||
-    (trimmedUrl.startsWith('https://') &&
-      trimmedUrl.length >= 12 &&
-      trimmedUrl.length <= 500);
+    trimmedUrl.length === 0 || isValidHttpsUrl(trimmedUrl);
   const isValid =
     trimmedTitle.length >= 5 &&
     trimmedTitle.length <= 200 &&

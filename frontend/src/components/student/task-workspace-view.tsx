@@ -38,6 +38,7 @@ import {
   MIN_SUBMISSION_CHARS,
   countNormalizedChars,
   formatViDate,
+  isValidHttpsUrl,
   isValidStudyLength,
 } from '@/lib/study-utils';
 import {
@@ -483,14 +484,18 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
         submissionNote: customNote.trim(),
         driveFileUrl: customFileUrl.trim() || null,
       }),
-    onSuccess: () => {
+    onSuccess: (res) => {
       void queryClient.invalidateQueries({ queryKey: ['student-task', taskId] });
       void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
       void queryClient.invalidateQueries({ queryKey: ['student-history'] });
       void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
       void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
       void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
-      toast.success('Đã gửi xác nhận nộp bài lên Google Drive cho phụ huynh!');
+      toast.success(
+        res.customDriveFolderUrl
+          ? 'Đã gửi xác nhận nộp bài lên Google Drive cho phụ huynh!'
+          : 'Đã gửi xác nhận hoàn thành nhiệm vụ cho phụ huynh!'
+      );
     },
     onError: (err) => {
       toast.error(extractApiErrorMessage(err));
@@ -678,12 +683,47 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
             !task.customSubmittedAt &&
             (task.status === 'NOT_STARTED' || task.status === 'IN_PROGRESS');
 
+          const skipStatusBanners = (
+            <>
+              {task.skipRequestStatus === 'PENDING' && task.skipRequestReason ? (
+                <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="font-semibold">Đang chờ phụ huynh duyệt yêu cầu bỏ qua</p>
+                    <p className="break-words text-xs [overflow-wrap:anywhere]">
+                      Lý do: &ldquo;{task.skipRequestReason}&rdquo;
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={cancelSkipMutation.isPending}
+                    onClick={() => cancelSkipMutation.mutate(task.id)}
+                    className="h-11 shrink-0 bg-background sm:h-9"
+                  >
+                    {cancelSkipMutation.isPending ? 'Đang hủy...' : 'Hủy xin bỏ qua'}
+                  </Button>
+                </div>
+              ) : null}
+
+              {task.skipRequestStatus === 'REJECTED' ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm text-rose-900 dark:border-rose-900/60 dark:bg-rose-950/25 dark:text-rose-200">
+                  <p className="font-semibold">Phụ huynh chưa đồng ý bỏ qua bài học này</p>
+                  {task.guardianNote ? (
+                    <p className="mt-0.5 break-words text-xs [overflow-wrap:anywhere]">
+                      Lời nhắn của phụ huynh: &ldquo;{task.guardianNote}&rdquo;
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </>
+          );
+
           if (isCustomDrive) {
             const trimmedCustomNote = customNote.trim();
             const trimmedFileUrl = customFileUrl.trim();
             const customFileUrlValid =
-              trimmedFileUrl.length === 0 ||
-              trimmedFileUrl.startsWith('https://');
+              trimmedFileUrl.length === 0 || isValidHttpsUrl(trimmedFileUrl);
             const canSubmitCustom =
               trimmedCustomNote.length >= 5 &&
               trimmedCustomNote.length <= 300 &&
@@ -703,6 +743,11 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                       </Badge>
                       <Badge variant="brand">Phụ huynh giao thay thế</Badge>
                       <StatusBadge status={task.status} />
+                      {task.skipRequestStatus === 'PENDING' ? (
+                        <Badge variant="warning" className="whitespace-nowrap">
+                          Chờ PH duyệt bỏ qua
+                        </Badge>
+                      ) : null}
                     </div>
                     <h1 className="break-words text-xl font-bold tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-2xl">
                       {task.customTaskTitle ?? `Bài tập ${task.subjectName}`}
@@ -718,11 +763,15 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                         className="h-11 sm:h-9"
                         onClick={() => setSkipTarget(task)}
                       >
-                        Xin phụ huynh bỏ qua
+                        {task.skipRequestStatus === 'REJECTED'
+                          ? 'Gửi lại xin bỏ qua'
+                          : 'Xin phụ huynh bỏ qua'}
                       </Button>
                     ) : null}
                   </div>
                 </div>
+
+                {skipStatusBanners}
 
                 {task.status === 'IN_PROGRESS' && task.guardianNote ? (
                   <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
@@ -944,37 +993,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                 </div>
               </div>
 
-              {task.skipRequestStatus === 'PENDING' && task.skipRequestReason ? (
-                <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0 space-y-0.5">
-                    <p className="font-semibold">Đang chờ phụ huynh duyệt yêu cầu bỏ qua</p>
-                    <p className="break-words text-xs [overflow-wrap:anywhere]">
-                      Lý do: &ldquo;{task.skipRequestReason}&rdquo;
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={cancelSkipMutation.isPending}
-                    onClick={() => cancelSkipMutation.mutate(task.id)}
-                    className="h-11 shrink-0 bg-background sm:h-9"
-                  >
-                    {cancelSkipMutation.isPending ? 'Đang hủy...' : 'Hủy xin bỏ qua'}
-                  </Button>
-                </div>
-              ) : null}
-
-              {task.skipRequestStatus === 'REJECTED' ? (
-                <div className="rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm text-rose-900 dark:border-rose-900/60 dark:bg-rose-950/25 dark:text-rose-200">
-                  <p className="font-semibold">Phụ huynh chưa đồng ý bỏ qua bài học này</p>
-                  {task.guardianNote ? (
-                    <p className="mt-0.5 break-words text-xs [overflow-wrap:anywhere]">
-                      Lời nhắn của phụ huynh: &ldquo;{task.guardianNote}&rdquo;
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
+              {skipStatusBanners}
 
               {task.guardianAcknowledgedAt ? (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">
