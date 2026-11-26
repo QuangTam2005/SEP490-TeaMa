@@ -15,10 +15,10 @@ import { Label } from '@/components/ui/label';
 import type { StudyTaskSummaryResponse } from '@/types';
 
 const QUICK_REASONS = [
-  'Làm bài tập thầy cô giao trên lớp',
-  'Đã làm bài tập SGK/SBT thay thế',
-  'Ôn thi / kiểm tra môn khác',
-  'Lý do sức khỏe / việc gia đình',
+  { label: 'Làm bài cô giao', value: 'Làm bài tập thầy cô giao trên lớp' },
+  { label: 'Bài tập SGK/SBT', value: 'Đã làm bài tập SGK/SBT thay thế' },
+  { label: 'Ôn kiểm tra', value: 'Ôn thi / kiểm tra môn khác' },
+  { label: 'Việc gia đình', value: 'Lý do sức khỏe / việc gia đình' },
 ];
 
 interface SkipRequestDialogProps {
@@ -60,28 +60,22 @@ export function SkipRequestDialog({
             Xin phụ huynh bỏ qua · Môn {task.subjectName}
           </DialogTitle>
           <DialogDescription>
-            Phần <strong>{taskLabel}</strong> chỉ được tính là bỏ qua sau khi
-            phụ huynh đồng ý. Hãy ghi rõ lý do để bố mẹ xem xét nhé.
+            Cần phụ huynh đồng ý để bỏ qua phần <strong>{taskLabel}</strong>.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
-          <div className="space-y-1.5">
-            <span className="text-xs font-medium text-muted-foreground">
-              Chọn nhanh lý do phổ biến:
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {QUICK_REASONS.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => setReason(preset)}
-                  className="min-h-[44px] rounded-full border bg-muted/50 px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted sm:min-h-0 sm:py-1.5"
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-1.5">
+            {QUICK_REASONS.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => setReason(preset.value)}
+                className="min-h-[44px] rounded-full border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted sm:min-h-0"
+              >
+                {preset.label}
+              </button>
+            ))}
           </div>
 
           <div className="space-y-1.5">
@@ -97,12 +91,12 @@ export function SkipRequestDialog({
               maxLength={300}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Ví dụ: Hôm nay cô giao phiếu bài tập Toán nên con làm bài cô giao trước..."
+              placeholder="Nhập lý do xin bỏ qua..."
               className="w-full rounded-lg border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
             />
             {trimmed.length > 0 && trimmed.length < 5 ? (
               <p className="text-xs text-rose-600 dark:text-rose-400">
-                Vui lòng nhập ít nhất 5 ký tự để phụ huynh dễ hiểu lý do nhé.
+                Nhập ít nhất 5 ký tự.
               </p>
             ) : null}
           </div>

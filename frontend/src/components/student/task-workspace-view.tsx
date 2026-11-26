@@ -745,9 +745,8 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                   </div>
                 ) : null}
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                  <div className="space-y-4 lg:col-span-7">
-                    <Card>
+                <div className="max-w-3xl space-y-4">
+                  <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-lg">
                           <FolderUp className="h-5 w-5 text-brand-strong" />
@@ -773,7 +772,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                                   rel="noopener noreferrer"
                                 >
                                   <FolderUp className="h-4 w-4" />
-                                  Mở thư mục Google Drive để tải bài lên
+                                  Mở thư mục Google Drive
                                   <ExternalLink className="h-4 w-4" />
                                 </a>
                               </Button>
@@ -786,7 +785,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                             <p className="font-semibold text-foreground">
                               {task.status === 'EVALUATED'
                                 ? 'Bài làm qua Drive đã được phụ huynh xác nhận đạt'
-                                : 'Con đã xác nhận nộp bài lên Drive (đang chờ phụ huynh kiểm tra)'}
+                                : 'Đã nộp bài lên Drive (chờ phụ huynh kiểm tra)'}
                             </p>
                             {task.customSubmissionNote ? (
                               <p className="whitespace-pre-wrap break-words text-muted-foreground [overflow-wrap:anywhere]">
@@ -810,7 +809,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                             <div className="space-y-1.5">
                               <div className="flex items-center justify-between">
                                 <Label htmlFor="custom-sub-note">
-                                  Ghi chú sau khi tải bài lên Drive *
+                                  Ghi chú bài nộp *
                                 </Label>
                                 <span className="font-mono text-xs text-muted-foreground">
                                   {trimmedCustomNote.length}/300
@@ -822,14 +821,14 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                                 maxLength={300}
                                 value={customNote}
                                 onChange={(e) => setCustomNote(e.target.value)}
-                                placeholder="Ví dụ: Con đã giải đủ 3 bài tập và tải 2 ảnh vào thư mục Drive của bố mẹ."
+                                placeholder="VD: Đã tải 2 ảnh bài làm lên thư mục Drive..."
                                 className="w-full rounded-lg border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
                               />
                             </div>
 
                             <div className="space-y-1.5">
                               <Label htmlFor="custom-sub-url">
-                                Link file cụ thể trong Drive (tùy chọn)
+                                Link file Drive (tùy chọn)
                               </Label>
                               <Input
                                 id="custom-sub-url"
@@ -863,28 +862,6 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                         )}
                       </CardContent>
                     </Card>
-                  </div>
-
-                  <div className="lg:col-span-5">
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base">
-                          Hướng dẫn 3 bước nộp bài qua Drive
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2.5 text-sm text-muted-foreground">
-                        <p>
-                          <strong className="text-foreground">Bước 1:</strong> Hoàn thành bài tập phụ huynh đã giao (ra vở hoặc file).
-                        </p>
-                        <p>
-                          <strong className="text-foreground">Bước 2:</strong> Bấm <strong>&ldquo;Mở thư mục Google Drive&rdquo;</strong> và tải ảnh/file bài làm lên đó.
-                        </p>
-                        <p>
-                          <strong className="text-foreground">Bước 3:</strong> Quay lại đây, viết ghi chú ngắn và bấm <strong>&ldquo;Xác nhận đã nộp bài lên Drive&rdquo;</strong> (bài này không cần viết 400 ký tự và không gọi AI).
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
                 </div>
               </div>
             );
@@ -951,7 +928,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                   <div className="min-w-0 space-y-0.5">
                     <p className="font-semibold">Đang chờ phụ huynh duyệt yêu cầu bỏ qua</p>
                     <p className="break-words text-xs [overflow-wrap:anywhere]">
-                      Lý do đã gửi: &ldquo;{task.skipRequestReason}&rdquo; (Con vẫn có thể viết và nộp bài nếu đổi ý).
+                      Lý do: &ldquo;{task.skipRequestReason}&rdquo;
                     </p>
                   </div>
                   <Button

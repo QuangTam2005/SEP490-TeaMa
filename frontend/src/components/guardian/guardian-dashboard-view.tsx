@@ -870,16 +870,11 @@ export function GuardianDashboardView() {
           return (
           <div className="space-y-6">
             {pendingSkipCount > 0 ? (
-              <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-200">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                <div>
-                  <p className="font-semibold">
-                    Con đang gửi {pendingSkipCount} yêu cầu xin bỏ qua bài học cần phụ huynh xem xét
-                  </p>
-                  <p className="text-xs opacity-90">
-                    Bấm &ldquo;Đồng ý&rdquo; hoặc &ldquo;Từ chối&rdquo; ngay ở danh sách bên dưới.
-                  </p>
-                </div>
+              <div className="flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-200">
+                <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <p className="font-semibold">
+                  Con đang xin bỏ qua {pendingSkipCount} bài học chờ duyệt.
+                </p>
               </div>
             ) : null}
 
@@ -1201,8 +1196,7 @@ export function GuardianDashboardView() {
               Từ chối yêu cầu bỏ qua · {rejectTarget?.subjectName}
             </DialogTitle>
             <DialogDescription>
-              Con sẽ giữ nguyên nhiệm vụ để tự hoàn thành. Phụ huynh có thể
-              nhắn thêm một lời nhắc ngắn cho con (không bắt buộc).
+              Giữ nguyên bài học để con tự hoàn thành.
             </DialogDescription>
           </DialogHeader>
           {rejectTarget?.skipRequestReason ? (
@@ -1218,7 +1212,7 @@ export function GuardianDashboardView() {
               maxLength={300}
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
-              placeholder="Ví dụ: Con vẫn tóm tắt nhanh 5 dòng ý chính rồi mới làm phiếu bài tập nhé."
+              placeholder="Lời nhắn cho con..."
               className="w-full rounded-lg border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
             />
           </div>
@@ -1287,8 +1281,7 @@ export function GuardianDashboardView() {
               Nhắc con làm lại · {verifyTarget?.subjectName}
             </DialogTitle>
             <DialogDescription>
-              Sau khi kiểm tra thư mục Drive, phụ huynh có thể ghi rõ phần con
-              cần bổ sung hoặc chụp ảnh rõ nét hơn rồi gửi lại.
+              Ghi chú phần con cần sửa hoặc bổ sung trên Drive.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
@@ -1299,7 +1292,7 @@ export function GuardianDashboardView() {
               maxLength={300}
               value={verifyNote}
               onChange={(e) => setVerifyNote(e.target.value)}
-              placeholder="Ví dụ: Ảnh bài 3 hơi mờ, con chụp lại và tải lên lại thư mục Drive giúp bố mẹ nhé."
+              placeholder="VD: Ảnh bài 3 hơi mờ, chụp lại giúp bố mẹ nhé."
               className="w-full rounded-lg border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
             />
           </div>

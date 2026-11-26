@@ -19,9 +19,9 @@ import type {
 } from '@/types';
 
 const QUICK_CUSTOM_TASKS = [
-  'Làm phiếu bài tập thầy cô giao & chụp ảnh nộp lên Drive',
-  'Giải bài tập SGK/SBT và tải ảnh bài làm vào thư mục Drive',
-  'Viết đoạn văn / tóm tắt ra vở rồi chụp ảnh gửi vào Drive',
+  { label: 'Làm phiếu bài tập', title: 'Làm phiếu bài tập & nộp lên Drive' },
+  { label: 'Bài tập SGK/SBT', title: 'Giải bài tập SGK/SBT & nộp lên Drive' },
+  { label: 'Viết ra vở', title: 'Viết/tóm tắt ra vở & chụp ảnh gửi Drive' },
 ];
 
 interface AssignCustomTaskDialogProps {
@@ -84,27 +84,22 @@ export function AssignCustomTaskDialog({
             Giao bài thay thế · {task.subjectName}
           </DialogTitle>
           <DialogDescription>
-            Thay thế phần <strong>{taskLabel}</strong> mặc định bằng bài tập riêng. Con sẽ mở thư mục Google Drive của phụ huynh để nộp ảnh/file bài làm (không cần viết 400 ký tự cho AI).
+            Thay phần <strong>{taskLabel}</strong> · Học sinh nộp bài qua Google Drive.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <span className="text-xs font-medium text-muted-foreground">
-              Gợi ý nhanh:
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {QUICK_CUSTOM_TASKS.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => setTitle(preset)}
-                  className="min-h-[44px] rounded-full border bg-muted/50 px-3 py-2 text-left text-xs font-medium text-foreground transition-colors hover:bg-muted sm:min-h-0 sm:py-1"
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-1.5">
+            {QUICK_CUSTOM_TASKS.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => setTitle(preset.title)}
+                className="min-h-[44px] rounded-full border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted sm:min-h-0"
+              >
+                {preset.label}
+              </button>
+            ))}
           </div>
 
           <div className="space-y-1.5">
@@ -119,18 +114,18 @@ export function AssignCustomTaskDialog({
               maxLength={200}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ví dụ: Làm bài 1, 2, 3 trong phiếu Toán tuần 12 và chụp ảnh nộp lên Drive"
+              placeholder="VD: Làm phiếu Toán tuần 12"
             />
             {trimmedTitle.length > 0 && trimmedTitle.length < 5 ? (
               <p className="text-xs text-rose-600 dark:text-rose-400">
-                Vui lòng nhập ít nhất 5 ký tự.
+                Nhập ít nhất 5 ký tự.
               </p>
             ) : null}
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="custom-task-desc">Hướng dẫn chi tiết (tùy chọn)</Label>
+              <Label htmlFor="custom-task-desc">Ghi chú thêm (tùy chọn)</Label>
               <span className="font-mono text-xs text-muted-foreground">
                 {trimmedDesc.length}/500
               </span>
@@ -141,7 +136,7 @@ export function AssignCustomTaskDialog({
               maxLength={500}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ghi thêm số trang sách, lưu ý trình bày hoặc đặt tên file..."
+              placeholder="Số trang, lưu ý..."
               className="w-full rounded-lg border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
             />
           </div>
@@ -157,11 +152,11 @@ export function AssignCustomTaskDialog({
               placeholder="https://drive.google.com/drive/folders/..."
             />
             <p className="text-xs text-muted-foreground">
-              Hãy mở quyền chia sẻ thư mục Drive (&ldquo;Bất kỳ ai có đường liên kết đều có thể chỉnh sửa/tải lên&rdquo;) để con dễ nộp bài.
+              Mở quyền chỉnh sửa cho &ldquo;Bất kỳ ai có đường liên kết&rdquo;.
             </p>
             {trimmedUrl.length > 0 && !isUrlValid ? (
               <p className="text-xs text-rose-600 dark:text-rose-400">
-                Link Drive phải bắt đầu bằng https://
+                Link phải bắt đầu bằng https://
               </p>
             ) : null}
           </div>
@@ -173,7 +168,7 @@ export function AssignCustomTaskDialog({
               onChange={(e) => setSaveAsDefault(e.target.checked)}
               className="h-4 w-4 rounded border"
             />
-            Lưu link thư mục Drive này làm mặc định cho các lần giao bài sau của con
+            Lưu làm link Drive mặc định
           </label>
         </div>
 
