@@ -587,6 +587,7 @@ export const studyMockService: StudyService = {
         }
         if (
           detail.submissions.length > 0 ||
+          Boolean(detail.task.customSubmittedAt) ||
           detail.task.status === 'SUBMITTED' ||
           detail.task.status === 'EVALUATING' ||
           detail.task.status === 'EVALUATED' ||

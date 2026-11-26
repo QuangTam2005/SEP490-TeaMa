@@ -241,5 +241,23 @@ class StudyTaskServiceTest {
                 () -> studyTaskService.submitCustomTask(1L, 201L,
                         new StudentCustomSubmitRequest("Con đã nộp bài", "javascript:alert(1)")));
         assertEquals(ErrorCode.VALIDATION_FAILED, badSchemeEx.getErrorCode());
+
+        // Regression: after Guardian returns a submitted custom task for revision (IN_PROGRESS + customSubmittedAt != null),
+        // Student cannot open a deadlock PENDING skip request.
+        StudyTask customInRevision = StudyTask.builder()
+                .id(203L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.IN_PROGRESS)
+                .assignmentMode(TaskAssignmentMode.CUSTOM_DRIVE)
+                .customSubmittedAt(java.time.Instant.now())
+                .build();
+        when(studyTaskRepository.findById(203L)).thenReturn(Optional.of(customInRevision));
+        when(studySubmissionRepository.existsByTaskId(203L)).thenReturn(false);
+
+        AppException skipDuringCustomRevisionEx = assertThrows(AppException.class,
+                () -> studyTaskService.requestSkip(1L, 203L, new StudentSkipRequestDto("Con bận làm việc khác")));
+        assertEquals(ErrorCode.VALIDATION_FAILED, skipDuringCustomRevisionEx.getErrorCode());
     }
 }

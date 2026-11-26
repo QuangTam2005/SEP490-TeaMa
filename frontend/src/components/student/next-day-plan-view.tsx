@@ -54,9 +54,10 @@ function TaskActionButton({
   const isPendingSkip = task.skipRequestStatus === 'PENDING' && !isSkipped;
   const isRejectedSkip = task.skipRequestStatus === 'REJECTED' && !isSkipped;
   const canRequestSkip =
-    task.status === 'NOT_STARTED' ||
-    task.status === 'IN_PROGRESS' ||
-    task.status === 'BLOCKED';
+    !task.customSubmittedAt &&
+    (task.status === 'NOT_STARTED' ||
+      task.status === 'IN_PROGRESS' ||
+      task.status === 'BLOCKED');
 
   return (
     <div

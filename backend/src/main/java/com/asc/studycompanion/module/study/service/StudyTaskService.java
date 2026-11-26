@@ -109,6 +109,7 @@ public class StudyTaskService {
         }
 
         boolean hasSubmission = studySubmissionRepository.existsByTaskId(taskId)
+                || task.getCustomSubmittedAt() != null
                 || task.getStatus() == StudyTaskStatus.SUBMITTED
                 || task.getStatus() == StudyTaskStatus.EVALUATING
                 || task.getStatus() == StudyTaskStatus.EVALUATED

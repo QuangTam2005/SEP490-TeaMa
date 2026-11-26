@@ -55,7 +55,6 @@ import { useGuardianStore } from '@/store/guardian-store';
 import type {
   GuardianAssignCustomTaskRequest,
   GuardianTaskItem,
-  StudyTaskStatus,
   SubjectCode,
 } from '@/types';
 
@@ -298,11 +297,13 @@ export function GuardianDashboardView() {
     row.status !== 'EVALUATED' &&
     row.status !== 'EVALUATION_FAILED';
 
-  const canToggleSkip = (status: StudyTaskStatus) =>
-    status === 'NOT_STARTED' ||
-    status === 'IN_PROGRESS' ||
-    status === 'BLOCKED' ||
-    status === 'SKIPPED';
+  const canToggleSkip = (row: GuardianTaskItem) =>
+    !row.currentSubmissionId &&
+    !row.customSubmittedAt &&
+    (row.status === 'NOT_STARTED' ||
+      row.status === 'IN_PROGRESS' ||
+      row.status === 'BLOCKED' ||
+      row.status === 'SKIPPED');
 
   const handleExportExcel = async () => {
     setIsExporting(true);
@@ -563,7 +564,7 @@ export function GuardianDashboardView() {
             </div>
           );
         }
-        if (canToggleSkip(row.status) || canAssignCustomTask(row)) {
+        if (canToggleSkip(row) || canAssignCustomTask(row)) {
           const isSkipped = row.status === 'SKIPPED';
           const isCustom = row.assignmentMode === 'CUSTOM_DRIVE';
           const isBusy =
@@ -601,7 +602,7 @@ export function GuardianDashboardView() {
                   Gỡ thay thế
                 </Button>
               ) : null}
-              {canToggleSkip(row.status) ? (
+              {canToggleSkip(row) ? (
                 <Button
                   type="button"
                   size="sm"
@@ -1119,7 +1120,7 @@ export function GuardianDashboardView() {
                           </Button>
                         ) : null}
                       </div>
-                    ) : canToggleSkip(item.status) || canAssignCustomTask(item) ? (
+                    ) : canToggleSkip(item) || canAssignCustomTask(item) ? (
                       <div className="space-y-2">
                         {canAssignCustomTask(item) ? (
                           <Button
@@ -1149,7 +1150,7 @@ export function GuardianDashboardView() {
                             Gỡ bài giao thay thế
                           </Button>
                         ) : null}
-                        {canToggleSkip(item.status) ? (
+                        {canToggleSkip(item) ? (
                           <Button
                             type="button"
                             variant="outline"
