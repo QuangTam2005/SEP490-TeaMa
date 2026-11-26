@@ -19,7 +19,10 @@ import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
 import com.asc.studycompanion.module.study.util.StudyTextUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +40,9 @@ public class StudySubmissionService {
     private final EvaluationJobRepository evaluationJobRepository;
     private final AIEvaluationRepository aiEvaluationRepository;
     private final StudyTaskService studyTaskService;
+
+    @Autowired(required = false)
+    private EntityManager entityManager;
 
     @Transactional
     public StudySubmissionResponse submitTask(
@@ -61,6 +67,10 @@ public class StudySubmissionService {
         StudyTask task = studyTaskRepository.findById(taskId)
                 .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
         studyAccessGuard.assertStudentOwner(studentUserId, task.getPlan().getStudent().getId());
+        if (entityManager != null && task.getId() != null) {
+            entityManager.find(StudyTask.class, task.getId(), LockModeType.PESSIMISTIC_WRITE);
+            entityManager.refresh(task);
+        }
 
         if (task.getStatus() == StudyTaskStatus.SKIPPED) {
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Nhiệm vụ này đã được phụ huynh đánh dấu bỏ qua");

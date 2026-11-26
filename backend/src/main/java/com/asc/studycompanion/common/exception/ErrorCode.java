@@ -16,6 +16,8 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR("SYS_500", HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống không mong muốn, vui lòng thử lại sau"),
     BAD_REQUEST("SYS_400", HttpStatus.BAD_REQUEST, "Yêu cầu không hợp lệ"),
     RESOURCE_NOT_FOUND("SYS_404", HttpStatus.NOT_FOUND, "Không tìm thấy tài nguyên yêu cầu"),
+    METHOD_NOT_ALLOWED("SYS_405", HttpStatus.METHOD_NOT_ALLOWED, "Phương thức HTTP không được hỗ trợ"),
+    CONFLICT("SYS_409", HttpStatus.CONFLICT, "Dữ liệu đang được cập nhật bởi thao tác khác, vui lòng tải lại và thử lại"),
     RATE_LIMIT_EXCEEDED("SYS_429", HttpStatus.TOO_MANY_REQUESTS, "Thao tác quá nhanh, vui lòng thử lại sau ít phút"),
 
     // Validation Errors

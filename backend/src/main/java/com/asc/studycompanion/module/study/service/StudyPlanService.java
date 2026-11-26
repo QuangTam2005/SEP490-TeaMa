@@ -24,6 +24,8 @@ import com.asc.studycompanion.module.timetable.entity.Timetable;
 import com.asc.studycompanion.module.timetable.entity.TimetableEntry;
 import com.asc.studycompanion.module.timetable.entity.TimetableStatus;
 import com.asc.studycompanion.module.timetable.repository.TimetableRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,6 +70,9 @@ public class StudyPlanService {
     @Autowired(required = false)
     private PlatformTransactionManager transactionManager;
 
+    @Autowired(required = false)
+    private EntityManager entityManager;
+
     private Clock clock = Clock.systemUTC();
 
     /**
@@ -101,6 +106,9 @@ public class StudyPlanService {
     public Optional<StudyPlan> ensurePlanForStudentAndDate(StudentProfile student, LocalDate targetDate) {
         if (student == null || student.getId() == null || targetDate == null) {
             return Optional.empty();
+        }
+        if (entityManager != null) {
+            entityManager.find(StudentProfile.class, student.getId(), LockModeType.PESSIMISTIC_WRITE);
         }
         int targetWeekday = targetDate.getDayOfWeek().getValue();
 

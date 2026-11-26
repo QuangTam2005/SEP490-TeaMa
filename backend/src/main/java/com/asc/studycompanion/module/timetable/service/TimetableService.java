@@ -16,7 +16,10 @@ import com.asc.studycompanion.module.timetable.entity.TimetableEntry;
 import com.asc.studycompanion.module.timetable.entity.TimetableStatus;
 import com.asc.studycompanion.module.timetable.repository.SubjectRepository;
 import com.asc.studycompanion.module.timetable.repository.TimetableRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,9 @@ public class TimetableService {
 
     @Value("${app.timezone:Asia/Ho_Chi_Minh}")
     private String appTimezone = "Asia/Ho_Chi_Minh";
+
+    @Autowired(required = false)
+    private EntityManager entityManager;
 
     @Transactional(readOnly = true)
     public TimetableResponse getTimetable(Long currentUserId) {
@@ -74,6 +80,9 @@ public class TimetableService {
         StudentProfile student = studentId == null
                 ? studyAccessGuard.resolveStudentProfileForTimetable(currentUserId)
                 : studyAccessGuard.resolveStudentProfileForTimetable(currentUserId, studentId);
+        if (entityManager != null && student.getId() != null) {
+            entityManager.find(StudentProfile.class, student.getId(), LockModeType.PESSIMISTIC_WRITE);
+        }
         User actor = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 

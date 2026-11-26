@@ -3,12 +3,18 @@ package com.asc.studycompanion.common.exception;
 import com.asc.studycompanion.common.dto.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -104,6 +110,45 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException ex) {
         ErrorCode errorCode = ErrorCode.RESOURCE_NOT_FOUND;
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode));
+    }
+
+    @ExceptionHandler({
+            MissingServletRequestParameterException.class,
+            MissingRequestHeaderException.class
+    })
+    public ResponseEntity<ApiResponse<Void>> handleMissingRequestPart(Exception ex) {
+        ErrorCode errorCode = ErrorCode.VALIDATION_FAILED;
+        log.warn("Missing request parameter/header [{}]: {}", errorCode.getCode(), ex.getMessage());
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
+        log.warn("Method not supported [{}]: {}", errorCode.getCode(), ex.getMessage());
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
+        ErrorCode errorCode = ErrorCode.BAD_REQUEST;
+        log.warn("Unsupported media type [{}]: {}", errorCode.getCode(), ex.getMessage());
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode));
+    }
+
+    @ExceptionHandler({DataIntegrityViolationException.class, ConcurrencyFailureException.class})
+    public ResponseEntity<ApiResponse<Void>> handleConcurrencyOrIntegrityConflict(Exception ex) {
+        ErrorCode errorCode = ErrorCode.CONFLICT;
+        log.warn("Database concurrency or integrity conflict [{}]: {}", errorCode.getCode(), ex.getMessage());
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
                 .body(ApiResponse.error(errorCode));

@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.access.AccessDeniedException;
@@ -66,6 +68,16 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/unexpected")
         ApiResponse<Void> unexpected() {
             throw new RuntimeException("Internal sensitive SQL detail");
+        }
+
+        @GetMapping("/conflict-unique")
+        ApiResponse<Void> conflictUnique() {
+            throw new DataIntegrityViolationException("duplicate key uq_timetables_student_version");
+        }
+
+        @GetMapping("/conflict-locking")
+        ApiResponse<Void> conflictLocking() {
+            throw new OptimisticLockingFailureException("stale study_tasks row");
         }
     }
 
@@ -128,5 +140,24 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value("SYS_500"))
                 .andExpect(jsonPath("$.message").value(ErrorCode.INTERNAL_SERVER_ERROR.getDefaultMessage()));
+    }
+
+    @Test
+    void integrityAndConcurrencyConflictsReturn409Without500OrSqlLeaks() throws Exception {
+        mockMvc.perform(get("/test/conflict-unique"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value("SYS_409"))
+                .andExpect(jsonPath("$.message").value(ErrorCode.CONFLICT.getDefaultMessage()));
+
+        mockMvc.perform(get("/test/conflict-locking"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value("SYS_409"));
+
+        mockMvc.perform(post("/test/ok"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value("SYS_405"));
     }
 }
