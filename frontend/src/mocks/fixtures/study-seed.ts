@@ -442,6 +442,14 @@ export function buildGuardianDashboardFromBuckets(
       skipRequestReason: detail.task.skipRequestReason ?? null,
       skipRequestedAt: detail.task.skipRequestedAt ?? null,
       skipReviewedAt: detail.task.skipReviewedAt ?? null,
+      assignmentMode: detail.task.assignmentMode ?? 'STANDARD_AI',
+      customTaskTitle: detail.task.customTaskTitle ?? null,
+      customTaskDescription: detail.task.customTaskDescription ?? null,
+      customDriveFolderUrl: detail.task.customDriveFolderUrl ?? null,
+      customAssignedAt: detail.task.customAssignedAt ?? null,
+      customSubmissionNote: detail.task.customSubmissionNote ?? null,
+      customSubmissionUrl: detail.task.customSubmissionUrl ?? null,
+      customSubmittedAt: detail.task.customSubmittedAt ?? null,
       evaluation: evaluation
         ? {
             accuracy: evaluation.accuracy,

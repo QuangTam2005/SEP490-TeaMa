@@ -18,15 +18,20 @@ import { getMockStudyState } from '@/services/mock/study.mock-service';
 import type {
   GuardianAcknowledgeRequest,
   GuardianAcknowledgeResponse,
+  GuardianAssignCustomTaskRequest,
   GuardianDashboardResponse,
   GuardianSkipReviewRequest,
   GuardianSkipTaskRequest,
   GuardianSkipTaskResponse,
   GuardianSubmissionDetailResponse,
+  GuardianTaskItem,
+  GuardianVerifyCustomTaskRequest,
   GuardianWeeklyDaySummary,
   GuardianWeeklySummaryResponse,
   Weekday,
 } from '@/types';
+
+let mockDefaultDriveUrl: string | null = null;
 
 function resolveMockStudentMeta(studentId?: number): {
   studentId: number;
@@ -59,6 +64,7 @@ export const guardianMockService: GuardianService = {
           ...result,
           linkedStudentName: meta.name,
           grade: meta.grade,
+          defaultDriveFolderUrl: mockDefaultDriveUrl,
         };
       },
       {
@@ -262,6 +268,169 @@ export const guardianMockService: GuardianService = {
               skipRequestReason: detail.task.skipRequestReason ?? null,
               skipRequestedAt: detail.task.skipRequestedAt ?? null,
               skipReviewedAt: detail.task.skipReviewedAt ?? null,
+            };
+          }
+        }
+        throw new ApiClientError({
+          status: 404,
+          errorCode: 'STUDY_001',
+          message: 'Không tìm thấy nhiệm vụ học tập.',
+        });
+      },
+      { requireRole: 'GUARDIAN' }
+    );
+  },
+
+  async assignCustomTask(
+    taskId: number,
+    request: GuardianAssignCustomTaskRequest
+  ): Promise<GuardianTaskItem> {
+    return runMockOperation(
+      () => {
+        const state = getMockStudyState();
+        const title = request.title.trim();
+        const driveUrl = request.driveFolderUrl.trim();
+        if (title.length < 5 || !driveUrl.startsWith('https://')) {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Vui lòng nhập tiêu đề (>= 5 ký tự) và link Drive https:// hợp lệ.',
+          });
+        }
+        for (const bucket of state.buckets) {
+          for (const detail of [bucket.reviewTask, bucket.previewTask]) {
+            if (detail.task.id !== taskId) continue;
+            detail.task.assignmentMode = 'CUSTOM_DRIVE';
+            detail.task.customTaskTitle = title;
+            detail.task.customTaskDescription = request.description?.trim() || null;
+            detail.task.customDriveFolderUrl = driveUrl;
+            detail.task.customAssignedAt = new Date().toISOString();
+            if (detail.task.status === 'SKIPPED') {
+              detail.task.status = 'NOT_STARTED';
+            }
+            detail.task.skipRequestStatus = null;
+            detail.task.skipRequestReason = null;
+            if (request.saveAsDefaultDriveFolder) {
+              mockDefaultDriveUrl = driveUrl;
+            }
+            return {
+              taskId: detail.task.id,
+              currentSubmissionId: null,
+              targetDate: detail.targetDate,
+              subjectCode: detail.task.subjectCode,
+              subjectName: detail.task.subjectName,
+              taskType: detail.task.taskType,
+              status: detail.task.status,
+              lessonTitle: null,
+              revisionCount: detail.task.revisionCount,
+              evaluation: null,
+              guardianAcknowledgedAt: detail.task.guardianAcknowledgedAt ?? null,
+              guardianNote: detail.task.guardianNote ?? null,
+              skipRequestStatus: null,
+              skipRequestReason: null,
+              skipRequestedAt: null,
+              skipReviewedAt: null,
+              assignmentMode: 'CUSTOM_DRIVE',
+              customTaskTitle: detail.task.customTaskTitle,
+              customTaskDescription: detail.task.customTaskDescription,
+              customDriveFolderUrl: detail.task.customDriveFolderUrl,
+              customAssignedAt: detail.task.customAssignedAt,
+              customSubmissionNote: detail.task.customSubmissionNote ?? null,
+              customSubmissionUrl: detail.task.customSubmissionUrl ?? null,
+              customSubmittedAt: detail.task.customSubmittedAt ?? null,
+            };
+          }
+        }
+        throw new ApiClientError({
+          status: 404,
+          errorCode: 'STUDY_001',
+          message: 'Không tìm thấy nhiệm vụ học tập.',
+        });
+      },
+      { requireRole: 'GUARDIAN' }
+    );
+  },
+
+  async clearCustomTask(taskId: number): Promise<GuardianTaskItem> {
+    return runMockOperation(
+      () => {
+        const state = getMockStudyState();
+        for (const bucket of state.buckets) {
+          for (const detail of [bucket.reviewTask, bucket.previewTask]) {
+            if (detail.task.id !== taskId) continue;
+            detail.task.assignmentMode = 'STANDARD_AI';
+            detail.task.customTaskTitle = null;
+            detail.task.customTaskDescription = null;
+            detail.task.customDriveFolderUrl = null;
+            detail.task.customAssignedAt = null;
+            detail.task.customSubmissionNote = null;
+            detail.task.customSubmissionUrl = null;
+            detail.task.customSubmittedAt = null;
+            return {
+              taskId: detail.task.id,
+              currentSubmissionId: null,
+              targetDate: detail.targetDate,
+              subjectCode: detail.task.subjectCode,
+              subjectName: detail.task.subjectName,
+              taskType: detail.task.taskType,
+              status: detail.task.status,
+              lessonTitle: null,
+              revisionCount: detail.task.revisionCount,
+              evaluation: null,
+              assignmentMode: 'STANDARD_AI',
+            };
+          }
+        }
+        throw new ApiClientError({
+          status: 404,
+          errorCode: 'STUDY_001',
+          message: 'Không tìm thấy nhiệm vụ học tập.',
+        });
+      },
+      { requireRole: 'GUARDIAN' }
+    );
+  },
+
+  async verifyCustomTask(
+    taskId: number,
+    request: GuardianVerifyCustomTaskRequest
+  ): Promise<GuardianTaskItem> {
+    return runMockOperation(
+      () => {
+        const state = getMockStudyState();
+        const note = request.note?.trim() || null;
+        for (const bucket of state.buckets) {
+          for (const detail of [bucket.reviewTask, bucket.previewTask]) {
+            if (detail.task.id !== taskId) continue;
+            if (request.approved) {
+              detail.task.status = 'EVALUATED';
+              detail.task.guardianAcknowledgedAt = new Date().toISOString();
+              if (note) detail.task.guardianNote = note;
+            } else {
+              detail.task.status = 'IN_PROGRESS';
+              detail.task.guardianNote = note;
+            }
+            return {
+              taskId: detail.task.id,
+              currentSubmissionId: null,
+              targetDate: detail.targetDate,
+              subjectCode: detail.task.subjectCode,
+              subjectName: detail.task.subjectName,
+              taskType: detail.task.taskType,
+              status: detail.task.status,
+              lessonTitle: null,
+              revisionCount: detail.task.revisionCount,
+              evaluation: null,
+              guardianAcknowledgedAt: detail.task.guardianAcknowledgedAt ?? null,
+              guardianNote: detail.task.guardianNote ?? null,
+              assignmentMode: detail.task.assignmentMode ?? 'CUSTOM_DRIVE',
+              customTaskTitle: detail.task.customTaskTitle ?? null,
+              customTaskDescription: detail.task.customTaskDescription ?? null,
+              customDriveFolderUrl: detail.task.customDriveFolderUrl ?? null,
+              customAssignedAt: detail.task.customAssignedAt ?? null,
+              customSubmissionNote: detail.task.customSubmissionNote ?? null,
+              customSubmissionUrl: detail.task.customSubmissionUrl ?? null,
+              customSubmittedAt: detail.task.customSubmittedAt ?? null,
             };
           }
         }

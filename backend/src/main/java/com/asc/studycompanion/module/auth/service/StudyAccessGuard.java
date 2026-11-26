@@ -10,6 +10,8 @@ import com.asc.studycompanion.module.auth.entity.UserRole;
 import com.asc.studycompanion.module.auth.repository.GuardianLinkRepository;
 import com.asc.studycompanion.module.auth.repository.StudentProfileRepository;
 import com.asc.studycompanion.module.auth.repository.UserRepository;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -115,6 +117,29 @@ public class StudyAccessGuard {
         if (!linked) {
             throw new AppException(ErrorCode.GUARDIAN_NOT_LINKED);
         }
+    }
+
+    public Optional<GuardianLink> findActiveGuardianLink(Long guardianUserId, Long studentId) {
+        if (guardianUserId == null || studentId == null) {
+            return Optional.empty();
+        }
+        return guardianLinkRepository.findFirstByGuardianUserIdAndStudentIdAndStatus(
+                guardianUserId,
+                studentId,
+                GuardianLinkStatus.ACTIVE
+        );
+    }
+
+    @Transactional
+    public void updateDefaultDriveFolderUrl(Long guardianUserId, Long studentId, String driveFolderUrl) {
+        guardianLinkRepository.findFirstByGuardianUserIdAndStudentIdAndStatus(
+                guardianUserId,
+                studentId,
+                GuardianLinkStatus.ACTIVE
+        ).ifPresent(link -> {
+            link.setDefaultDriveFolderUrl(driveFolderUrl);
+            guardianLinkRepository.save(link);
+        });
     }
 
     private User loadUserWithRole(Long userId, UserRole expectedRole) {

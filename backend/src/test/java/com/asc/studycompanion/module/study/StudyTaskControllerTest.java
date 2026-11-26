@@ -8,6 +8,7 @@ import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.common.exception.GlobalExceptionHandler;
 import com.asc.studycompanion.module.auth.entity.UserRole;
 import com.asc.studycompanion.module.study.controller.StudyTaskController;
+import com.asc.studycompanion.module.study.dto.StudentCustomSubmitRequest;
 import com.asc.studycompanion.module.study.dto.StudentSkipRequestDto;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskDetailResponse;
@@ -16,6 +17,7 @@ import com.asc.studycompanion.module.study.dto.SubmitStudyRequest;
 import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.study.service.StudySubmissionService;
 import com.asc.studycompanion.module.study.service.StudyTaskService;
 import com.asc.studycompanion.module.timetable.entity.SubjectCode;
@@ -161,5 +163,20 @@ class StudyTaskControllerTest {
         mockMvc.perform(delete("/api/student/tasks/101/skip-request"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(101));
+
+        when(studyTaskService.submitCustomTask(eq(1L), eq(101L), any(StudentCustomSubmitRequest.class)))
+                .thenReturn(new StudyTaskSummaryResponse(
+                        101L, SubjectCode.MATH, "Toán", StudyTaskType.REVIEW, StudyTaskStatus.SUBMITTED,
+                        0, 2, null, null, null, null, null, null, null, null,
+                        TaskAssignmentMode.CUSTOM_DRIVE, "Làm phiếu Toán", null, "https://drive.google.com/drive/folders/abc",
+                        Instant.now(), "Con đã tải ảnh lên Drive", null, Instant.now()
+                ));
+
+        mockMvc.perform(post("/api/student/tasks/101/custom-submission")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"submissionNote\":\"Con đã tải ảnh lên Drive\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("SUBMITTED"))
+                .andExpect(jsonPath("$.data.assignmentMode").value("CUSTOM_DRIVE"));
     }
 }

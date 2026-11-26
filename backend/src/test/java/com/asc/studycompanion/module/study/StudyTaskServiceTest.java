@@ -6,6 +6,7 @@ import com.asc.studycompanion.module.ai.repository.AIEvaluationRepository;
 import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
 import com.asc.studycompanion.module.auth.entity.StudentProfile;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
+import com.asc.studycompanion.module.study.dto.StudentCustomSubmitRequest;
 import com.asc.studycompanion.module.study.dto.StudentSkipRequestDto;
 import com.asc.studycompanion.module.study.dto.StudyTaskSummaryResponse;
 import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
@@ -13,6 +14,7 @@ import com.asc.studycompanion.module.study.entity.StudyPlan;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
 import com.asc.studycompanion.module.study.service.StudyTaskService;
@@ -137,5 +139,45 @@ class StudyTaskServiceTest {
                 () -> studyTaskService.requestSkip(1L, 104L, new StudentSkipRequestDto("Làm đề cương"))
         );
         assertEquals(ErrorCode.VALIDATION_FAILED, alreadyDone.getErrorCode());
+    }
+
+    @Test
+    void studentCustomDriveSubmissionMarksSubmittedAndUnlocksPreviewSibling() {
+        StudentProfile student = StudentProfile.builder().id(10L).displayName("Khoi").grade(6).build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        StudyPlan plan = StudyPlan.builder().id(20L).student(student).targetDate(LocalDate.of(2026, 11, 27)).build();
+        StudyTask reviewCustom = StudyTask.builder()
+                .id(101L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.NOT_STARTED)
+                .assignmentMode(TaskAssignmentMode.CUSTOM_DRIVE)
+                .customTaskTitle("Làm 5 bài SBT")
+                .customDriveFolderUrl("https://drive.google.com/drive/folders/abc")
+                .build();
+        StudyTask preview = StudyTask.builder()
+                .id(102L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.PREVIEW)
+                .status(StudyTaskStatus.BLOCKED)
+                .build();
+
+        when(studyTaskRepository.findById(101L)).thenReturn(Optional.of(reviewCustom));
+        when(studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(20L, 1L, StudyTaskType.PREVIEW))
+                .thenReturn(Optional.of(preview));
+
+        StudyTaskSummaryResponse res = studyTaskService.submitCustomTask(
+                1L,
+                101L,
+                new StudentCustomSubmitRequest("Con đã up 2 ảnh bài làm lên Drive", "https://drive.google.com/file/d/xyz/view")
+        );
+
+        assertEquals(StudyTaskStatus.SUBMITTED, res.status());
+        assertEquals(TaskAssignmentMode.CUSTOM_DRIVE, res.assignmentMode());
+        assertEquals("Con đã up 2 ảnh bài làm lên Drive", res.customSubmissionNote());
+        assertNotNull(res.customSubmittedAt());
+        assertEquals(StudyTaskStatus.NOT_STARTED, preview.getStatus());
     }
 }

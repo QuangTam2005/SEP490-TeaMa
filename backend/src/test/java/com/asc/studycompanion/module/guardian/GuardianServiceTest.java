@@ -12,9 +12,11 @@ import com.asc.studycompanion.module.ai.repository.AIEvaluationRepository;
 import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
 import com.asc.studycompanion.module.auth.entity.StudentProfile;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
+import com.asc.studycompanion.module.guardian.dto.GuardianAssignCustomTaskRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianDashboardResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipReviewRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianSubmissionDetailResponse;
+import com.asc.studycompanion.module.guardian.dto.GuardianVerifyCustomTaskRequest;
 import com.asc.studycompanion.module.guardian.service.GuardianService;
 import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudyPlan;
@@ -22,6 +24,7 @@ import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.study.repository.StudyPlanRepository;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
@@ -371,5 +374,88 @@ class GuardianServiceTest {
         assertEquals(SkipRequestStatus.APPROVED, approved.skipRequestStatus());
         assertEquals("Đồng ý cho con làm phiếu bài tập", approved.guardianNote());
         assertEquals(StudyTaskStatus.NOT_STARTED, preview.getStatus());
+    }
+
+    @Test
+    void guardianCanAssignVerifyAndClearCustomDriveTask() {
+        StudentProfile student = StudentProfile.builder().id(10L).displayName("Khoi").grade(7).build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        StudyPlan plan = StudyPlan.builder().id(20L).student(student).targetDate(LocalDate.of(2026, 11, 27)).build();
+        StudyTask review = StudyTask.builder()
+                .id(101L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.NOT_STARTED)
+                .assignmentMode(TaskAssignmentMode.STANDARD_AI)
+                .build();
+
+        when(studyTaskRepository.findById(101L)).thenReturn(Optional.of(review));
+        when(studySubmissionRepository.existsByTaskId(101L)).thenReturn(false);
+
+        AppException invalidUrl = assertThrows(
+                AppException.class,
+                () -> guardianService.assignCustomTask(
+                        2L,
+                        101L,
+                        new GuardianAssignCustomTaskRequest("Làm phiếu bài tập Toán", null, "http://insecure.local/drive", false)
+                )
+        );
+        assertEquals(ErrorCode.VALIDATION_FAILED, invalidUrl.getErrorCode());
+
+        var assigned = guardianService.assignCustomTask(
+                2L,
+                101L,
+                new GuardianAssignCustomTaskRequest(
+                        "Làm phiếu bài tập Toán tuần 12",
+                        "Chụp ảnh 3 bài đầu nộp lên thư mục",
+                        "https://drive.google.com/drive/folders/abc123",
+                        true
+                )
+        );
+        assertEquals(TaskAssignmentMode.CUSTOM_DRIVE, assigned.assignmentMode());
+        assertEquals("Làm phiếu bài tập Toán tuần 12", assigned.customTaskTitle());
+        assertEquals("https://drive.google.com/drive/folders/abc123", assigned.customDriveFolderUrl());
+        verify(studyAccessGuard).updateDefaultDriveFolderUrl(2L, 10L, "https://drive.google.com/drive/folders/abc123");
+
+        // Before submission: Guardian can revert back to STANDARD_AI
+        var reverted = guardianService.clearCustomTask(2L, 101L);
+        assertEquals(TaskAssignmentMode.STANDARD_AI, reverted.assignmentMode());
+
+        // Re-assign, simulate student Drive confirmation -> SUBMITTED -> Guardian requests revision & then approves
+        guardianService.assignCustomTask(
+                2L,
+                101L,
+                new GuardianAssignCustomTaskRequest(
+                        "Giải 5 bài SBT",
+                        null,
+                        "https://drive.google.com/drive/folders/abc123",
+                        false
+                )
+        );
+        review.setStatus(StudyTaskStatus.SUBMITTED);
+        review.setCustomSubmittedAt(Instant.now());
+
+        AppException cannotClearAfterSubmit = assertThrows(
+                AppException.class,
+                () -> guardianService.clearCustomTask(2L, 101L)
+        );
+        assertEquals(ErrorCode.VALIDATION_FAILED, cannotClearAfterSubmit.getErrorCode());
+
+        var redo = guardianService.verifyCustomTask(
+                2L,
+                101L,
+                new GuardianVerifyCustomTaskRequest(false, "Con thiếu hình chụp trang 2")
+        );
+        assertEquals(StudyTaskStatus.IN_PROGRESS, redo.status());
+        assertEquals("Con thiếu hình chụp trang 2", redo.guardianNote());
+
+        review.setStatus(StudyTaskStatus.SUBMITTED);
+        var done = guardianService.verifyCustomTask(
+                2L,
+                101L,
+                new GuardianVerifyCustomTaskRequest(true, "Bố đã xem ảnh trên Drive, làm rất sạch sẽ")
+        );
+        assertEquals(StudyTaskStatus.EVALUATED, done.status());
     }
 }

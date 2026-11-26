@@ -10,6 +10,7 @@ import com.asc.studycompanion.module.auth.entity.StudentProfile;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
 import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeResponse;
+import com.asc.studycompanion.module.guardian.dto.GuardianAssignCustomTaskRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianDashboardResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianEvaluationSummary;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipReviewRequest;
@@ -17,9 +18,11 @@ import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianSubmissionDetailResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianTaskItem;
+import com.asc.studycompanion.module.guardian.dto.GuardianVerifyCustomTaskRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianWeeklyDaySummary;
 import com.asc.studycompanion.module.guardian.dto.GuardianWeeklySubjectStat;
 import com.asc.studycompanion.module.guardian.dto.GuardianWeeklySummaryResponse;
+import com.asc.studycompanion.module.auth.entity.GuardianLink;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
 import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudyPlan;
@@ -27,6 +30,7 @@ import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.study.repository.StudyPlanRepository;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
@@ -46,6 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.time.Clock;
 import java.time.DateTimeException;
 import java.time.DayOfWeek;
@@ -117,6 +122,10 @@ public class GuardianService {
         SubjectCode filterSubject = parseSubjectFilter(requestedSubject);
         String selectedSubjectLabel = filterSubject != null ? filterSubject.name() : "ALL";
 
+        String defaultDriveFolderUrl = studyAccessGuard.findActiveGuardianLink(guardianUserId, student.getId())
+                .map(GuardianLink::getDefaultDriveFolderUrl)
+                .orElse(null);
+
         Optional<StudyPlan> planOpt = !selectedDate.isBefore(today)
                 ? studyPlanService.ensurePlanForStudentAndDate(student, selectedDate)
                 : studyPlanRepository.findByStudentIdAndTargetDate(student.getId(), selectedDate);
@@ -129,7 +138,8 @@ public class GuardianService {
                     0,
                     0,
                     0,
-                    List.of()
+                    List.of(),
+                    defaultDriveFolderUrl
             );
         }
 
@@ -168,23 +178,11 @@ public class GuardianService {
                             .orElse(null)
                     : null;
 
-            items.add(new GuardianTaskItem(
-                    task.getId(),
+            items.add(GuardianTaskItem.from(
+                    task,
                     currentSub != null ? currentSub.getId() : null,
-                    plan.getTargetDate(),
-                    task.getSubject().getCode(),
-                    task.getSubject().getName(),
-                    task.getTaskType(),
-                    task.getStatus(),
                     currentSub != null ? currentSub.getLessonTitle() : null,
-                    task.getRevisionCount(),
-                    evalSummary,
-                    task.getGuardianAcknowledgedAt(),
-                    task.getGuardianNote(),
-                    task.getSkipRequestStatus(),
-                    task.getSkipRequestReason(),
-                    task.getSkipRequestedAt(),
-                    task.getSkipReviewedAt()
+                    evalSummary
             ));
         }
 
@@ -196,7 +194,8 @@ public class GuardianService {
                 activeTotalCount,
                 completedCount,
                 evaluatingCount,
-                items
+                items,
+                defaultDriveFolderUrl
         );
     }
 
@@ -434,6 +433,138 @@ public class GuardianService {
     }
 
     @Transactional
+    public GuardianTaskItem assignCustomTask(
+            Long guardianUserId,
+            Long taskId,
+            GuardianAssignCustomTaskRequest request
+    ) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
+        Long studentId = task.getPlan().getStudent().getId();
+        studyAccessGuard.assertGuardianCanReadStudent(guardianUserId, studentId);
+
+        assertTaskHasNoSubmission(task, "Không thể giao bài thay thế cho nhiệm vụ đã có bài nộp");
+
+        String normalizedTitle = request != null && request.title() != null ? request.title().trim() : "";
+        if (normalizedTitle.length() < 5 || normalizedTitle.length() > 200) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Tên nhiệm vụ thay thế phải từ 5 đến 200 ký tự");
+        }
+        String normalizedDesc = (request != null && request.description() != null && !request.description().isBlank())
+                ? request.description().trim()
+                : null;
+        if (normalizedDesc != null && normalizedDesc.length() > 500) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Hướng dẫn chi tiết tối đa 500 ký tự");
+        }
+        String validatedDriveUrl = validateRequiredDriveFolderUrl(request != null ? request.driveFolderUrl() : null);
+
+        if (task.getStatus() == StudyTaskStatus.SKIPPED) {
+            applySkipDecision(task, false, null, false);
+        }
+        if (task.getSkipRequestStatus() == SkipRequestStatus.PENDING) {
+            task.setSkipRequestStatus(null);
+            task.setSkipRequestReason(null);
+            task.setSkipRequestedAt(null);
+            task.setSkipReviewedAt(null);
+            task.setSkipReviewedByUserId(null);
+        }
+
+        task.setAssignmentMode(TaskAssignmentMode.CUSTOM_DRIVE);
+        task.setCustomTaskTitle(normalizedTitle);
+        task.setCustomTaskDescription(normalizedDesc);
+        task.setCustomDriveFolderUrl(validatedDriveUrl);
+        task.setCustomAssignedByUserId(guardianUserId);
+        task.setCustomAssignedAt(Instant.now());
+        studyTaskRepository.save(task);
+
+        if (Boolean.TRUE.equals(request.saveAsDefaultDriveFolder())) {
+            studyAccessGuard.updateDefaultDriveFolderUrl(guardianUserId, studentId, validatedDriveUrl);
+        }
+
+        return GuardianTaskItem.from(task, null, null, null);
+    }
+
+    @Transactional
+    public GuardianTaskItem clearCustomTask(Long guardianUserId, Long taskId) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
+        studyAccessGuard.assertGuardianCanReadStudent(guardianUserId, task.getPlan().getStudent().getId());
+
+        if (task.getAssignmentMode() != TaskAssignmentMode.CUSTOM_DRIVE) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Nhiệm vụ này đang ở chế độ AI mặc định");
+        }
+        if (task.getCustomSubmittedAt() != null
+                || task.getStatus() == StudyTaskStatus.SUBMITTED
+                || task.getStatus() == StudyTaskStatus.EVALUATED) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Không thể gỡ bài giao thay thế sau khi con đã nộp bài");
+        }
+
+        task.setAssignmentMode(TaskAssignmentMode.STANDARD_AI);
+        task.setCustomTaskTitle(null);
+        task.setCustomTaskDescription(null);
+        task.setCustomDriveFolderUrl(null);
+        task.setCustomAssignedByUserId(null);
+        task.setCustomAssignedAt(null);
+        task.setCustomSubmissionNote(null);
+        task.setCustomSubmissionUrl(null);
+        task.setCustomSubmittedAt(null);
+        studyTaskRepository.save(task);
+
+        return GuardianTaskItem.from(task, null, null, null);
+    }
+
+    @Transactional
+    public GuardianTaskItem verifyCustomTask(
+            Long guardianUserId,
+            Long taskId,
+            GuardianVerifyCustomTaskRequest request
+    ) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
+        studyAccessGuard.assertGuardianCanReadStudent(guardianUserId, task.getPlan().getStudent().getId());
+
+        if (task.getAssignmentMode() != TaskAssignmentMode.CUSTOM_DRIVE
+                || task.getStatus() != StudyTaskStatus.SUBMITTED) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Chỉ có thể xác nhận bài giao thay thế đang chờ kiểm tra trên Drive");
+        }
+
+        boolean approved = request != null && Boolean.TRUE.equals(request.approved());
+        String normalizedNote = (request != null && request.note() != null && !request.note().isBlank())
+                ? request.note().trim()
+                : null;
+
+        if (approved) {
+            task.setStatus(StudyTaskStatus.EVALUATED);
+            task.setGuardianAcknowledgedAt(Instant.now());
+            task.setGuardianAcknowledgedByUserId(guardianUserId);
+            if (normalizedNote != null) {
+                task.setGuardianNote(normalizedNote);
+            }
+        } else {
+            task.setStatus(StudyTaskStatus.IN_PROGRESS);
+            task.setGuardianNote(normalizedNote);
+        }
+        studyTaskRepository.save(task);
+
+        return GuardianTaskItem.from(task, null, null, null);
+    }
+
+    private static String validateRequiredDriveFolderUrl(String rawUrl) {
+        String trimmed = rawUrl == null ? "" : rawUrl.trim();
+        if (trimmed.isEmpty() || trimmed.length() > 500) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Link thư mục Google Drive không hợp lệ (tối đa 500 ký tự)");
+        }
+        try {
+            URI uri = URI.create(trimmed);
+            if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null || uri.getHost().isBlank()) {
+                throw new AppException(ErrorCode.VALIDATION_FAILED, "Link thư mục Google Drive phải bắt đầu bằng https://");
+            }
+            return trimmed;
+        } catch (IllegalArgumentException ex) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Link thư mục Google Drive không đúng định dạng URL");
+        }
+    }
+
+    @Transactional
     public GuardianWeeklySummaryResponse getWeeklySummary(
             Long guardianUserId,
             LocalDate requestedWeekStart,
@@ -584,6 +715,18 @@ public class GuardianService {
                             ? aiEvaluationRepository.findBySubmissionId(currentSub.getId()).orElse(null)
                             : null;
 
+                    boolean isCustomDrive = task.getAssignmentMode() == TaskAssignmentMode.CUSTOM_DRIVE;
+                    String lessonCellValue = currentSub != null
+                            ? currentSub.getLessonTitle()
+                            : (isCustomDrive && task.getCustomTaskTitle() != null
+                                    ? "[PH giao] " + task.getCustomTaskTitle()
+                                    : "Chưa nộp");
+                    String evalCellValue = eval != null
+                            ? eval.getOverallStatus().name()
+                            : (isCustomDrive
+                                    ? (task.getStatus() == StudyTaskStatus.EVALUATED ? "PH đã xác nhận (Drive)" : "Nộp qua Google Drive")
+                                    : "-");
+
                     Row row = sheet.createRow(rowIdx++);
                     row.createCell(0).setCellValue(plan.getTargetDate().toString());
                     row.createCell(1).setCellValue(task.getSubject().getName());
@@ -593,8 +736,8 @@ public class GuardianService {
                                     ? "Đã bỏ qua (PH)"
                                     : task.getStatus().name()
                     );
-                    row.createCell(4).setCellValue(currentSub != null ? currentSub.getLessonTitle() : "Chưa nộp");
-                    row.createCell(5).setCellValue(eval != null ? eval.getOverallStatus().name() : "-");
+                    row.createCell(4).setCellValue(lessonCellValue);
+                    row.createCell(5).setCellValue(evalCellValue);
                     row.createCell(6).setCellValue(task.getRevisionCount() != null ? task.getRevisionCount() : 0);
                     row.createCell(7).setCellValue(task.getGuardianAcknowledgedAt() != null ? "Đã xem" : "Chưa xem");
                     row.createCell(8).setCellValue(task.getGuardianNote() != null ? task.getGuardianNote() : "");

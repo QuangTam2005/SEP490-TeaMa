@@ -5,6 +5,8 @@ export type StudyTaskType = 'REVIEW' | 'PREVIEW';
 
 export type SkipRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
+export type TaskAssignmentMode = 'STANDARD_AI' | 'CUSTOM_DRIVE';
+
 export type StudyTaskStatus =
   | 'NOT_STARTED'
   | 'IN_PROGRESS'
@@ -44,10 +46,23 @@ export interface StudyTaskSummaryResponse {
   skipRequestReason?: string | null;
   skipRequestedAt?: string | null;
   skipReviewedAt?: string | null;
+  assignmentMode?: TaskAssignmentMode;
+  customTaskTitle?: string | null;
+  customTaskDescription?: string | null;
+  customDriveFolderUrl?: string | null;
+  customAssignedAt?: string | null;
+  customSubmissionNote?: string | null;
+  customSubmissionUrl?: string | null;
+  customSubmittedAt?: string | null;
 }
 
 export interface StudentSkipRequestPayload {
   reason: string;
+}
+
+export interface StudentCustomSubmitPayload {
+  submissionNote: string;
+  driveFileUrl?: string | null;
 }
 
 export interface NextDaySubjectPair {

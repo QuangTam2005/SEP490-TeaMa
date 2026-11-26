@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Compass,
   ExternalLink,
+  FolderUp,
   History,
   Loader2,
   Lock,
@@ -269,6 +270,8 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
   const [skipTarget, setSkipTarget] = useState<StudyTaskSummaryResponse | null>(
     null
   );
+  const [customNote, setCustomNote] = useState('');
+  const [customFileUrl, setCustomFileUrl] = useState('');
   const [pendingKey, setPendingKey] = useState<string>(() =>
     createIdempotencyKey(taskId, 1)
   );
@@ -460,6 +463,25 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
     },
   });
 
+  const submitCustomMutation = useMutation({
+    mutationFn: () =>
+      studyService.submitCustomTask(taskId, {
+        submissionNote: customNote.trim(),
+        driveFileUrl: customFileUrl.trim() || null,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['student-task', taskId] });
+      void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
+      toast.success('Đã gửi xác nhận nộp bài lên Google Drive cho phụ huynh!');
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
+
   const normalizedCount = countNormalizedChars(content);
   const lengthValid = isValidStudyLength(content);
   const progressPct = Math.min(
@@ -635,9 +657,224 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
             );
           }
 
+          const isCustomDrive = task.assignmentMode === 'CUSTOM_DRIVE';
           const canRequestSkipHere =
             submissions.length === 0 &&
+            !task.customSubmittedAt &&
             (task.status === 'NOT_STARTED' || task.status === 'IN_PROGRESS');
+
+          if (isCustomDrive) {
+            const trimmedCustomNote = customNote.trim();
+            const trimmedFileUrl = customFileUrl.trim();
+            const customFileUrlValid =
+              trimmedFileUrl.length === 0 ||
+              trimmedFileUrl.startsWith('https://') ||
+              trimmedFileUrl.startsWith('http://');
+            const canSubmitCustom =
+              trimmedCustomNote.length >= 5 &&
+              trimmedCustomNote.length <= 300 &&
+              customFileUrlValid;
+            const isSubmittedOrDone =
+              task.status === 'SUBMITTED' || task.status === 'EVALUATED';
+
+            return (
+              <div className="space-y-6">
+                <div className="flex flex-col gap-3 rounded-xl border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="brand">Môn {task.subjectName}</Badge>
+                      <Badge variant="outline">
+                        {task.taskType === 'REVIEW' ? 'Ôn bài cũ' : 'Soạn bài mới'}
+                      </Badge>
+                      <Badge variant="brand">Phụ huynh giao thay thế</Badge>
+                      <StatusBadge status={task.status} />
+                    </div>
+                    <h1 className="break-words text-xl font-bold tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-2xl">
+                      {task.customTaskTitle ?? `Bài tập ${task.subjectName}`}
+                    </h1>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2.5 text-xs font-medium text-muted-foreground">
+                    <span>Ngày học trên lớp: {formatViDate(detail.targetDate)}</span>
+                    {canRequestSkipHere && task.skipRequestStatus !== 'PENDING' ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-9"
+                        onClick={() => setSkipTarget(task)}
+                      >
+                        Xin phụ huynh bỏ qua
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+
+                {task.status === 'IN_PROGRESS' && task.guardianNote ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                    <p className="font-semibold">Phụ huynh nhắc con bổ sung lại bài trên Drive</p>
+                    <p className="mt-0.5 break-words text-xs [overflow-wrap:anywhere]">
+                      Lời nhắn: &ldquo;{task.guardianNote}&rdquo;
+                    </p>
+                  </div>
+                ) : null}
+
+                {task.guardianAcknowledgedAt ? (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">
+                    <p className="font-semibold">
+                      Phụ huynh đã xác nhận hoàn thành ({new Date(task.guardianAcknowledgedAt).toLocaleString('vi-VN')})
+                    </p>
+                    {task.guardianNote ? (
+                      <p className="mt-0.5 break-words text-xs [overflow-wrap:anywhere]">
+                        Lời nhắn từ bố mẹ: &ldquo;{task.guardianNote}&rdquo;
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                  <div className="space-y-4 lg:col-span-7">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <FolderUp className="h-5 w-5 text-brand-strong" />
+                          Nhiệm vụ từ Phụ huynh &amp; Nộp bài Google Drive
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2 rounded-xl border border-brand/25 bg-brand-soft/30 p-4">
+                          <p className="text-sm font-semibold text-foreground">
+                            {task.customTaskTitle}
+                          </p>
+                          {task.customTaskDescription ? (
+                            <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground [overflow-wrap:anywhere]">
+                              {task.customTaskDescription}
+                            </p>
+                          ) : null}
+                          {task.customDriveFolderUrl ? (
+                            <div className="pt-1">
+                              <Button asChild className="h-11 w-full gap-2 sm:w-auto">
+                                <a
+                                  href={task.customDriveFolderUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <FolderUp className="h-4 w-4" />
+                                  Mở thư mục Google Drive để tải bài lên
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        {isSubmittedOrDone ? (
+                          <div className="space-y-2 rounded-xl border bg-muted/40 p-4 text-sm">
+                            <p className="font-semibold text-foreground">
+                              {task.status === 'EVALUATED'
+                                ? 'Bài làm qua Drive đã được phụ huynh xác nhận đạt'
+                                : 'Con đã xác nhận nộp bài lên Drive (đang chờ phụ huynh kiểm tra)'}
+                            </p>
+                            {task.customSubmissionNote ? (
+                              <p className="whitespace-pre-wrap break-words text-muted-foreground [overflow-wrap:anywhere]">
+                                Ghi chú của con: &ldquo;{task.customSubmissionNote}&rdquo;
+                              </p>
+                            ) : null}
+                            {task.customSubmissionUrl ? (
+                              <a
+                                href={task.customSubmissionUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-strong hover:underline dark:text-sky-300"
+                              >
+                                Mở link file con đã đính kèm
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="custom-sub-note">
+                                  Ghi chú sau khi tải bài lên Drive *
+                                </Label>
+                                <span className="font-mono text-xs text-muted-foreground">
+                                  {trimmedCustomNote.length}/300
+                                </span>
+                              </div>
+                              <textarea
+                                id="custom-sub-note"
+                                rows={3}
+                                maxLength={300}
+                                value={customNote}
+                                onChange={(e) => setCustomNote(e.target.value)}
+                                placeholder="Ví dụ: Con đã giải đủ 3 bài tập và tải 2 ảnh vào thư mục Drive của bố mẹ."
+                                className="w-full rounded-lg border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label htmlFor="custom-sub-url">
+                                Link file cụ thể trong Drive (tùy chọn)
+                              </Label>
+                              <Input
+                                id="custom-sub-url"
+                                type="url"
+                                maxLength={500}
+                                value={customFileUrl}
+                                onChange={(e) => setCustomFileUrl(e.target.value)}
+                                placeholder="https://drive.google.com/file/d/..."
+                              />
+                              {!customFileUrlValid ? (
+                                <p className="text-xs text-rose-600 dark:text-rose-400">
+                                  Link file phải bắt đầu bằng https:// hoặc http://
+                                </p>
+                              ) : null}
+                            </div>
+
+                            <Button
+                              type="button"
+                              disabled={!canSubmitCustom || submitCustomMutation.isPending}
+                              onClick={() => submitCustomMutation.mutate()}
+                              className="h-11 w-full gap-2"
+                            >
+                              {submitCustomMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="h-4 w-4" />
+                              )}
+                              Xác nhận đã nộp bài lên Drive
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="lg:col-span-5">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base">
+                          Hướng dẫn 3 bước nộp bài qua Drive
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2.5 text-sm text-muted-foreground">
+                        <p>
+                          <strong className="text-foreground">Bước 1:</strong> Hoàn thành bài tập phụ huynh đã giao (ra vở hoặc file).
+                        </p>
+                        <p>
+                          <strong className="text-foreground">Bước 2:</strong> Bấm <strong>&ldquo;Mở thư mục Google Drive&rdquo;</strong> và tải ảnh/file bài làm lên đó.
+                        </p>
+                        <p>
+                          <strong className="text-foreground">Bước 3:</strong> Quay lại đây, viết ghi chú ngắn và bấm <strong>&ldquo;Xác nhận đã nộp bài lên Drive&rdquo;</strong> (bài này không cần viết 400 ký tự và không gọi AI).
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            );
+          }
 
           return (
             <div className="space-y-6">

@@ -5,6 +5,7 @@ import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.timetable.entity.SubjectCode;
 
 import java.time.Instant;
@@ -27,7 +28,15 @@ public record StudyTaskSummaryResponse(
         SkipRequestStatus skipRequestStatus,
         String skipRequestReason,
         Instant skipRequestedAt,
-        Instant skipReviewedAt
+        Instant skipReviewedAt,
+        TaskAssignmentMode assignmentMode,
+        String customTaskTitle,
+        String customTaskDescription,
+        String customDriveFolderUrl,
+        Instant customAssignedAt,
+        String customSubmissionNote,
+        String customSubmissionUrl,
+        Instant customSubmittedAt
 ) {
     public static StudyTaskSummaryResponse from(
             StudyTask task,
@@ -49,9 +58,18 @@ public record StudyTaskSummaryResponse(
                 task.getSkipRequestStatus(),
                 task.getSkipRequestReason(),
                 task.getSkipRequestedAt(),
-                task.getSkipReviewedAt()
+                task.getSkipReviewedAt(),
+                task.getAssignmentMode() != null ? task.getAssignmentMode() : TaskAssignmentMode.STANDARD_AI,
+                task.getCustomTaskTitle(),
+                task.getCustomTaskDescription(),
+                task.getCustomDriveFolderUrl(),
+                task.getCustomAssignedAt(),
+                task.getCustomSubmissionNote(),
+                task.getCustomSubmissionUrl(),
+                task.getCustomSubmittedAt()
         );
     }
+
     public StudyTaskSummaryResponse(
             Long id,
             SubjectCode subjectCode,
@@ -73,6 +91,14 @@ public record StudyTaskSummaryResponse(
                 maxRevisions,
                 currentLessonTitle,
                 latestEvaluationStatus,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                TaskAssignmentMode.STANDARD_AI,
+                null,
                 null,
                 null,
                 null,
@@ -107,6 +133,58 @@ public record StudyTaskSummaryResponse(
                 latestEvaluationStatus,
                 guardianAcknowledgedAt,
                 guardianNote,
+                null,
+                null,
+                null,
+                null,
+                TaskAssignmentMode.STANDARD_AI,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    public StudyTaskSummaryResponse(
+            Long id,
+            SubjectCode subjectCode,
+            String subjectName,
+            StudyTaskType taskType,
+            StudyTaskStatus status,
+            Integer revisionCount,
+            Integer maxRevisions,
+            String currentLessonTitle,
+            OverallEvaluationStatus latestEvaluationStatus,
+            Instant guardianAcknowledgedAt,
+            String guardianNote,
+            SkipRequestStatus skipRequestStatus,
+            String skipRequestReason,
+            Instant skipRequestedAt,
+            Instant skipReviewedAt
+    ) {
+        this(
+                id,
+                subjectCode,
+                subjectName,
+                taskType,
+                status,
+                revisionCount,
+                maxRevisions,
+                currentLessonTitle,
+                latestEvaluationStatus,
+                guardianAcknowledgedAt,
+                guardianNote,
+                skipRequestStatus,
+                skipRequestReason,
+                skipRequestedAt,
+                skipReviewedAt,
+                TaskAssignmentMode.STANDARD_AI,
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,

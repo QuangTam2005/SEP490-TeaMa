@@ -15,6 +15,7 @@ import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
 import com.asc.studycompanion.module.study.service.StudySubmissionService;
@@ -276,5 +277,23 @@ class StudySubmissionServiceTest {
                 () -> submissionService.submitTask(1L, 101L, new SubmitStudyRequest("Bài", "a".repeat(450), null), "k".repeat(65))
         );
         assertEquals(ErrorCode.VALIDATION_FAILED, keyTooLong.getErrorCode());
+
+        StudyTask customDriveTask = StudyTask.builder()
+                .id(105L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.NOT_STARTED)
+                .assignmentMode(TaskAssignmentMode.CUSTOM_DRIVE)
+                .customTaskTitle("Làm phiếu bài tập")
+                .customDriveFolderUrl("https://drive.google.com/drive/folders/abc")
+                .build();
+        when(studySubmissionRepository.findByIdempotencyKey("idem-custom")).thenReturn(Optional.empty());
+        when(studyTaskRepository.findById(105L)).thenReturn(Optional.of(customDriveTask));
+        AppException customBlocked = assertThrows(
+                AppException.class,
+                () -> submissionService.submitTask(1L, 105L, new SubmitStudyRequest("Bài", "a".repeat(450), "idem-custom"), null)
+        );
+        assertEquals(ErrorCode.VALIDATION_FAILED, customBlocked.getErrorCode());
     }
 }

@@ -14,6 +14,29 @@ public record GuardianDashboardResponse(
         int totalTasks,
         int completedTasks,
         int evaluatingTasks,
-        List<GuardianTaskItem> items
+        List<GuardianTaskItem> items,
+        String defaultDriveFolderUrl
 ) {
+    public GuardianDashboardResponse(
+            String linkedStudentName,
+            Integer grade,
+            LocalDate selectedDate,
+            String selectedSubject,
+            int totalTasks,
+            int completedTasks,
+            int evaluatingTasks,
+            List<GuardianTaskItem> items
+    ) {
+        this(
+                linkedStudentName,
+                grade,
+                selectedDate,
+                selectedSubject,
+                totalTasks,
+                completedTasks,
+                evaluatingTasks,
+                items,
+                null
+        );
+    }
 }

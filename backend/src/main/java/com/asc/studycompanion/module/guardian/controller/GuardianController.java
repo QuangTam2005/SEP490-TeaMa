@@ -5,11 +5,14 @@ import com.asc.studycompanion.common.exception.AppException;
 import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeResponse;
+import com.asc.studycompanion.module.guardian.dto.GuardianAssignCustomTaskRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianDashboardResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipReviewRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianSubmissionDetailResponse;
+import com.asc.studycompanion.module.guardian.dto.GuardianTaskItem;
+import com.asc.studycompanion.module.guardian.dto.GuardianVerifyCustomTaskRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianWeeklySummaryResponse;
 import com.asc.studycompanion.module.guardian.service.GuardianService;
 import com.asc.studycompanion.security.UserPrincipal;
@@ -20,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -108,6 +112,47 @@ public class GuardianController {
                 ? "Đã đồng ý cho con bỏ qua bài học"
                 : "Đã từ chối yêu cầu xin bỏ qua của con";
         return ResponseEntity.ok(ApiResponse.ok(msg, res));
+    }
+
+    @PostMapping("/tasks/{taskId}/custom-task")
+    public ResponseEntity<ApiResponse<GuardianTaskItem>> assignCustomTask(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long taskId,
+            @Valid @RequestBody GuardianAssignCustomTaskRequest request
+    ) {
+        if (principal == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        GuardianTaskItem updated = guardianService.assignCustomTask(principal.getId(), taskId, request);
+        return ResponseEntity.ok(ApiResponse.ok("Đã giao nhiệm vụ thay thế kèm thư mục Google Drive cho con", updated));
+    }
+
+    @DeleteMapping("/tasks/{taskId}/custom-task")
+    public ResponseEntity<ApiResponse<GuardianTaskItem>> clearCustomTask(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long taskId
+    ) {
+        if (principal == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        GuardianTaskItem updated = guardianService.clearCustomTask(principal.getId(), taskId);
+        return ResponseEntity.ok(ApiResponse.ok("Đã chuyển nhiệm vụ về chế độ AI mặc định", updated));
+    }
+
+    @PostMapping("/tasks/{taskId}/custom-task/verify")
+    public ResponseEntity<ApiResponse<GuardianTaskItem>> verifyCustomTask(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long taskId,
+            @Valid @RequestBody GuardianVerifyCustomTaskRequest request
+    ) {
+        if (principal == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        GuardianTaskItem updated = guardianService.verifyCustomTask(principal.getId(), taskId, request);
+        String msg = updated.status() == com.asc.studycompanion.module.study.entity.StudyTaskStatus.EVALUATED
+                ? "Đã xác nhận con hoàn thành bài nộp trên Drive"
+                : "Đã gửi lời nhắc con bổ sung bài làm trên Drive";
+        return ResponseEntity.ok(ApiResponse.ok(msg, updated));
     }
 
     @GetMapping("/weekly")

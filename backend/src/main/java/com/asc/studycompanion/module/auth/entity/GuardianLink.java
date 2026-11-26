@@ -58,4 +58,7 @@ public class GuardianLink extends BaseTimestampEntity {
 
     @Column(name = "linked_at")
     private Instant linkedAt;
+
+    @Column(name = "default_drive_folder_url", length = 500)
+    private String defaultDriveFolderUrl;
 }

@@ -15,6 +15,7 @@ import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.study.repository.StudyPlanRepository;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.timetable.entity.Subject;
@@ -186,6 +187,7 @@ public class StudyPlanService {
                 (task.getStatus() == StudyTaskStatus.NOT_STARTED
                         || task.getStatus() == StudyTaskStatus.BLOCKED)
                         && task.getSkipRequestStatus() == null
+                        && (task.getAssignmentMode() == null || task.getAssignmentMode() == TaskAssignmentMode.STANDARD_AI)
         );
     }
 

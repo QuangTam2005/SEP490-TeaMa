@@ -1,4 +1,4 @@
-import { apiClient, apiGet, apiPost } from '@/lib/api-client';
+import { apiClient, apiDelete, apiGet, apiPost } from '@/lib/api-client';
 import type {
   GuardianDashboardParams,
   GuardianExportParams,
@@ -8,11 +8,14 @@ import type {
 import type {
   GuardianAcknowledgeRequest,
   GuardianAcknowledgeResponse,
+  GuardianAssignCustomTaskRequest,
   GuardianDashboardResponse,
   GuardianSkipReviewRequest,
   GuardianSkipTaskRequest,
   GuardianSkipTaskResponse,
   GuardianSubmissionDetailResponse,
+  GuardianTaskItem,
+  GuardianVerifyCustomTaskRequest,
   GuardianWeeklySummaryResponse,
 } from '@/types';
 
@@ -54,6 +57,21 @@ export const guardianHttpService: GuardianService = {
   reviewSkipRequest: (taskId: number, request: GuardianSkipReviewRequest) =>
     apiPost<GuardianSkipTaskResponse>(
       `/api/guardian/tasks/${taskId}/skip-request/review`,
+      request
+    ),
+
+  assignCustomTask: (taskId: number, request: GuardianAssignCustomTaskRequest) =>
+    apiPost<GuardianTaskItem>(
+      `/api/guardian/tasks/${taskId}/custom-task`,
+      request
+    ),
+
+  clearCustomTask: (taskId: number) =>
+    apiDelete<GuardianTaskItem>(`/api/guardian/tasks/${taskId}/custom-task`),
+
+  verifyCustomTask: (taskId: number, request: GuardianVerifyCustomTaskRequest) =>
+    apiPost<GuardianTaskItem>(
+      `/api/guardian/tasks/${taskId}/custom-task/verify`,
       request
     ),
 

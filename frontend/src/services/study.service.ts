@@ -1,5 +1,6 @@
 import type {
   NextDayStudyPlanResponse,
+  StudentCustomSubmitPayload,
   StudentSkipRequestPayload,
   StudentStreakResponse,
   StudyPlanHistoryItem,
@@ -24,4 +25,8 @@ export interface StudyService {
     request: StudentSkipRequestPayload
   ): Promise<StudyTaskSummaryResponse>;
   cancelSkipRequest(taskId: number): Promise<StudyTaskSummaryResponse>;
+  submitCustomTask(
+    taskId: number,
+    request: StudentCustomSubmitPayload
+  ): Promise<StudyTaskSummaryResponse>;
 }

@@ -90,4 +90,33 @@ public class StudyTask extends BaseTimestampEntity {
 
     @Column(name = "skip_reviewed_by_user_id")
     private Long skipReviewedByUserId;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "assignment_mode", nullable = false, length = 30)
+    private TaskAssignmentMode assignmentMode = TaskAssignmentMode.STANDARD_AI;
+
+    @Column(name = "custom_task_title", length = 200)
+    private String customTaskTitle;
+
+    @Column(name = "custom_task_description", length = 500)
+    private String customTaskDescription;
+
+    @Column(name = "custom_drive_folder_url", length = 500)
+    private String customDriveFolderUrl;
+
+    @Column(name = "custom_assigned_by_user_id")
+    private Long customAssignedByUserId;
+
+    @Column(name = "custom_assigned_at")
+    private java.time.Instant customAssignedAt;
+
+    @Column(name = "custom_submission_note", length = 300)
+    private String customSubmissionNote;
+
+    @Column(name = "custom_submission_url", length = 500)
+    private String customSubmissionUrl;
+
+    @Column(name = "custom_submitted_at")
+    private java.time.Instant customSubmittedAt;
 }

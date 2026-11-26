@@ -15,6 +15,7 @@ import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
 import com.asc.studycompanion.module.study.util.StudyTextUtils;
@@ -63,6 +64,12 @@ public class StudySubmissionService {
 
         if (task.getStatus() == StudyTaskStatus.SKIPPED) {
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Nhiệm vụ này đã được phụ huynh đánh dấu bỏ qua");
+        }
+        if (task.getAssignmentMode() == TaskAssignmentMode.CUSTOM_DRIVE) {
+            throw new AppException(
+                    ErrorCode.VALIDATION_FAILED,
+                    "Nhiệm vụ này đã được phụ huynh thay thế bằng bài nộp qua Google Drive"
+            );
         }
 
         if (task.getTaskType() == StudyTaskType.PREVIEW) {
@@ -169,6 +176,7 @@ public class StudySubmissionService {
                         StudyTaskType.REVIEW
                 )
                 .map(review -> review.getStatus() == StudyTaskStatus.SKIPPED
+                        || review.getCustomSubmittedAt() != null
                         || studySubmissionRepository.existsByTaskId(review.getId()))
                 .orElse(false);
 

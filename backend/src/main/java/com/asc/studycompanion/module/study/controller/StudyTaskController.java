@@ -3,6 +3,7 @@ package com.asc.studycompanion.module.study.controller;
 import com.asc.studycompanion.common.dto.ApiResponse;
 import com.asc.studycompanion.common.exception.AppException;
 import com.asc.studycompanion.common.exception.ErrorCode;
+import com.asc.studycompanion.module.study.dto.StudentCustomSubmitRequest;
 import com.asc.studycompanion.module.study.dto.StudentSkipRequestDto;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskDetailResponse;
@@ -87,5 +88,18 @@ public class StudyTaskController {
         }
         StudyTaskSummaryResponse updated = studyTaskService.cancelSkipRequest(principal.getId(), taskId);
         return ResponseEntity.ok(ApiResponse.ok("Đã hủy yêu cầu xin bỏ qua", updated));
+    }
+
+    @PostMapping("/{taskId}/custom-submission")
+    public ResponseEntity<ApiResponse<StudyTaskSummaryResponse>> submitCustomTask(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long taskId,
+            @Valid @RequestBody StudentCustomSubmitRequest request
+    ) {
+        if (principal == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        StudyTaskSummaryResponse updated = studyTaskService.submitCustomTask(principal.getId(), taskId, request);
+        return ResponseEntity.ok(ApiResponse.ok("Đã gửi xác nhận nộp bài lên Google Drive", updated));
     }
 }

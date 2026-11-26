@@ -13,6 +13,7 @@ import com.asc.studycompanion.module.guardian.dto.GuardianSubmissionDetailRespon
 import com.asc.studycompanion.module.guardian.service.GuardianService;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.timetable.entity.SubjectCode;
 import com.asc.studycompanion.security.UserPrincipal;
 import org.junit.jupiter.api.AfterEach;
@@ -36,6 +37,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -180,5 +182,64 @@ class GuardianControllerTest {
                 .andExpect(jsonPath("$.data.taskId").value(101))
                 .andExpect(jsonPath("$.data.status").value("SKIPPED"))
                 .andExpect(jsonPath("$.data.skipRequestStatus").value("APPROVED"));
+
+        var assignedItem = new com.asc.studycompanion.module.guardian.dto.GuardianTaskItem(
+                101L,
+                null,
+                LocalDate.of(2026, 11, 27),
+                SubjectCode.MATH,
+                "Toán",
+                StudyTaskType.REVIEW,
+                StudyTaskStatus.NOT_STARTED,
+                null,
+                0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                TaskAssignmentMode.CUSTOM_DRIVE,
+                "Làm phiếu bài tập tuần 12",
+                "Chụp ảnh nộp vào Drive",
+                "https://drive.google.com/drive/folders/abc",
+                java.time.Instant.parse("2026-11-26T02:00:00Z"),
+                null,
+                null,
+                null
+        );
+        when(guardianService.assignCustomTask(eq(2L), eq(101L), any())).thenReturn(assignedItem);
+        mockMvc.perform(post("/api/guardian/tasks/101/custom-task")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Làm phiếu bài tập tuần 12\",\"description\":\"Chụp ảnh nộp vào Drive\",\"driveFolderUrl\":\"https://drive.google.com/drive/folders/abc\",\"saveAsDefaultDriveFolder\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.assignmentMode").value("CUSTOM_DRIVE"))
+                .andExpect(jsonPath("$.data.customDriveFolderUrl").value("https://drive.google.com/drive/folders/abc"));
+
+        when(guardianService.verifyCustomTask(eq(2L), eq(101L), any())).thenReturn(
+                new com.asc.studycompanion.module.guardian.dto.GuardianTaskItem(
+                        101L, null, LocalDate.of(2026, 11, 27), SubjectCode.MATH, "Toán",
+                        StudyTaskType.REVIEW, StudyTaskStatus.EVALUATED, null, 0, null,
+                        java.time.Instant.now(), "Đã kiểm tra Drive", null, null, null, null,
+                        TaskAssignmentMode.CUSTOM_DRIVE, "Làm phiếu bài tập tuần 12", null,
+                        "https://drive.google.com/drive/folders/abc", null, "Con đã up ảnh", null, java.time.Instant.now()
+                )
+        );
+        mockMvc.perform(post("/api/guardian/tasks/101/custom-task/verify")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"approved\":true,\"note\":\"Đã kiểm tra Drive\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("EVALUATED"));
+
+        when(guardianService.clearCustomTask(2L, 101L)).thenReturn(
+                new com.asc.studycompanion.module.guardian.dto.GuardianTaskItem(
+                        101L, null, LocalDate.of(2026, 11, 27), SubjectCode.MATH, "Toán",
+                        StudyTaskType.REVIEW, StudyTaskStatus.NOT_STARTED, null, 0, null
+                )
+        );
+        mockMvc.perform(delete("/api/guardian/tasks/101/custom-task"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.assignmentMode").value("STANDARD_AI"));
     }
 }

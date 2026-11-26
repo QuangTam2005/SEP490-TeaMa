@@ -9,7 +9,9 @@ import {
   CalendarDays,
   CheckCircle2,
   Compass,
+  ExternalLink,
   Flame,
+  FolderUp,
   History,
   Lock,
   SkipForward,
@@ -48,6 +50,7 @@ function TaskActionButton({
   const isSkipped = task.status === 'SKIPPED';
   const isDone = task.status === 'EVALUATED';
   const isEvaluating = task.status === 'EVALUATING';
+  const isCustomDrive = task.assignmentMode === 'CUSTOM_DRIVE';
   const isPendingSkip = task.skipRequestStatus === 'PENDING' && !isSkipped;
   const isRejectedSkip = task.skipRequestStatus === 'REJECTED' && !isSkipped;
   const canRequestSkip =
@@ -78,6 +81,11 @@ function TaskActionButton({
           </span>
           <div className="flex flex-wrap items-center gap-1.5">
             <StatusBadge status={task.status} />
+            {isCustomDrive && !isSkipped ? (
+              <Badge variant="brand" className="whitespace-nowrap">
+                Phụ huynh giao
+              </Badge>
+            ) : null}
             {isPendingSkip ? (
               <Badge variant="warning" className="whitespace-nowrap">
                 Chờ PH duyệt bỏ qua
@@ -86,16 +94,45 @@ function TaskActionButton({
           </div>
         </div>
 
-        <p className="text-sm font-medium text-foreground">
-          {task.currentLessonTitle ??
-            (isSkipped
-              ? 'Phụ huynh đã đánh dấu bỏ qua bài này hôm nay'
-              : isBlocked
-                ? 'Mở khóa sau khi con nộp Bước 1 (Ôn bài cũ)'
-                : stepNumber === 1
-                  ? 'Tóm tắt lại bài đã học trên lớp'
-                  : 'Đọc trước và ghi ý chính bài học mới')}
+        <p className="break-words text-sm font-medium text-foreground [overflow-wrap:anywhere]">
+          {isSkipped
+            ? 'Phụ huynh đã đánh dấu bỏ qua bài này hôm nay'
+            : isCustomDrive
+              ? task.customTaskTitle ?? 'Nhiệm vụ phụ huynh giao thay thế'
+              : task.currentLessonTitle ??
+                (isBlocked
+                  ? 'Mở khóa sau khi con nộp Bước 1 (Ôn bài cũ)'
+                  : stepNumber === 1
+                    ? 'Tóm tắt lại bài đã học trên lớp'
+                    : 'Đọc trước và ghi ý chính bài học mới')}
         </p>
+
+        {isCustomDrive && !isSkipped ? (
+          <div className="space-y-1.5 rounded-lg border border-brand/25 bg-brand-soft/30 px-2.5 py-2 text-xs">
+            {task.customTaskDescription ? (
+              <p className="break-words text-muted-foreground [overflow-wrap:anywhere]">
+                {task.customTaskDescription}
+              </p>
+            ) : null}
+            {task.customDriveFolderUrl ? (
+              <a
+                href={task.customDriveFolderUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-semibold text-brand-strong hover:underline dark:text-sky-300"
+              >
+                <FolderUp className="h-3.5 w-3.5" />
+                Mở thư mục Google Drive
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            ) : null}
+            {task.customSubmissionNote ? (
+              <p className="break-words text-sky-900 dark:text-sky-200 [overflow-wrap:anywhere]">
+                Đã gửi: &ldquo;{task.customSubmissionNote}&rdquo;
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         {isSkipped && task.skipRequestReason ? (
           <p className="break-words rounded-lg border bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground [overflow-wrap:anywhere]">
@@ -187,13 +224,21 @@ function TaskActionButton({
           >
             <Link href={`/student/tasks/${task.id}`}>
               <span>
-                {isEvaluating
-                  ? 'Xem trạng thái AI'
-                  : isDone
-                    ? 'Xem nhận xét / Sửa bài'
-                    : task.status === 'EVALUATION_FAILED'
-                      ? 'Mở bài & Thử đánh giá lại'
-                      : 'Bắt đầu làm bài'}
+                {isCustomDrive
+                  ? task.status === 'SUBMITTED'
+                    ? 'Đã nộp Drive · Xem lại'
+                    : isDone
+                      ? 'Đã hoàn thành bài Drive'
+                      : task.status === 'IN_PROGRESS'
+                        ? 'Bổ sung & nộp lại Drive'
+                        : 'Làm bài & nộp lên Drive'
+                  : isEvaluating
+                    ? 'Xem trạng thái AI'
+                    : isDone
+                      ? 'Xem nhận xét / Sửa bài'
+                      : task.status === 'EVALUATION_FAILED'
+                        ? 'Mở bài & Thử đánh giá lại'
+                        : 'Bắt đầu làm bài'}
               </span>
               <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
             </Link>

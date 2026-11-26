@@ -9,6 +9,7 @@ import com.asc.studycompanion.module.ai.entity.EvaluationJob;
 import com.asc.studycompanion.module.ai.repository.AIEvaluationRepository;
 import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
+import com.asc.studycompanion.module.study.dto.StudentCustomSubmitRequest;
 import com.asc.studycompanion.module.study.dto.StudentSkipRequestDto;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskDetailResponse;
@@ -18,12 +19,14 @@ import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
+import com.asc.studycompanion.module.study.entity.TaskAssignmentMode;
 import com.asc.studycompanion.module.study.repository.StudySubmissionRepository;
 import com.asc.studycompanion.module.study.repository.StudyTaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -149,9 +152,92 @@ public class StudyTaskService {
         return StudyTaskSummaryResponse.from(task, null, null);
     }
 
+    @Transactional
+    public StudyTaskSummaryResponse submitCustomTask(
+            Long studentUserId,
+            Long taskId,
+            StudentCustomSubmitRequest request
+    ) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
+        studyAccessGuard.assertStudentOwner(studentUserId, task.getPlan().getStudent().getId());
+
+        if (task.getAssignmentMode() != TaskAssignmentMode.CUSTOM_DRIVE) {
+            throw new AppException(
+                    ErrorCode.VALIDATION_FAILED,
+                    "Nhiệm vụ này đang ở chế độ nộp bài AI thông thường"
+            );
+        }
+        if (task.getStatus() == StudyTaskStatus.SKIPPED) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Nhiệm vụ này đã được phụ huynh đánh dấu bỏ qua");
+        }
+        if (task.getStatus() == StudyTaskStatus.EVALUATED || task.getStatus() == StudyTaskStatus.SUBMITTED) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Con đã xác nhận nộp bài này lên Drive rồi");
+        }
+        if (task.getTaskType() == StudyTaskType.PREVIEW && !isReviewCompleted(task, List.of())) {
+            throw new AppException(ErrorCode.REVIEW_REQUIRED_BEFORE_PREVIEW);
+        }
+
+        String note = request != null && request.submissionNote() != null ? request.submissionNote().trim() : "";
+        if (note.length() < 5 || note.length() > 300) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Ghi chú nộp bài phải từ 5 đến 300 ký tự");
+        }
+
+        String validatedFileUrl = normalizeOptionalHttpUrl(request != null ? request.driveFileUrl() : null);
+
+        task.setCustomSubmissionNote(note);
+        task.setCustomSubmissionUrl(validatedFileUrl);
+        task.setCustomSubmittedAt(Instant.now());
+        task.setStatus(StudyTaskStatus.SUBMITTED);
+        if (task.getSkipRequestStatus() == SkipRequestStatus.PENDING) {
+            task.setSkipRequestStatus(null);
+            task.setSkipRequestReason(null);
+            task.setSkipRequestedAt(null);
+            task.setSkipReviewedAt(null);
+            task.setSkipReviewedByUserId(null);
+        }
+        studyTaskRepository.save(task);
+
+        if (task.getTaskType() == StudyTaskType.REVIEW) {
+            studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
+                            task.getPlan().getId(),
+                            task.getSubject().getId(),
+                            StudyTaskType.PREVIEW
+                    )
+                    .ifPresent(preview -> {
+                        if (preview.getStatus() == StudyTaskStatus.BLOCKED) {
+                            preview.setStatus(StudyTaskStatus.NOT_STARTED);
+                            studyTaskRepository.save(preview);
+                        }
+                    });
+        }
+
+        return StudyTaskSummaryResponse.from(task, null, null);
+    }
+
+    private static String normalizeOptionalHttpUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return null;
+        }
+        String trimmed = rawUrl.trim();
+        try {
+            URI uri = URI.create(trimmed);
+            String scheme = uri.getScheme();
+            if (scheme == null
+                    || (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme))
+                    || uri.getHost() == null
+                    || uri.getHost().isBlank()) {
+                throw new AppException(ErrorCode.VALIDATION_FAILED, "Link file Google Drive không hợp lệ (cần bắt đầu bằng https://)");
+            }
+            return trimmed;
+        } catch (IllegalArgumentException ex) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Link file Google Drive không hợp lệ");
+        }
+    }
+
     private boolean isReviewCompleted(StudyTask task, List<StudySubmission> taskSubmissions) {
         if (task.getTaskType() == StudyTaskType.REVIEW) {
-            return !taskSubmissions.isEmpty();
+            return task.getCustomSubmittedAt() != null || !taskSubmissions.isEmpty();
         }
         return studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
                         task.getPlan().getId(),
@@ -159,6 +245,7 @@ public class StudyTaskService {
                         StudyTaskType.REVIEW
                 )
                 .map(reviewTask -> reviewTask.getStatus() == StudyTaskStatus.SKIPPED
+                        || reviewTask.getCustomSubmittedAt() != null
                         || studySubmissionRepository.existsByTaskId(reviewTask.getId()))
                 .orElse(false);
     }

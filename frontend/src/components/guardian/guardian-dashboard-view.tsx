@@ -12,6 +12,8 @@ import {
   ChevronRight,
   ClipboardList,
   Download,
+  ExternalLink,
+  FolderUp,
   Link2,
   Loader2,
   ShieldCheck,
@@ -39,6 +41,7 @@ import {
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
+import { AssignCustomTaskDialog } from '@/components/guardian/assign-custom-task-dialog';
 import {
   formatViDate,
   getNextTargetDateIso,
@@ -49,7 +52,12 @@ import { useMockRuntime } from '@/mocks/mock-runtime';
 import { IS_MOCK_MODE, guardianService, linkService } from '@/services';
 import { useAuthStore } from '@/store/auth-store';
 import { useGuardianStore } from '@/store/guardian-store';
-import type { GuardianTaskItem, StudyTaskStatus, SubjectCode } from '@/types';
+import type {
+  GuardianAssignCustomTaskRequest,
+  GuardianTaskItem,
+  StudyTaskStatus,
+  SubjectCode,
+} from '@/types';
 
 function shiftIsoDate(isoDate: string, days: number): string {
   const [y, m, d] = isoDate.split('-').map(Number);
@@ -94,6 +102,13 @@ export function GuardianDashboardView() {
     null
   );
   const [rejectNote, setRejectNote] = useState('');
+  const [assignTarget, setAssignTarget] = useState<GuardianTaskItem | null>(
+    null
+  );
+  const [verifyTarget, setVerifyTarget] = useState<GuardianTaskItem | null>(
+    null
+  );
+  const [verifyNote, setVerifyNote] = useState('');
 
   const childrenQuery = useQuery({
     queryKey: [
@@ -220,6 +235,76 @@ export function GuardianDashboardView() {
     },
   });
 
+  const invalidateAllPlanAndGuardianQueries = () => {
+    void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+    void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+    void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+    void queryClient.invalidateQueries({ queryKey: ['student-task'] });
+    void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
+  };
+
+  const assignCustomMutation = useMutation({
+    mutationFn: ({
+      taskId,
+      payload,
+    }: {
+      taskId: number;
+      payload: GuardianAssignCustomTaskRequest;
+    }) => guardianService.assignCustomTask(taskId, payload),
+    onSuccess: () => {
+      invalidateAllPlanAndGuardianQueries();
+      setAssignTarget(null);
+      toast.success('Đã giao nhiệm vụ thay thế kèm thư mục Google Drive');
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
+
+  const clearCustomMutation = useMutation({
+    mutationFn: (taskId: number) => guardianService.clearCustomTask(taskId),
+    onSuccess: () => {
+      invalidateAllPlanAndGuardianQueries();
+      toast.success('Đã chuyển nhiệm vụ về chế độ AI mặc định');
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
+
+  const verifyCustomMutation = useMutation({
+    mutationFn: ({
+      taskId,
+      approved,
+      note,
+    }: {
+      taskId: number;
+      approved: boolean;
+      note?: string;
+    }) => guardianService.verifyCustomTask(taskId, { approved, note }),
+    onSuccess: (res) => {
+      invalidateAllPlanAndGuardianQueries();
+      setVerifyTarget(null);
+      setVerifyNote('');
+      toast.success(
+        res.status === 'EVALUATED'
+          ? 'Đã xác nhận con hoàn thành bài nộp trên Drive'
+          : 'Đã gửi lời nhắc con bổ sung bài trên Drive'
+      );
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
+
+  const canAssignCustomTask = (row: GuardianTaskItem) =>
+    !row.currentSubmissionId &&
+    !row.customSubmittedAt &&
+    row.status !== 'SUBMITTED' &&
+    row.status !== 'EVALUATING' &&
+    row.status !== 'EVALUATED' &&
+    row.status !== 'EVALUATION_FAILED';
+
   const canToggleSkip = (status: StudyTaskStatus) =>
     status === 'NOT_STARTED' ||
     status === 'IN_PROGRESS' ||
@@ -273,20 +358,67 @@ export function GuardianDashboardView() {
     {
       key: 'lessonTitle',
       header: 'Bài học',
-      render: (row) => (
-        <div className="max-w-xs space-y-1">
-          <span className="block break-words text-sm text-foreground [overflow-wrap:anywhere]">
-            {row.lessonTitle ?? 'Chưa nộp bài'}
-          </span>
-          {row.skipRequestReason &&
-          (row.skipRequestStatus === 'PENDING' ||
-            row.skipRequestStatus === 'APPROVED') ? (
-            <p className="break-words rounded border border-amber-200 bg-amber-50/70 px-2 py-1 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200 [overflow-wrap:anywhere]">
-              Lý do con xin: &ldquo;{row.skipRequestReason}&rdquo;
-            </p>
-          ) : null}
-        </div>
-      ),
+      render: (row) => {
+        const isCustom = row.assignmentMode === 'CUSTOM_DRIVE';
+        return (
+          <div className="max-w-xs space-y-1">
+            {isCustom ? (
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Badge variant="brand" className="whitespace-nowrap">
+                    PH giao (Drive)
+                  </Badge>
+                  {row.customDriveFolderUrl ? (
+                    <a
+                      href={row.customDriveFolderUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-brand-strong hover:underline dark:text-sky-300"
+                    >
+                      Mở Drive
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ) : null}
+                </div>
+                <p className="break-words text-sm font-medium text-foreground [overflow-wrap:anywhere]">
+                  {row.customTaskTitle}
+                </p>
+                {row.customSubmissionNote ? (
+                  <p className="break-words rounded border border-sky-200 bg-sky-50/70 px-2 py-1 text-xs text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200 [overflow-wrap:anywhere]">
+                    Con nộp: &ldquo;{row.customSubmissionNote}&rdquo;
+                    {row.customSubmissionUrl ? (
+                      <>
+                        {' · '}
+                        <a
+                          href={row.customSubmissionUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-semibold underline"
+                        >
+                          Link bài
+                        </a>
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <span className="block break-words text-sm text-foreground [overflow-wrap:anywhere]">
+                {row.lessonTitle ?? 'Chưa nộp bài'}
+              </span>
+            )}
+            {row.skipRequestReason &&
+            (row.skipRequestStatus === 'PENDING' ||
+              row.skipRequestStatus === 'APPROVED') ? (
+              <p className="break-words rounded border border-amber-200 bg-amber-50/70 px-2 py-1 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200 [overflow-wrap:anywhere]">
+                Lý do con xin: &ldquo;{row.skipRequestReason}&rdquo;
+              </p>
+            ) : null}
+          </div>
+        );
+      },
     },
     {
       key: 'status',
@@ -306,7 +438,11 @@ export function GuardianDashboardView() {
       key: 'evaluation',
       header: 'AI Đánh giá',
       render: (row) =>
-        row.evaluation ? (
+        row.assignmentMode === 'CUSTOM_DRIVE' ? (
+          <span className="text-xs font-medium text-muted-foreground">
+            Nộp qua Drive (không AI)
+          </span>
+        ) : row.evaluation ? (
           <div className="flex flex-wrap gap-1.5">
             <StatusBadge status={row.evaluation.overallStatus} />
             <StatusBadge status={row.evaluation.accuracy} />
@@ -342,12 +478,50 @@ export function GuardianDashboardView() {
             </Button>
           );
         }
+        if (row.assignmentMode === 'CUSTOM_DRIVE' && row.status === 'SUBMITTED') {
+          const isVerifying =
+            verifyCustomMutation.isPending &&
+            verifyCustomMutation.variables?.taskId === row.taskId;
+          return (
+            <div className="flex flex-wrap justify-end gap-1.5">
+              <Button
+                type="button"
+                size="sm"
+                disabled={isVerifying}
+                className="h-9 whitespace-nowrap"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  verifyCustomMutation.mutate({
+                    taskId: row.taskId,
+                    approved: true,
+                  });
+                }}
+              >
+                Xác nhận đạt
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={isVerifying}
+                className="h-9 whitespace-nowrap"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setVerifyTarget(row);
+                  setVerifyNote('');
+                }}
+              >
+                Nhắc làm lại
+              </Button>
+            </div>
+          );
+        }
         if (row.skipRequestStatus === 'PENDING') {
           const isReviewing =
             reviewSkipMutation.isPending &&
             reviewSkipMutation.variables?.taskId === row.taskId;
           return (
-            <div className="flex justify-end gap-1.5">
+            <div className="flex flex-wrap justify-end gap-1.5">
               <Button
                 type="button"
                 size="sm"
@@ -377,30 +551,95 @@ export function GuardianDashboardView() {
               >
                 Từ chối
               </Button>
+              {canAssignCustomTask(row) ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-9 whitespace-nowrap"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAssignTarget(row);
+                  }}
+                >
+                  Giao bài thay thế
+                </Button>
+              ) : null}
             </div>
           );
         }
-        if (canToggleSkip(row.status)) {
+        if (canToggleSkip(row.status) || canAssignCustomTask(row)) {
           const isSkipped = row.status === 'SKIPPED';
+          const isCustom = row.assignmentMode === 'CUSTOM_DRIVE';
           const isBusy =
-            skipMutation.isPending &&
-            skipMutation.variables?.taskId === row.taskId;
+            (skipMutation.isPending && skipMutation.variables?.taskId === row.taskId) ||
+            (clearCustomMutation.isPending && clearCustomMutation.variables === row.taskId);
           return (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={isBusy}
-              className="h-9 whitespace-nowrap"
-              onClick={(e) => {
-                e.stopPropagation();
-                skipMutation.mutate({
-                  taskId: row.taskId,
-                  skipped: !isSkipped,
-                });
-              }}
-            >
-              {isBusy ? 'Đang xử lý...' : isSkipped ? 'Khôi phục' : 'Bỏ qua'}
+            <div className="flex flex-wrap justify-end gap-1.5">
+              {canAssignCustomTask(row) ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={isBusy}
+                  className="h-9 gap-1 whitespace-nowrap"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAssignTarget(row);
+                  }}
+                >
+                  <FolderUp className="h-3.5 w-3.5" />
+                  {isCustom ? 'Sửa bài giao' : 'Giao bài thay thế'}
+                </Button>
+              ) : null}
+              {isCustom && !row.customSubmittedAt ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={isBusy}
+                  className="h-9 whitespace-nowrap text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearCustomMutation.mutate(row.taskId);
+                  }}
+                >
+                  Gỡ thay thế
+                </Button>
+              ) : null}
+              {canToggleSkip(row.status) ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={isBusy}
+                  className="h-9 whitespace-nowrap"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    skipMutation.mutate({
+                      taskId: row.taskId,
+                      skipped: !isSkipped,
+                    });
+                  }}
+                >
+                  {isBusy ? 'Đang xử lý...' : isSkipped ? 'Khôi phục' : 'Bỏ qua'}
+                </Button>
+              ) : null}
+            </div>
+          );
+        }
+        if (row.assignmentMode === 'CUSTOM_DRIVE' && row.customDriveFolderUrl) {
+          return (
+            <Button asChild size="sm" variant="outline" className="h-9 gap-1 whitespace-nowrap">
+              <a
+                href={row.customDriveFolderUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Mở Drive
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
             </Button>
           );
         }
@@ -423,13 +662,26 @@ export function GuardianDashboardView() {
             </h1>
           </div>
           {dashboardQuery.data?.linkedStudentName ? (
-            <p className="text-sm text-muted-foreground">
-              Học sinh:{' '}
-              <strong className="text-foreground">
-                {dashboardQuery.data.linkedStudentName}
-              </strong>{' '}
-              · Lớp {dashboardQuery.data.grade}
-            </p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <span>
+                Học sinh:{' '}
+                <strong className="text-foreground">
+                  {dashboardQuery.data.linkedStudentName}
+                </strong>{' '}
+                · Lớp {dashboardQuery.data.grade}
+              </span>
+              {dashboardQuery.data.defaultDriveFolderUrl ? (
+                <a
+                  href={dashboardQuery.data.defaultDriveFolderUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-strong hover:underline dark:text-sky-300"
+                >
+                  Thư mục Drive mặc định
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : null}
+            </div>
           ) : null}
         </div>
 
@@ -725,6 +977,35 @@ export function GuardianDashboardView() {
                       </div>
                     </div>
 
+                    {item.assignmentMode === 'CUSTOM_DRIVE' ? (
+                      <div className="space-y-1.5 rounded-md border border-brand/25 bg-brand-soft/30 px-2.5 py-2 text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <Badge variant="brand" className="whitespace-nowrap">
+                            PH giao (Drive)
+                          </Badge>
+                          {item.customDriveFolderUrl ? (
+                            <a
+                              href={item.customDriveFolderUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-brand-strong hover:underline dark:text-sky-300"
+                            >
+                              Mở Drive xem bài
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : null}
+                        </div>
+                        <p className="break-words font-medium text-foreground [overflow-wrap:anywhere]">
+                          {item.customTaskTitle}
+                        </p>
+                        {item.customSubmissionNote ? (
+                          <p className="break-words text-sky-900 dark:text-sky-200 [overflow-wrap:anywhere]">
+                            Con nộp: &ldquo;{item.customSubmissionNote}&rdquo;
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+
                     {item.skipRequestReason &&
                     (item.skipRequestStatus === 'PENDING' ||
                       item.skipRequestStatus === 'APPROVED') ? (
@@ -767,60 +1048,140 @@ export function GuardianDashboardView() {
                           Xem bài gốc &amp; nhận xét
                         </Link>
                       </Button>
-                    ) : item.skipRequestStatus === 'PENDING' ? (
+                    ) : item.assignmentMode === 'CUSTOM_DRIVE' &&
+                      item.status === 'SUBMITTED' ? (
                       <div className="grid grid-cols-2 gap-2">
                         <Button
                           type="button"
                           disabled={
-                            reviewSkipMutation.isPending &&
-                            reviewSkipMutation.variables?.taskId === item.taskId
+                            verifyCustomMutation.isPending &&
+                            verifyCustomMutation.variables?.taskId === item.taskId
                           }
                           className="h-11 w-full justify-center"
                           onClick={() =>
-                            reviewSkipMutation.mutate({
+                            verifyCustomMutation.mutate({
                               taskId: item.taskId,
                               approved: true,
                             })
                           }
                         >
-                          Đồng ý bỏ qua
+                          Xác nhận đạt
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
                           disabled={
-                            reviewSkipMutation.isPending &&
-                            reviewSkipMutation.variables?.taskId === item.taskId
+                            verifyCustomMutation.isPending &&
+                            verifyCustomMutation.variables?.taskId === item.taskId
                           }
                           className="h-11 w-full justify-center"
                           onClick={() => {
-                            setRejectTarget(item);
-                            setRejectNote('');
+                            setVerifyTarget(item);
+                            setVerifyNote('');
                           }}
                         >
-                          Từ chối
+                          Nhắc làm lại
                         </Button>
                       </div>
-                    ) : canToggleSkip(item.status) ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={
-                          skipMutation.isPending &&
-                          skipMutation.variables?.taskId === item.taskId
-                        }
-                        className="h-11 w-full justify-center"
-                        onClick={() =>
-                          skipMutation.mutate({
-                            taskId: item.taskId,
-                            skipped: item.status !== 'SKIPPED',
-                          })
-                        }
-                      >
-                        {item.status === 'SKIPPED'
-                          ? 'Khôi phục bài học'
-                          : 'Đánh dấu bỏ qua hôm nay'}
-                      </Button>
+                    ) : item.skipRequestStatus === 'PENDING' ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            type="button"
+                            disabled={
+                              reviewSkipMutation.isPending &&
+                              reviewSkipMutation.variables?.taskId === item.taskId
+                            }
+                            className="h-11 w-full justify-center"
+                            onClick={() =>
+                              reviewSkipMutation.mutate({
+                                taskId: item.taskId,
+                                approved: true,
+                              })
+                            }
+                          >
+                            Đồng ý bỏ qua
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={
+                              reviewSkipMutation.isPending &&
+                              reviewSkipMutation.variables?.taskId === item.taskId
+                            }
+                            className="h-11 w-full justify-center"
+                            onClick={() => {
+                              setRejectTarget(item);
+                              setRejectNote('');
+                            }}
+                          >
+                            Từ chối
+                          </Button>
+                        </div>
+                        {canAssignCustomTask(item) ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-11 w-full justify-center gap-1.5"
+                            onClick={() => setAssignTarget(item)}
+                          >
+                            <FolderUp className="h-4 w-4" />
+                            Giao bài thay thế (Drive)
+                          </Button>
+                        ) : null}
+                      </div>
+                    ) : canToggleSkip(item.status) || canAssignCustomTask(item) ? (
+                      <div className="space-y-2">
+                        {canAssignCustomTask(item) ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-11 w-full justify-center gap-1.5"
+                            onClick={() => setAssignTarget(item)}
+                          >
+                            <FolderUp className="h-4 w-4" />
+                            {item.assignmentMode === 'CUSTOM_DRIVE'
+                              ? 'Sửa bài giao (Drive)'
+                              : 'Giao bài thay thế (Drive)'}
+                          </Button>
+                        ) : null}
+                        {item.assignmentMode === 'CUSTOM_DRIVE' &&
+                        !item.customSubmittedAt ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={
+                              clearCustomMutation.isPending &&
+                              clearCustomMutation.variables === item.taskId
+                            }
+                            className="h-10 w-full justify-center"
+                            onClick={() => clearCustomMutation.mutate(item.taskId)}
+                          >
+                            Gỡ bài giao thay thế
+                          </Button>
+                        ) : null}
+                        {canToggleSkip(item.status) ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={
+                              skipMutation.isPending &&
+                              skipMutation.variables?.taskId === item.taskId
+                            }
+                            className="h-11 w-full justify-center"
+                            onClick={() =>
+                              skipMutation.mutate({
+                                taskId: item.taskId,
+                                skipped: item.status !== 'SKIPPED',
+                              })
+                            }
+                          >
+                            {item.status === 'SKIPPED'
+                              ? 'Khôi phục bài học'
+                              : 'Đánh dấu bỏ qua hôm nay'}
+                          </Button>
+                        ) : null}
+                      </div>
                     ) : null}
                   </CardContent>
                 </Card>
@@ -898,6 +1259,87 @@ export function GuardianDashboardView() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : null}
               Xác nhận từ chối
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AssignCustomTaskDialog
+        task={assignTarget}
+        defaultDriveFolderUrl={dashboardQuery.data?.defaultDriveFolderUrl}
+        open={Boolean(assignTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAssignTarget(null);
+          }
+        }}
+        isSubmitting={assignCustomMutation.isPending}
+        onSubmit={(taskId, payload) =>
+          assignCustomMutation.mutate({ taskId, payload })
+        }
+      />
+
+      <Dialog
+        open={Boolean(verifyTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setVerifyTarget(null);
+            setVerifyNote('');
+          }
+        }}
+      >
+        <DialogContent className="w-[calc(100%-1.5rem)] sm:w-full">
+          <DialogHeader>
+            <DialogTitle>
+              Nhắc con làm lại · {verifyTarget?.subjectName}
+            </DialogTitle>
+            <DialogDescription>
+              Sau khi kiểm tra thư mục Drive, phụ huynh có thể ghi rõ phần con
+              cần bổ sung hoặc chụp ảnh rõ nét hơn rồi gửi lại.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="guardian-verify-note">Lời nhắn cho con</Label>
+            <textarea
+              id="guardian-verify-note"
+              rows={3}
+              maxLength={300}
+              value={verifyNote}
+              onChange={(e) => setVerifyNote(e.target.value)}
+              placeholder="Ví dụ: Ảnh bài 3 hơi mờ, con chụp lại và tải lên lại thư mục Drive giúp bố mẹ nhé."
+              className="w-full rounded-lg border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 sm:h-10"
+              disabled={verifyCustomMutation.isPending}
+              onClick={() => {
+                setVerifyTarget(null);
+                setVerifyNote('');
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              className="h-11 gap-1.5 sm:h-10"
+              disabled={verifyCustomMutation.isPending || !verifyTarget}
+              onClick={() => {
+                if (!verifyTarget) return;
+                verifyCustomMutation.mutate({
+                  taskId: verifyTarget.taskId,
+                  approved: false,
+                  note: verifyNote.trim() || undefined,
+                });
+              }}
+            >
+              {verifyCustomMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              Gửi nhắc nhở con
             </Button>
           </DialogFooter>
         </DialogContent>

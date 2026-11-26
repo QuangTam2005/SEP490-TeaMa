@@ -26,6 +26,7 @@ import type { StudyService } from '@/services/study.service';
 import type {
   AIEvaluationResponse,
   NextDayStudyPlanResponse,
+  StudentCustomSubmitPayload,
   StudentSkipRequestPayload,
   StudentStreakResponse,
   StudyPlanHistoryItem,
@@ -627,6 +628,57 @@ export const studyMockService: StudyService = {
         detail.task.skipRequestReason = null;
         detail.task.skipRequestedAt = null;
         detail.task.skipReviewedAt = null;
+        return structuredClone(detail.task);
+      },
+      { requireRole: 'STUDENT' }
+    );
+  },
+
+  async submitCustomTask(
+    taskId: number,
+    request: StudentCustomSubmitPayload
+  ): Promise<StudyTaskSummaryResponse> {
+    return runMockOperation(
+      () => {
+        const container = findTaskContainer(taskId);
+        if (!container) {
+          throw new ApiClientError({
+            status: 404,
+            errorCode: 'STUDY_001',
+            message: 'Không tìm thấy nhiệm vụ học tập.',
+          });
+        }
+        const { bucket, detail } = container;
+        if (detail.task.assignmentMode !== 'CUSTOM_DRIVE') {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Nhiệm vụ này đang ở chế độ AI mặc định.',
+          });
+        }
+        const note = request.submissionNote.trim();
+        if (note.length < 5 || note.length > 300) {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Ghi chú nộp bài phải từ 5 đến 300 ký tự.',
+          });
+        }
+        detail.task.customSubmissionNote = note;
+        detail.task.customSubmissionUrl = request.driveFileUrl?.trim() || null;
+        detail.task.customSubmittedAt = new Date().toISOString();
+        detail.task.status = 'SUBMITTED';
+        detail.task.skipRequestStatus = null;
+        detail.task.skipRequestReason = null;
+        detail.task.skipRequestedAt = null;
+        detail.task.skipReviewedAt = null;
+        if (detail.task.taskType === 'REVIEW') {
+          bucket.reviewTask.reviewCompleted = true;
+          bucket.previewTask.reviewCompleted = true;
+          if (bucket.previewTask.task.status === 'BLOCKED') {
+            bucket.previewTask.task.status = 'NOT_STARTED';
+          }
+        }
         return structuredClone(detail.task);
       },
       { requireRole: 'STUDENT' }

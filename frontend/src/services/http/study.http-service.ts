@@ -2,6 +2,7 @@ import { apiDelete, apiGet, apiPost } from '@/lib/api-client';
 import type { StudyService } from '@/services/study.service';
 import type {
   NextDayStudyPlanResponse,
+  StudentCustomSubmitPayload,
   StudentSkipRequestPayload,
   StudentStreakResponse,
   StudyPlanHistoryItem,
@@ -52,5 +53,11 @@ export const studyHttpService: StudyService = {
   cancelSkipRequest: (taskId: number) =>
     apiDelete<StudyTaskSummaryResponse>(
       `/api/student/tasks/${taskId}/skip-request`
+    ),
+
+  submitCustomTask: (taskId: number, request: StudentCustomSubmitPayload) =>
+    apiPost<StudyTaskSummaryResponse>(
+      `/api/student/tasks/${taskId}/custom-submission`,
+      request
     ),
 };

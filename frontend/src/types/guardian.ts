@@ -4,6 +4,7 @@ import type {
   StudySubmissionResponse,
   StudyTaskStatus,
   StudyTaskType,
+  TaskAssignmentMode,
 } from './study';
 import type { SubjectCode } from './timetable';
 
@@ -42,6 +43,14 @@ export interface GuardianTaskItem {
   skipRequestReason?: string | null;
   skipRequestedAt?: string | null;
   skipReviewedAt?: string | null;
+  assignmentMode?: TaskAssignmentMode;
+  customTaskTitle?: string | null;
+  customTaskDescription?: string | null;
+  customDriveFolderUrl?: string | null;
+  customAssignedAt?: string | null;
+  customSubmissionNote?: string | null;
+  customSubmissionUrl?: string | null;
+  customSubmittedAt?: string | null;
 }
 
 export interface GuardianDashboardResponse {
@@ -53,6 +62,7 @@ export interface GuardianDashboardResponse {
   completedTasks: number;
   evaluatingTasks: number;
   items: GuardianTaskItem[];
+  defaultDriveFolderUrl?: string | null;
 }
 
 export interface GuardianSubmissionDetailResponse {
@@ -86,6 +96,18 @@ export interface GuardianSkipTaskRequest {
 }
 
 export interface GuardianSkipReviewRequest {
+  approved: boolean;
+  note?: string | null;
+}
+
+export interface GuardianAssignCustomTaskRequest {
+  title: string;
+  description?: string | null;
+  driveFolderUrl: string;
+  saveAsDefaultDriveFolder?: boolean;
+}
+
+export interface GuardianVerifyCustomTaskRequest {
   approved: boolean;
   note?: string | null;
 }
