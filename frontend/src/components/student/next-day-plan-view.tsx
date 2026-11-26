@@ -253,7 +253,7 @@ function TaskActionButton({
             onClick={() => onOpenSkipDialog(task)}
             className="h-11 w-full text-xs text-muted-foreground hover:text-foreground sm:h-9"
           >
-            {isRejectedSkip ? 'Gửi lại lý do xin bỏ qua' : 'Xin phụ huynh bỏ qua...'}
+            {isRejectedSkip ? 'Gửi lại lý do xin bỏ qua' : 'Xin PH bỏ qua phần này...'}
           </Button>
         ) : null}
       </div>
