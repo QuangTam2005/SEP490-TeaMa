@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AlertCircle,
   CalendarDays,
   CheckCircle2,
   ChevronLeft,
@@ -21,7 +22,16 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   DataTable,
   type DataTableColumn,
@@ -80,6 +90,10 @@ export function GuardianDashboardView() {
     getMondayIso(getNextTargetDateIso())
   );
   const [isExporting, setIsExporting] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState<GuardianTaskItem | null>(
+    null
+  );
+  const [rejectNote, setRejectNote] = useState('');
 
   const childrenQuery = useQuery({
     queryKey: [
@@ -177,6 +191,35 @@ export function GuardianDashboardView() {
     },
   });
 
+  const reviewSkipMutation = useMutation({
+    mutationFn: ({
+      taskId,
+      approved,
+      note,
+    }: {
+      taskId: number;
+      approved: boolean;
+      note?: string;
+    }) => guardianService.reviewSkipRequest(taskId, { approved, note }),
+    onSuccess: (res) => {
+      void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+      void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-task'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
+      setRejectTarget(null);
+      setRejectNote('');
+      toast.success(
+        res.status === 'SKIPPED'
+          ? 'Đã đồng ý cho con bỏ qua bài học'
+          : 'Đã từ chối yêu cầu xin bỏ qua của con'
+      );
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
+
   const canToggleSkip = (status: StudyTaskStatus) =>
     status === 'NOT_STARTED' ||
     status === 'IN_PROGRESS' ||
@@ -231,15 +274,33 @@ export function GuardianDashboardView() {
       key: 'lessonTitle',
       header: 'Bài học',
       render: (row) => (
-        <span className="block max-w-xs break-words text-sm text-foreground [overflow-wrap:anywhere]">
-          {row.lessonTitle ?? 'Chưa nộp bài'}
-        </span>
+        <div className="max-w-xs space-y-1">
+          <span className="block break-words text-sm text-foreground [overflow-wrap:anywhere]">
+            {row.lessonTitle ?? 'Chưa nộp bài'}
+          </span>
+          {row.skipRequestReason &&
+          (row.skipRequestStatus === 'PENDING' ||
+            row.skipRequestStatus === 'APPROVED') ? (
+            <p className="break-words rounded border border-amber-200 bg-amber-50/70 px-2 py-1 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200 [overflow-wrap:anywhere]">
+              Lý do con xin: &ldquo;{row.skipRequestReason}&rdquo;
+            </p>
+          ) : null}
+        </div>
       ),
     },
     {
       key: 'status',
       header: 'Trạng thái',
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (row) => (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <StatusBadge status={row.status} />
+          {row.skipRequestStatus === 'PENDING' ? (
+            <Badge variant="warning" className="whitespace-nowrap">
+              Chờ duyệt bỏ qua
+            </Badge>
+          ) : null}
+        </div>
+      ),
     },
     {
       key: 'evaluation',
@@ -279,6 +340,44 @@ export function GuardianDashboardView() {
                 Xem bài gốc
               </Link>
             </Button>
+          );
+        }
+        if (row.skipRequestStatus === 'PENDING') {
+          const isReviewing =
+            reviewSkipMutation.isPending &&
+            reviewSkipMutation.variables?.taskId === row.taskId;
+          return (
+            <div className="flex justify-end gap-1.5">
+              <Button
+                type="button"
+                size="sm"
+                disabled={isReviewing}
+                className="h-9 whitespace-nowrap"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  reviewSkipMutation.mutate({
+                    taskId: row.taskId,
+                    approved: true,
+                  });
+                }}
+              >
+                Đồng ý
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={isReviewing}
+                className="h-9 whitespace-nowrap"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRejectTarget(row);
+                  setRejectNote('');
+                }}
+              >
+                Từ chối
+              </Button>
+            </div>
           );
         }
         if (canToggleSkip(row.status)) {
@@ -518,8 +617,27 @@ export function GuardianDashboardView() {
           ) : undefined,
         }}
       >
-        {(data) => (
+        {(data) => {
+          const pendingSkipCount = data.items.filter(
+            (i) => i.skipRequestStatus === 'PENDING'
+          ).length;
+
+          return (
           <div className="space-y-6">
+            {pendingSkipCount > 0 ? (
+              <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-200">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <div>
+                  <p className="font-semibold">
+                    Con đang gửi {pendingSkipCount} yêu cầu xin bỏ qua bài học cần phụ huynh xem xét
+                  </p>
+                  <p className="text-xs opacity-90">
+                    Bấm &ldquo;Đồng ý&rdquo; hoặc &ldquo;Từ chối&rdquo; ngay ở danh sách bên dưới.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
@@ -597,8 +715,23 @@ export function GuardianDashboardView() {
                           {item.lessonTitle ?? 'Chưa nộp bài'}
                         </p>
                       </div>
-                      <StatusBadge status={item.status} />
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
+                        <StatusBadge status={item.status} />
+                        {item.skipRequestStatus === 'PENDING' ? (
+                          <Badge variant="warning" className="whitespace-nowrap">
+                            Chờ duyệt bỏ qua
+                          </Badge>
+                        ) : null}
+                      </div>
                     </div>
+
+                    {item.skipRequestReason &&
+                    (item.skipRequestStatus === 'PENDING' ||
+                      item.skipRequestStatus === 'APPROVED') ? (
+                      <p className="break-words rounded-md border border-amber-200 bg-amber-50/70 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200 [overflow-wrap:anywhere]">
+                        Lý do con xin bỏ qua: &ldquo;{item.skipRequestReason}&rdquo;
+                      </p>
+                    ) : null}
 
                     {(item.evaluation || item.guardianAcknowledgedAt) ? (
                       <div className="flex flex-wrap gap-1.5">
@@ -634,6 +767,40 @@ export function GuardianDashboardView() {
                           Xem bài gốc &amp; nhận xét
                         </Link>
                       </Button>
+                    ) : item.skipRequestStatus === 'PENDING' ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          disabled={
+                            reviewSkipMutation.isPending &&
+                            reviewSkipMutation.variables?.taskId === item.taskId
+                          }
+                          className="h-11 w-full justify-center"
+                          onClick={() =>
+                            reviewSkipMutation.mutate({
+                              taskId: item.taskId,
+                              approved: true,
+                            })
+                          }
+                        >
+                          Đồng ý bỏ qua
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={
+                            reviewSkipMutation.isPending &&
+                            reviewSkipMutation.variables?.taskId === item.taskId
+                          }
+                          className="h-11 w-full justify-center"
+                          onClick={() => {
+                            setRejectTarget(item);
+                            setRejectNote('');
+                          }}
+                        >
+                          Từ chối
+                        </Button>
+                      </div>
                     ) : canToggleSkip(item.status) ? (
                       <Button
                         type="button"
@@ -660,9 +827,81 @@ export function GuardianDashboardView() {
               ))}
             </div>
           </div>
-        )}
+          );
+        }}
       </QueryStateBoundary>
       )}
+
+      <Dialog
+        open={Boolean(rejectTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRejectTarget(null);
+            setRejectNote('');
+          }
+        }}
+      >
+        <DialogContent className="w-[calc(100%-1.5rem)] sm:w-full">
+          <DialogHeader>
+            <DialogTitle>
+              Từ chối yêu cầu bỏ qua · {rejectTarget?.subjectName}
+            </DialogTitle>
+            <DialogDescription>
+              Con sẽ giữ nguyên nhiệm vụ để tự hoàn thành. Phụ huynh có thể
+              nhắn thêm một lời nhắc ngắn cho con (không bắt buộc).
+            </DialogDescription>
+          </DialogHeader>
+          {rejectTarget?.skipRequestReason ? (
+            <p className="break-words rounded-lg border bg-muted/50 px-3 py-2 text-xs text-muted-foreground [overflow-wrap:anywhere]">
+              Lý do con gửi: &ldquo;{rejectTarget.skipRequestReason}&rdquo;
+            </p>
+          ) : null}
+          <div className="space-y-1.5">
+            <Label htmlFor="guardian-reject-note">Lời nhắn cho con (tùy chọn)</Label>
+            <textarea
+              id="guardian-reject-note"
+              rows={3}
+              maxLength={300}
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              placeholder="Ví dụ: Con vẫn tóm tắt nhanh 5 dòng ý chính rồi mới làm phiếu bài tập nhé."
+              className="w-full rounded-lg border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 sm:h-10"
+              disabled={reviewSkipMutation.isPending}
+              onClick={() => {
+                setRejectTarget(null);
+                setRejectNote('');
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              className="h-11 gap-1.5 sm:h-10"
+              disabled={reviewSkipMutation.isPending || !rejectTarget}
+              onClick={() => {
+                if (!rejectTarget) return;
+                reviewSkipMutation.mutate({
+                  taskId: rejectTarget.taskId,
+                  approved: false,
+                  note: rejectNote.trim() || undefined,
+                });
+              }}
+            >
+              {reviewSkipMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              Xác nhận từ chối
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

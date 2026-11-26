@@ -6,6 +6,7 @@ import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianDashboardResponse;
+import com.asc.studycompanion.module.guardian.dto.GuardianSkipReviewRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianSubmissionDetailResponse;
@@ -90,6 +91,22 @@ public class GuardianController {
         String msg = res.status() == com.asc.studycompanion.module.study.entity.StudyTaskStatus.SKIPPED
                 ? "Đã đánh dấu bỏ qua bài học cho con"
                 : "Đã khôi phục bài học cho con";
+        return ResponseEntity.ok(ApiResponse.ok(msg, res));
+    }
+
+    @PostMapping("/tasks/{taskId}/skip-request/review")
+    public ResponseEntity<ApiResponse<GuardianSkipTaskResponse>> reviewSkipRequest(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long taskId,
+            @Valid @RequestBody GuardianSkipReviewRequest request
+    ) {
+        if (principal == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        GuardianSkipTaskResponse res = guardianService.reviewSkipRequest(principal.getId(), taskId, request);
+        String msg = res.status() == com.asc.studycompanion.module.study.entity.StudyTaskStatus.SKIPPED
+                ? "Đã đồng ý cho con bỏ qua bài học"
+                : "Đã từ chối yêu cầu xin bỏ qua của con";
         return ResponseEntity.ok(ApiResponse.ok(msg, res));
     }
 

@@ -10,6 +10,7 @@ import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
 import com.asc.studycompanion.module.study.dto.SubmitStudyRequest;
+import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
@@ -106,6 +107,13 @@ public class StudySubmissionService {
 
         task.setStatus(StudyTaskStatus.EVALUATING);
         task.setRevisionCount(Math.max(0, nextVersion - 1));
+        if (task.getSkipRequestStatus() == SkipRequestStatus.PENDING) {
+            task.setSkipRequestStatus(null);
+            task.setSkipRequestReason(null);
+            task.setSkipRequestedAt(null);
+            task.setSkipReviewedAt(null);
+            task.setSkipReviewedByUserId(null);
+        }
         studyTaskRepository.save(task);
 
         if (task.getTaskType() == StudyTaskType.REVIEW) {

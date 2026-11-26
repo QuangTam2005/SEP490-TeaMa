@@ -183,8 +183,9 @@ public class StudyPlanService {
             return false;
         }
         return plan.getTasks().stream().allMatch(task ->
-                task.getStatus() == StudyTaskStatus.NOT_STARTED
-                        || task.getStatus() == StudyTaskStatus.BLOCKED
+                (task.getStatus() == StudyTaskStatus.NOT_STARTED
+                        || task.getStatus() == StudyTaskStatus.BLOCKED)
+                        && task.getSkipRequestStatus() == null
         );
     }
 
@@ -501,19 +502,7 @@ public class StudyPlanService {
                 }
             }
         }
-        return new StudyTaskSummaryResponse(
-                task.getId(),
-                task.getSubject().getCode(),
-                task.getSubject().getName(),
-                task.getTaskType(),
-                task.getStatus(),
-                task.getRevisionCount(),
-                StudyTask.MAX_REVISIONS,
-                currentLessonTitle,
-                latestEvaluationStatus,
-                task.getGuardianAcknowledgedAt(),
-                task.getGuardianNote()
-        );
+        return StudyTaskSummaryResponse.from(task, currentLessonTitle, latestEvaluationStatus);
     }
 
     private Map<SubjectCode, SubjectSlot> extractDistinctSubjectsForWeekday(

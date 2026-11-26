@@ -1,11 +1,13 @@
-import { apiGet, apiPost } from '@/lib/api-client';
+import { apiDelete, apiGet, apiPost } from '@/lib/api-client';
 import type { StudyService } from '@/services/study.service';
 import type {
   NextDayStudyPlanResponse,
+  StudentSkipRequestPayload,
   StudentStreakResponse,
   StudyPlanHistoryItem,
   StudySubmissionResponse,
   StudyTaskDetailResponse,
+  StudyTaskSummaryResponse,
   SubmitStudyRequest,
 } from '@/types';
 
@@ -39,5 +41,16 @@ export const studyHttpService: StudyService = {
     apiPost<StudySubmissionResponse>(
       `/api/student/submissions/${submissionId}/retry-evaluation`,
       {}
+    ),
+
+  requestSkip: (taskId: number, request: StudentSkipRequestPayload) =>
+    apiPost<StudyTaskSummaryResponse>(
+      `/api/student/tasks/${taskId}/skip-request`,
+      request
+    ),
+
+  cancelSkipRequest: (taskId: number) =>
+    apiDelete<StudyTaskSummaryResponse>(
+      `/api/student/tasks/${taskId}/skip-request`
     ),
 };

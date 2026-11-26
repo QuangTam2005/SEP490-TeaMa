@@ -1,5 +1,6 @@
 import type { AIEvaluationResponse } from './ai';
 import type {
+  SkipRequestStatus,
   StudySubmissionResponse,
   StudyTaskStatus,
   StudyTaskType,
@@ -37,6 +38,10 @@ export interface GuardianTaskItem {
   > | null;
   guardianAcknowledgedAt?: string | null;
   guardianNote?: string | null;
+  skipRequestStatus?: SkipRequestStatus | null;
+  skipRequestReason?: string | null;
+  skipRequestedAt?: string | null;
+  skipReviewedAt?: string | null;
 }
 
 export interface GuardianDashboardResponse {
@@ -80,10 +85,19 @@ export interface GuardianSkipTaskRequest {
   note?: string | null;
 }
 
+export interface GuardianSkipReviewRequest {
+  approved: boolean;
+  note?: string | null;
+}
+
 export interface GuardianSkipTaskResponse {
   taskId: number;
   status: StudyTaskStatus;
   guardianNote: string | null;
+  skipRequestStatus?: SkipRequestStatus | null;
+  skipRequestReason?: string | null;
+  skipRequestedAt?: string | null;
+  skipReviewedAt?: string | null;
 }
 
 export interface GuardianWeeklyDaySummary {

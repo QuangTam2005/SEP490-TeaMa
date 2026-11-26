@@ -2,6 +2,7 @@ import type {
   GuardianAcknowledgeRequest,
   GuardianAcknowledgeResponse,
   GuardianDashboardResponse,
+  GuardianSkipReviewRequest,
   GuardianSkipTaskRequest,
   GuardianSkipTaskResponse,
   GuardianSubmissionDetailResponse,
@@ -40,6 +41,10 @@ export interface GuardianService {
   skipTask(
     taskId: number,
     request: GuardianSkipTaskRequest
+  ): Promise<GuardianSkipTaskResponse>;
+  reviewSkipRequest(
+    taskId: number,
+    request: GuardianSkipReviewRequest
   ): Promise<GuardianSkipTaskResponse>;
   getWeeklySummary(
     params?: GuardianWeeklyParams

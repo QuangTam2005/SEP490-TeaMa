@@ -9,6 +9,7 @@ import type {
   GuardianAcknowledgeRequest,
   GuardianAcknowledgeResponse,
   GuardianDashboardResponse,
+  GuardianSkipReviewRequest,
   GuardianSkipTaskRequest,
   GuardianSkipTaskResponse,
   GuardianSubmissionDetailResponse,
@@ -47,6 +48,12 @@ export const guardianHttpService: GuardianService = {
   skipTask: (taskId: number, request: GuardianSkipTaskRequest) =>
     apiPost<GuardianSkipTaskResponse>(
       `/api/guardian/tasks/${taskId}/skip`,
+      request
+    ),
+
+  reviewSkipRequest: (taskId: number, request: GuardianSkipReviewRequest) =>
+    apiPost<GuardianSkipTaskResponse>(
+      `/api/guardian/tasks/${taskId}/skip-request/review`,
       request
     ),
 

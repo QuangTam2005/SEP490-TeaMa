@@ -26,10 +26,12 @@ import type { StudyService } from '@/services/study.service';
 import type {
   AIEvaluationResponse,
   NextDayStudyPlanResponse,
+  StudentSkipRequestPayload,
   StudentStreakResponse,
   StudyPlanHistoryItem,
   StudySubmissionResponse,
   StudyTaskDetailResponse,
+  StudyTaskSummaryResponse,
   SubmitStudyRequest,
   SubjectCode,
 } from '@/types';
@@ -449,6 +451,12 @@ export const studyMockService: StudyService = {
         detail.task.currentLessonTitle = trimmedTitle;
         detail.task.revisionCount = Math.max(0, newVersion - 1);
         detail.task.latestEvaluationStatus = null;
+        if (detail.task.skipRequestStatus === 'PENDING') {
+          detail.task.skipRequestStatus = null;
+          detail.task.skipRequestReason = null;
+          detail.task.skipRequestedAt = null;
+          detail.task.skipReviewedAt = null;
+        }
 
         if (detail.task.taskType === 'REVIEW') {
           bucket.reviewTask.reviewCompleted = true;
@@ -540,6 +548,88 @@ export const studyMockService: StudyService = {
           lastActiveDate: null,
         },
       }
+    );
+  },
+
+  async requestSkip(
+    taskId: number,
+    request: StudentSkipRequestPayload
+  ): Promise<StudyTaskSummaryResponse> {
+    return runMockOperation(
+      () => {
+        const container = findTaskContainer(taskId);
+        if (!container) {
+          throw new ApiClientError({
+            status: 404,
+            errorCode: 'STUDY_001',
+            message: 'Không tìm thấy nhiệm vụ học tập.',
+          });
+        }
+        const { detail } = container;
+        if (detail.task.status === 'SKIPPED') {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Bài học này đã được phụ huynh đánh dấu bỏ qua.',
+          });
+        }
+        if (
+          detail.submissions.length > 0 ||
+          detail.task.status === 'SUBMITTED' ||
+          detail.task.status === 'EVALUATING' ||
+          detail.task.status === 'EVALUATED' ||
+          detail.task.status === 'EVALUATION_FAILED'
+        ) {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Không thể xin bỏ qua bài học đã nộp bài.',
+          });
+        }
+        const trimmed = request.reason.trim();
+        if (trimmed.length < 5 || trimmed.length > 300) {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Lý do xin bỏ qua phải từ 5 đến 300 ký tự.',
+          });
+        }
+        detail.task.skipRequestStatus = 'PENDING';
+        detail.task.skipRequestReason = trimmed;
+        detail.task.skipRequestedAt = new Date().toISOString();
+        detail.task.skipReviewedAt = null;
+        return structuredClone(detail.task);
+      },
+      { requireRole: 'STUDENT' }
+    );
+  },
+
+  async cancelSkipRequest(taskId: number): Promise<StudyTaskSummaryResponse> {
+    return runMockOperation(
+      () => {
+        const container = findTaskContainer(taskId);
+        if (!container) {
+          throw new ApiClientError({
+            status: 404,
+            errorCode: 'STUDY_001',
+            message: 'Không tìm thấy nhiệm vụ học tập.',
+          });
+        }
+        const { detail } = container;
+        if (detail.task.skipRequestStatus !== 'PENDING') {
+          throw new ApiClientError({
+            status: 400,
+            errorCode: 'VAL_001',
+            message: 'Chỉ có thể hủy yêu cầu xin bỏ qua đang chờ duyệt.',
+          });
+        }
+        detail.task.skipRequestStatus = null;
+        detail.task.skipRequestReason = null;
+        detail.task.skipRequestedAt = null;
+        detail.task.skipReviewedAt = null;
+        return structuredClone(detail.task);
+      },
+      { requireRole: 'STUDENT' }
     );
   },
 };

@@ -74,4 +74,20 @@ public class StudyTask extends BaseTimestampEntity {
 
     @Column(name = "guardian_acknowledged_by_user_id")
     private Long guardianAcknowledgedByUserId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "skip_request_status", length = 20)
+    private SkipRequestStatus skipRequestStatus;
+
+    @Column(name = "skip_request_reason", length = 300)
+    private String skipRequestReason;
+
+    @Column(name = "skip_requested_at")
+    private java.time.Instant skipRequestedAt;
+
+    @Column(name = "skip_reviewed_at")
+    private java.time.Instant skipReviewedAt;
+
+    @Column(name = "skip_reviewed_by_user_id")
+    private Long skipReviewedByUserId;
 }

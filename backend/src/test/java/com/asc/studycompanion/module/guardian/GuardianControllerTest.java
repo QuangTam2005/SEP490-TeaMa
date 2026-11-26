@@ -161,5 +161,24 @@ class GuardianControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.taskId").value(101))
                 .andExpect(jsonPath("$.data.status").value("SKIPPED"));
+
+        when(guardianService.reviewSkipRequest(eq(2L), eq(101L), any())).thenReturn(
+                new com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskResponse(
+                        101L,
+                        StudyTaskStatus.SKIPPED,
+                        "Đồng ý cho con làm bài cô giao",
+                        com.asc.studycompanion.module.study.entity.SkipRequestStatus.APPROVED,
+                        "Làm bài tập cô giao",
+                        java.time.Instant.parse("2026-11-26T01:00:00Z"),
+                        java.time.Instant.parse("2026-11-26T01:10:00Z")
+                )
+        );
+        mockMvc.perform(post("/api/guardian/tasks/101/skip-request/review")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"approved\":true,\"note\":\"Đồng ý cho con làm bài cô giao\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.taskId").value(101))
+                .andExpect(jsonPath("$.data.status").value("SKIPPED"))
+                .andExpect(jsonPath("$.data.skipRequestStatus").value("APPROVED"));
     }
 }

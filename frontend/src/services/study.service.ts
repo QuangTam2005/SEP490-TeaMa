@@ -1,9 +1,11 @@
 import type {
   NextDayStudyPlanResponse,
+  StudentSkipRequestPayload,
   StudentStreakResponse,
   StudyPlanHistoryItem,
   StudySubmissionResponse,
   StudyTaskDetailResponse,
+  StudyTaskSummaryResponse,
   SubmitStudyRequest,
 } from '@/types';
 
@@ -17,4 +19,9 @@ export interface StudyService {
     request: SubmitStudyRequest
   ): Promise<StudySubmissionResponse>;
   retryEvaluation(submissionId: number): Promise<StudySubmissionResponse>;
+  requestSkip(
+    taskId: number,
+    request: StudentSkipRequestPayload
+  ): Promise<StudyTaskSummaryResponse>;
+  cancelSkipRequest(taskId: number): Promise<StudyTaskSummaryResponse>;
 }

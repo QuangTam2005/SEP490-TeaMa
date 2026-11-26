@@ -68,6 +68,15 @@ public class StudyAccessGuard {
         }
     }
 
+    public void assertStudentHasActiveGuardian(Long studentId) {
+        if (guardianLinkRepository.findAllByStudentIdAndStatus(studentId, GuardianLinkStatus.ACTIVE).isEmpty()) {
+            throw new AppException(
+                    ErrorCode.VALIDATION_FAILED,
+                    "Con cần liên kết với tài khoản Phụ huynh trước khi gửi đơn xin bỏ qua"
+            );
+        }
+    }
+
     public StudentProfile requireLinkedStudentForGuardian(Long guardianUserId) {
         return requireLinkedStudentForGuardian(guardianUserId, null);
     }

@@ -3,8 +3,10 @@ package com.asc.studycompanion.module.study.controller;
 import com.asc.studycompanion.common.dto.ApiResponse;
 import com.asc.studycompanion.common.exception.AppException;
 import com.asc.studycompanion.common.exception.ErrorCode;
+import com.asc.studycompanion.module.study.dto.StudentSkipRequestDto;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskDetailResponse;
+import com.asc.studycompanion.module.study.dto.StudyTaskSummaryResponse;
 import com.asc.studycompanion.module.study.dto.SubmitStudyRequest;
 import com.asc.studycompanion.module.study.service.StudySubmissionService;
 import com.asc.studycompanion.module.study.service.StudyTaskService;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -59,5 +62,30 @@ public class StudyTaskController {
         );
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Nộp bài thành công", created));
+    }
+
+    @PostMapping("/{taskId}/skip-request")
+    public ResponseEntity<ApiResponse<StudyTaskSummaryResponse>> requestSkip(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long taskId,
+            @Valid @RequestBody StudentSkipRequestDto request
+    ) {
+        if (principal == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        StudyTaskSummaryResponse updated = studyTaskService.requestSkip(principal.getId(), taskId, request);
+        return ResponseEntity.ok(ApiResponse.ok("Đã gửi xin phép bỏ qua tới phụ huynh", updated));
+    }
+
+    @DeleteMapping("/{taskId}/skip-request")
+    public ResponseEntity<ApiResponse<StudyTaskSummaryResponse>> cancelSkipRequest(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long taskId
+    ) {
+        if (principal == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        StudyTaskSummaryResponse updated = studyTaskService.cancelSkipRequest(principal.getId(), taskId);
+        return ResponseEntity.ok(ApiResponse.ok("Đã hủy yêu cầu xin bỏ qua", updated));
     }
 }

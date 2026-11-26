@@ -8,10 +8,12 @@ import com.asc.studycompanion.common.exception.ErrorCode;
 import com.asc.studycompanion.common.exception.GlobalExceptionHandler;
 import com.asc.studycompanion.module.auth.entity.UserRole;
 import com.asc.studycompanion.module.study.controller.StudyTaskController;
+import com.asc.studycompanion.module.study.dto.StudentSkipRequestDto;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskDetailResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskSummaryResponse;
 import com.asc.studycompanion.module.study.dto.SubmitStudyRequest;
+import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
 import com.asc.studycompanion.module.study.service.StudySubmissionService;
@@ -39,6 +41,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -131,5 +134,32 @@ class StudyTaskControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.version").value(1))
                 .andExpect(jsonPath("$.data.charCount").value(900));
+
+        mockMvc.perform(post("/api/student/tasks/101/skip-request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"ng\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VAL_001"));
+
+        when(studyTaskService.requestSkip(eq(1L), eq(101L), any(StudentSkipRequestDto.class)))
+                .thenReturn(new StudyTaskSummaryResponse(
+                        101L, SubjectCode.MATH, "Toán", StudyTaskType.REVIEW, StudyTaskStatus.NOT_STARTED,
+                        0, 2, null, null, null, null,
+                        SkipRequestStatus.PENDING, "Làm bài tập thầy cô giao", Instant.now(), null
+                ));
+
+        mockMvc.perform(post("/api/student/tasks/101/skip-request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Làm bài tập thầy cô giao\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.skipRequestStatus").value("PENDING"))
+                .andExpect(jsonPath("$.data.skipRequestReason").value("Làm bài tập thầy cô giao"));
+
+        when(studyTaskService.cancelSkipRequest(1L, 101L))
+                .thenReturn(summary);
+
+        mockMvc.perform(delete("/api/student/tasks/101/skip-request"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(101));
     }
 }

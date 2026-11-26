@@ -12,6 +12,7 @@ import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianAcknowledgeResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianDashboardResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianEvaluationSummary;
+import com.asc.studycompanion.module.guardian.dto.GuardianSkipReviewRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianSkipTaskResponse;
 import com.asc.studycompanion.module.guardian.dto.GuardianSubmissionDetailResponse;
@@ -20,6 +21,7 @@ import com.asc.studycompanion.module.guardian.dto.GuardianWeeklyDaySummary;
 import com.asc.studycompanion.module.guardian.dto.GuardianWeeklySubjectStat;
 import com.asc.studycompanion.module.guardian.dto.GuardianWeeklySummaryResponse;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
+import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudyPlan;
 import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
@@ -178,7 +180,11 @@ public class GuardianService {
                     task.getRevisionCount(),
                     evalSummary,
                     task.getGuardianAcknowledgedAt(),
-                    task.getGuardianNote()
+                    task.getGuardianNote(),
+                    task.getSkipRequestStatus(),
+                    task.getSkipRequestReason(),
+                    task.getSkipRequestedAt(),
+                    task.getSkipReviewedAt()
             ));
         }
 
@@ -279,25 +285,89 @@ public class GuardianService {
         studyAccessGuard.assertGuardianCanReadStudent(guardianUserId, task.getPlan().getStudent().getId());
 
         boolean shouldSkip = request == null || request.skipped();
-        boolean hasSubmission = studySubmissionRepository.existsByTaskId(taskId)
+        assertTaskHasNoSubmission(task, shouldSkip
+                ? "Không thể bỏ qua bài học đã được học sinh nộp"
+                : "Không thể khôi phục bài học đã có bài nộp");
+
+        String normalizedNote = (request != null && request.note() != null)
+                ? (request.note().isBlank() ? null : request.note().trim())
+                : null;
+
+        if (shouldSkip) {
+            if (task.getSkipRequestStatus() == SkipRequestStatus.PENDING) {
+                task.setSkipRequestStatus(SkipRequestStatus.APPROVED);
+                task.setSkipReviewedAt(Instant.now());
+                task.setSkipReviewedByUserId(guardianUserId);
+            }
+            applySkipDecision(task, true, normalizedNote, false);
+        } else {
+            task.setSkipRequestStatus(null);
+            task.setSkipRequestReason(null);
+            task.setSkipRequestedAt(null);
+            task.setSkipReviewedAt(null);
+            task.setSkipReviewedByUserId(null);
+            applySkipDecision(task, false, null, true);
+        }
+
+        return toSkipResponse(task);
+    }
+
+    @Transactional
+    public GuardianSkipTaskResponse reviewSkipRequest(
+            Long guardianUserId,
+            Long taskId,
+            GuardianSkipReviewRequest request
+    ) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
+        studyAccessGuard.assertGuardianCanReadStudent(guardianUserId, task.getPlan().getStudent().getId());
+
+        if (task.getSkipRequestStatus() != SkipRequestStatus.PENDING) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Yêu cầu xin bỏ qua này không còn ở trạng thái chờ duyệt");
+        }
+        assertTaskHasNoSubmission(task, "Học sinh đã nộp bài cho nhiệm vụ này");
+
+        boolean approved = request != null && Boolean.TRUE.equals(request.approved());
+        String normalizedNote = (request != null && request.note() != null && !request.note().isBlank())
+                ? request.note().trim()
+                : null;
+
+        task.setSkipReviewedAt(Instant.now());
+        task.setSkipReviewedByUserId(guardianUserId);
+
+        if (approved) {
+            task.setSkipRequestStatus(SkipRequestStatus.APPROVED);
+            applySkipDecision(task, true, normalizedNote, false);
+        } else {
+            task.setSkipRequestStatus(SkipRequestStatus.REJECTED);
+            task.setGuardianNote(normalizedNote);
+            studyTaskRepository.save(task);
+        }
+
+        return toSkipResponse(task);
+    }
+
+    private void assertTaskHasNoSubmission(StudyTask task, String message) {
+        boolean hasSubmission = studySubmissionRepository.existsByTaskId(task.getId())
                 || task.getStatus() == StudyTaskStatus.SUBMITTED
                 || task.getStatus() == StudyTaskStatus.EVALUATING
                 || task.getStatus() == StudyTaskStatus.EVALUATED
                 || task.getStatus() == StudyTaskStatus.EVALUATION_FAILED;
-
         if (hasSubmission) {
-            throw new AppException(
-                    ErrorCode.VALIDATION_FAILED,
-                    shouldSkip
-                            ? "Không thể bỏ qua bài học đã được học sinh nộp"
-                            : "Không thể khôi phục bài học đã có bài nộp"
-            );
+            throw new AppException(ErrorCode.VALIDATION_FAILED, message);
         }
+    }
 
+    private void applySkipDecision(
+            StudyTask task,
+            boolean shouldSkip,
+            String note,
+            boolean clearNoteWhenRestoring
+    ) {
         if (shouldSkip) {
             task.setStatus(StudyTaskStatus.SKIPPED);
-            if (request != null && request.note() != null) {
-                task.setGuardianNote(request.note().isBlank() ? null : request.note().trim());
+            if (note != null) {
+                task.setGuardianNote(note);
             }
             studyTaskRepository.save(task);
 
@@ -314,41 +384,53 @@ public class GuardianService {
                             }
                         });
             }
-        } else {
-            if (task.getTaskType() == StudyTaskType.REVIEW) {
-                task.setStatus(StudyTaskStatus.NOT_STARTED);
-                task.setGuardianNote(null);
-                studyTaskRepository.save(task);
-
-                studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
-                                task.getPlan().getId(),
-                                task.getSubject().getId(),
-                                StudyTaskType.PREVIEW
-                        )
-                        .ifPresent(preview -> {
-                            if (preview.getStatus() == StudyTaskStatus.NOT_STARTED
-                                    && !studySubmissionRepository.existsByTaskId(preview.getId())) {
-                                preview.setStatus(StudyTaskStatus.BLOCKED);
-                                studyTaskRepository.save(preview);
-                            }
-                        });
-            } else {
-                boolean reviewCleared = studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
-                                task.getPlan().getId(),
-                                task.getSubject().getId(),
-                                StudyTaskType.REVIEW
-                        )
-                        .map(review -> review.getStatus() == StudyTaskStatus.SKIPPED
-                                || studySubmissionRepository.existsByTaskId(review.getId()))
-                        .orElse(true);
-
-                task.setStatus(reviewCleared ? StudyTaskStatus.NOT_STARTED : StudyTaskStatus.BLOCKED);
-                task.setGuardianNote(null);
-                studyTaskRepository.save(task);
-            }
+            return;
         }
 
-        return new GuardianSkipTaskResponse(task.getId(), task.getStatus(), task.getGuardianNote());
+        if (clearNoteWhenRestoring) {
+            task.setGuardianNote(null);
+        }
+        if (task.getTaskType() == StudyTaskType.REVIEW) {
+            task.setStatus(StudyTaskStatus.NOT_STARTED);
+            studyTaskRepository.save(task);
+
+            studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
+                            task.getPlan().getId(),
+                            task.getSubject().getId(),
+                            StudyTaskType.PREVIEW
+                    )
+                    .ifPresent(preview -> {
+                        if (preview.getStatus() == StudyTaskStatus.NOT_STARTED
+                                && !studySubmissionRepository.existsByTaskId(preview.getId())) {
+                            preview.setStatus(StudyTaskStatus.BLOCKED);
+                            studyTaskRepository.save(preview);
+                        }
+                    });
+        } else {
+            boolean reviewCleared = studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(
+                            task.getPlan().getId(),
+                            task.getSubject().getId(),
+                            StudyTaskType.REVIEW
+                    )
+                    .map(review -> review.getStatus() == StudyTaskStatus.SKIPPED
+                            || studySubmissionRepository.existsByTaskId(review.getId()))
+                    .orElse(true);
+
+            task.setStatus(reviewCleared ? StudyTaskStatus.NOT_STARTED : StudyTaskStatus.BLOCKED);
+            studyTaskRepository.save(task);
+        }
+    }
+
+    private static GuardianSkipTaskResponse toSkipResponse(StudyTask task) {
+        return new GuardianSkipTaskResponse(
+                task.getId(),
+                task.getStatus(),
+                task.getGuardianNote(),
+                task.getSkipRequestStatus(),
+                task.getSkipRequestReason(),
+                task.getSkipRequestedAt(),
+                task.getSkipReviewedAt()
+        );
     }
 
     @Transactional

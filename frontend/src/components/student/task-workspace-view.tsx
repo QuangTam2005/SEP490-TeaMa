@@ -29,6 +29,7 @@ import { Label } from '@/components/ui/label';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
+import { SkipRequestDialog } from '@/components/student/skip-request-dialog';
 import {
   MAX_FEEDBACK_CHARS,
   MAX_POST_EVAL_REVISIONS,
@@ -47,7 +48,7 @@ import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
 import { IS_MOCK_MODE, studyService } from '@/services';
 import { useAuthStore } from '@/store/auth-store';
-import type { StudySubmissionResponse } from '@/types';
+import type { StudySubmissionResponse, StudyTaskSummaryResponse } from '@/types';
 
 interface TaskWorkspaceViewProps {
   taskId: number;
@@ -265,6 +266,9 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [isComposing, setIsComposing] = useState(true);
   const [selectedVersionId, setSelectedVersionId] = useState<number | null>(null);
+  const [skipTarget, setSkipTarget] = useState<StudyTaskSummaryResponse | null>(
+    null
+  );
   const [pendingKey, setPendingKey] = useState<string>(() =>
     createIdempotencyKey(taskId, 1)
   );
@@ -427,6 +431,35 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
     },
   });
 
+  const requestSkipMutation = useMutation({
+    mutationFn: ({ targetTaskId, reason }: { targetTaskId: number; reason: string }) =>
+      studyService.requestSkip(targetTaskId, { reason }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['student-task', taskId] });
+      void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+      setSkipTarget(null);
+      toast.success('Đã gửi yêu cầu xin bỏ qua tới phụ huynh');
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
+
+  const cancelSkipMutation = useMutation({
+    mutationFn: (targetTaskId: number) =>
+      studyService.cancelSkipRequest(targetTaskId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['student-task', taskId] });
+      void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+      void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+      toast.success('Đã hủy yêu cầu xin bỏ qua');
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
+
   const normalizedCount = countNormalizedChars(content);
   const lengthValid = isValidStudyLength(content);
   const progressPct = Math.min(
@@ -552,13 +585,59 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                       {task.subjectName} trước nhé.
                     </p>
                   </div>
-                  <Button asChild className="h-11 gap-2">
-                    <Link href="/student/today">Về danh sách bài học</Link>
-                  </Button>
+                  {task.skipRequestStatus === 'PENDING' && task.skipRequestReason ? (
+                    <div className="w-full space-y-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-left text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                      <p className="font-semibold">Đang chờ phụ huynh duyệt xin bỏ qua</p>
+                      <p className="break-words [overflow-wrap:anywhere]">
+                        Lý do: &ldquo;{task.skipRequestReason}&rdquo;
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={cancelSkipMutation.isPending}
+                        onClick={() => cancelSkipMutation.mutate(task.id)}
+                        className="h-9 bg-background text-xs"
+                      >
+                        {cancelSkipMutation.isPending ? 'Đang hủy...' : 'Hủy xin bỏ qua'}
+                      </Button>
+                    </div>
+                  ) : null}
+                  {task.skipRequestStatus === 'REJECTED' ? (
+                    <div className="w-full rounded-lg border border-rose-200 bg-rose-50/60 p-3 text-left text-xs text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
+                      <p className="font-semibold">Phụ huynh chưa đồng ý bỏ qua</p>
+                      {task.guardianNote ? (
+                        <p className="mt-1 break-words [overflow-wrap:anywhere]">
+                          Lời nhắn: &ldquo;{task.guardianNote}&rdquo;
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+                    <Button asChild className="h-11 gap-2">
+                      <Link href="/student/today">Về danh sách bài học</Link>
+                    </Button>
+                    {task.skipRequestStatus !== 'PENDING' ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11"
+                        onClick={() => setSkipTarget(task)}
+                      >
+                        {task.skipRequestStatus === 'REJECTED'
+                          ? 'Gửi lại xin bỏ qua'
+                          : 'Xin bỏ qua phần Soạn bài mới'}
+                      </Button>
+                    ) : null}
+                  </div>
                 </CardContent>
               </Card>
             );
           }
+
+          const canRequestSkipHere =
+            submissions.length === 0 &&
+            (task.status === 'NOT_STARTED' || task.status === 'IN_PROGRESS');
 
           return (
             <div className="space-y-6">
@@ -580,6 +659,11 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                       )}
                     </Badge>
                     <StatusBadge status={task.status} />
+                    {task.skipRequestStatus === 'PENDING' ? (
+                      <Badge variant="warning" className="whitespace-nowrap">
+                        Chờ PH duyệt bỏ qua
+                      </Badge>
+                    ) : null}
                   </div>
                   <h1 className="break-words text-xl font-bold tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-2xl">
                     {activeSubmission?.lessonTitle ??
@@ -595,8 +679,53 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                     Phiên bản: {submissions.length}/3 (đã sửa{' '}
                     {task.revisionCount}/{task.maxRevisions} lần)
                   </span>
+                  {canRequestSkipHere && task.skipRequestStatus !== 'PENDING' ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-9"
+                      onClick={() => setSkipTarget(task)}
+                    >
+                      {task.skipRequestStatus === 'REJECTED'
+                        ? 'Gửi lại xin bỏ qua'
+                        : 'Xin phụ huynh bỏ qua'}
+                    </Button>
+                  ) : null}
                 </div>
               </div>
+
+              {task.skipRequestStatus === 'PENDING' && task.skipRequestReason ? (
+                <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="font-semibold">Đang chờ phụ huynh duyệt yêu cầu bỏ qua</p>
+                    <p className="break-words text-xs [overflow-wrap:anywhere]">
+                      Lý do đã gửi: &ldquo;{task.skipRequestReason}&rdquo; (Con vẫn có thể viết và nộp bài nếu đổi ý).
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={cancelSkipMutation.isPending}
+                    onClick={() => cancelSkipMutation.mutate(task.id)}
+                    className="h-9 shrink-0 bg-background"
+                  >
+                    {cancelSkipMutation.isPending ? 'Đang hủy...' : 'Hủy xin bỏ qua'}
+                  </Button>
+                </div>
+              ) : null}
+
+              {task.skipRequestStatus === 'REJECTED' ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm text-rose-900 dark:border-rose-900/60 dark:bg-rose-950/25 dark:text-rose-200">
+                  <p className="font-semibold">Phụ huynh chưa đồng ý bỏ qua bài học này</p>
+                  {task.guardianNote ? (
+                    <p className="mt-0.5 break-words text-xs [overflow-wrap:anywhere]">
+                      Lời nhắn của phụ huynh: &ldquo;{task.guardianNote}&rdquo;
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               {task.guardianAcknowledgedAt ? (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">
@@ -908,6 +1037,20 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
           );
         }}
       </QueryStateBoundary>
+
+      <SkipRequestDialog
+        task={skipTarget}
+        open={Boolean(skipTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSkipTarget(null);
+          }
+        }}
+        isSubmitting={requestSkipMutation.isPending}
+        onSubmit={(targetTaskId, reason) =>
+          requestSkipMutation.mutate({ targetTaskId, reason })
+        }
+      />
     </div>
   );
 }

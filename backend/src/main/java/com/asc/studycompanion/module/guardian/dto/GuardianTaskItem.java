@@ -1,5 +1,6 @@
 package com.asc.studycompanion.module.guardian.dto;
 
+import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
 import com.asc.studycompanion.module.study.entity.StudyTaskType;
 import com.asc.studycompanion.module.timetable.entity.SubjectCode;
@@ -22,7 +23,11 @@ public record GuardianTaskItem(
         Integer revisionCount,
         GuardianEvaluationSummary evaluation,
         Instant guardianAcknowledgedAt,
-        String guardianNote
+        String guardianNote,
+        SkipRequestStatus skipRequestStatus,
+        String skipRequestReason,
+        Instant skipRequestedAt,
+        Instant skipReviewedAt
 ) {
     public GuardianTaskItem(
             Long taskId,
@@ -47,6 +52,10 @@ public record GuardianTaskItem(
                 lessonTitle,
                 revisionCount,
                 evaluation,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null
         );

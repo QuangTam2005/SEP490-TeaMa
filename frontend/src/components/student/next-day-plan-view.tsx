@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowRight,
   BookOpenCheck,
@@ -14,11 +15,14 @@ import {
   SkipForward,
   Sparkles,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { StatusBadge } from '@/components/shared/status-badge';
+import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
+import { SkipRequestDialog } from '@/components/student/skip-request-dialog';
 import { formatViDate } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
@@ -29,15 +33,27 @@ function TaskActionButton({
   task,
   stepLabel,
   stepNumber,
+  onOpenSkipDialog,
+  onCancelSkip,
+  isCancellingSkip,
 }: {
   task: StudyTaskSummaryResponse;
   stepLabel: string;
   stepNumber: 1 | 2;
+  onOpenSkipDialog: (task: StudyTaskSummaryResponse) => void;
+  onCancelSkip: (taskId: number) => void;
+  isCancellingSkip: boolean;
 }) {
   const isBlocked = task.status === 'BLOCKED';
   const isSkipped = task.status === 'SKIPPED';
   const isDone = task.status === 'EVALUATED';
   const isEvaluating = task.status === 'EVALUATING';
+  const isPendingSkip = task.skipRequestStatus === 'PENDING' && !isSkipped;
+  const isRejectedSkip = task.skipRequestStatus === 'REJECTED' && !isSkipped;
+  const canRequestSkip =
+    task.status === 'NOT_STARTED' ||
+    task.status === 'IN_PROGRESS' ||
+    task.status === 'BLOCKED';
 
   return (
     <div
@@ -51,7 +67,7 @@ function TaskActionButton({
       )}
     >
       <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-brand-strong dark:text-sky-300">
             {stepNumber === 1 ? (
               <BookOpenCheck className="h-4 w-4" strokeWidth={1.75} />
@@ -60,7 +76,14 @@ function TaskActionButton({
             )}
             Bước {stepNumber}: {stepLabel}
           </span>
-          <StatusBadge status={task.status} />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <StatusBadge status={task.status} />
+            {isPendingSkip ? (
+              <Badge variant="warning" className="whitespace-nowrap">
+                Chờ PH duyệt bỏ qua
+              </Badge>
+            ) : null}
+          </div>
         </div>
 
         <p className="text-sm font-medium text-foreground">
@@ -74,10 +97,46 @@ function TaskActionButton({
                   : 'Đọc trước và ghi ý chính bài học mới')}
         </p>
 
+        {isSkipped && task.skipRequestReason ? (
+          <p className="break-words rounded-lg border bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground [overflow-wrap:anywhere]">
+            Lý do đã xin: &ldquo;{task.skipRequestReason}&rdquo;
+          </p>
+        ) : null}
+
         {isSkipped && task.guardianNote ? (
-          <p className="rounded-lg border bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+          <p className="break-words rounded-lg border bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground [overflow-wrap:anywhere]">
             Ghi chú phụ huynh: &ldquo;{task.guardianNote}&rdquo;
           </p>
+        ) : null}
+
+        {isPendingSkip && task.skipRequestReason ? (
+          <div className="space-y-1.5 rounded-lg border border-amber-200 bg-amber-50/70 px-2.5 py-2 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            <p className="font-semibold">Đang xin phụ huynh bỏ qua</p>
+            <p className="break-words [overflow-wrap:anywhere]">
+              Lý do: &ldquo;{task.skipRequestReason}&rdquo;
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={isCancellingSkip}
+              onClick={() => onCancelSkip(task.id)}
+              className="h-8 bg-background text-xs"
+            >
+              {isCancellingSkip ? 'Đang hủy...' : 'Hủy xin bỏ qua'}
+            </Button>
+          </div>
+        ) : null}
+
+        {isRejectedSkip ? (
+          <div className="space-y-1 rounded-lg border border-rose-200 bg-rose-50/60 px-2.5 py-2 text-xs text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
+            <p className="font-semibold">Phụ huynh chưa đồng ý bỏ qua</p>
+            {task.guardianNote ? (
+              <p className="break-words [overflow-wrap:anywhere]">
+                Lời nhắn: &ldquo;{task.guardianNote}&rdquo;
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         {task.revisionCount > 0 ? (
@@ -87,7 +146,7 @@ function TaskActionButton({
           </p>
         ) : null}
 
-        {!isSkipped && task.guardianAcknowledgedAt ? (
+        {!isSkipped && !isRejectedSkip && task.guardianAcknowledgedAt ? (
           <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-2.5 py-1.5 text-xs text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200">
             <p className="font-semibold">Phụ huynh đã xem bài</p>
             {task.guardianNote ? (
@@ -99,52 +158,70 @@ function TaskActionButton({
         ) : null}
       </div>
 
-      {isSkipped ? (
-        <Button
-          type="button"
-          variant="outline"
-          disabled
-          className="h-11 w-full justify-center gap-2"
-        >
-          <SkipForward className="h-4 w-4" strokeWidth={1.75} />
-          Không cần làm hôm nay
-        </Button>
-      ) : isBlocked ? (
-        <Button
-          type="button"
-          variant="outline"
-          disabled
-          className="h-11 w-full justify-center gap-2"
-        >
-          <Lock className="h-4 w-4" strokeWidth={1.75} />
-          Chờ hoàn thành Ôn bài cũ
-        </Button>
-      ) : (
-        <Button
-          asChild
-          variant={isDone ? 'outline' : 'default'}
-          className="h-11 w-full justify-between px-4 text-sm font-semibold"
-        >
-          <Link href={`/student/tasks/${task.id}`}>
-            <span>
-              {isEvaluating
-                ? 'Xem trạng thái AI'
-                : isDone
-                  ? 'Xem nhận xét / Sửa bài'
-                  : task.status === 'EVALUATION_FAILED'
-                    ? 'Mở bài & Thử đánh giá lại'
-                    : 'Bắt đầu làm bài'}
-            </span>
-            <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
-          </Link>
-        </Button>
-      )}
+      <div className="space-y-2">
+        {isSkipped ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled
+            className="h-11 w-full justify-center gap-2"
+          >
+            <SkipForward className="h-4 w-4" strokeWidth={1.75} />
+            Không cần làm hôm nay
+          </Button>
+        ) : isBlocked ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled
+            className="h-11 w-full justify-center gap-2"
+          >
+            <Lock className="h-4 w-4" strokeWidth={1.75} />
+            Chờ hoàn thành Ôn bài cũ
+          </Button>
+        ) : (
+          <Button
+            asChild
+            variant={isDone ? 'outline' : 'default'}
+            className="h-11 w-full justify-between px-4 text-sm font-semibold"
+          >
+            <Link href={`/student/tasks/${task.id}`}>
+              <span>
+                {isEvaluating
+                  ? 'Xem trạng thái AI'
+                  : isDone
+                    ? 'Xem nhận xét / Sửa bài'
+                    : task.status === 'EVALUATION_FAILED'
+                      ? 'Mở bài & Thử đánh giá lại'
+                      : 'Bắt đầu làm bài'}
+              </span>
+              <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+            </Link>
+          </Button>
+        )}
+
+        {canRequestSkip && !isPendingSkip ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenSkipDialog(task)}
+            className="h-9 w-full text-xs text-muted-foreground hover:text-foreground"
+          >
+            {isRejectedSkip ? 'Gửi lại lý do xin bỏ qua' : 'Xin phụ huynh bỏ qua...'}
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }
 
 export function NextDayPlanView() {
   const runtime = useMockRuntime();
+  const queryClient = useQueryClient();
+  const [skipTarget, setSkipTarget] = useState<StudyTaskSummaryResponse | null>(
+    null
+  );
 
   const planQuery = useQuery({
     queryKey: ['next-day-plan', runtime.resetCounter, runtime.scenario, runtime.simulatedRole],
@@ -162,6 +239,36 @@ export function NextDayPlanView() {
   const streakQuery = useQuery({
     queryKey: ['student-streak', runtime.resetCounter, runtime.scenario, runtime.simulatedRole],
     queryFn: () => studyService.getStreak(),
+  });
+
+  const invalidateSkipRelatedQueries = () => {
+    void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
+    void queryClient.invalidateQueries({ queryKey: ['student-task'] });
+    void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+  };
+
+  const requestSkipMutation = useMutation({
+    mutationFn: ({ taskId, reason }: { taskId: number; reason: string }) =>
+      studyService.requestSkip(taskId, { reason }),
+    onSuccess: () => {
+      invalidateSkipRelatedQueries();
+      setSkipTarget(null);
+      toast.success('Đã gửi yêu cầu xin bỏ qua tới phụ huynh');
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
+
+  const cancelSkipMutation = useMutation({
+    mutationFn: (taskId: number) => studyService.cancelSkipRequest(taskId),
+    onSuccess: () => {
+      invalidateSkipRelatedQueries();
+      toast.success('Đã hủy yêu cầu xin bỏ qua');
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
   });
 
   return (
@@ -265,11 +372,23 @@ export function NextDayPlanView() {
                         task={pair.reviewTask}
                         stepLabel="Ôn bài cũ"
                         stepNumber={1}
+                        onOpenSkipDialog={setSkipTarget}
+                        onCancelSkip={(id) => cancelSkipMutation.mutate(id)}
+                        isCancellingSkip={
+                          cancelSkipMutation.isPending &&
+                          cancelSkipMutation.variables === pair.reviewTask.id
+                        }
                       />
                       <TaskActionButton
                         task={pair.previewTask}
                         stepLabel="Soạn bài mới"
                         stepNumber={2}
+                        onOpenSkipDialog={setSkipTarget}
+                        onCancelSkip={(id) => cancelSkipMutation.mutate(id)}
+                        isCancellingSkip={
+                          cancelSkipMutation.isPending &&
+                          cancelSkipMutation.variables === pair.previewTask.id
+                        }
                       />
                     </CardContent>
                   </Card>
@@ -279,6 +398,20 @@ export function NextDayPlanView() {
           );
         }}
       </QueryStateBoundary>
+
+      <SkipRequestDialog
+        task={skipTarget}
+        open={Boolean(skipTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSkipTarget(null);
+          }
+        }}
+        isSubmitting={requestSkipMutation.isPending}
+        onSubmit={(taskId, reason) =>
+          requestSkipMutation.mutate({ taskId, reason })
+        }
+      />
     </div>
   );
 }

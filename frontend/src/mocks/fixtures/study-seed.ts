@@ -438,6 +438,10 @@ export function buildGuardianDashboardFromBuckets(
       revisionCount: detail.task.revisionCount,
       guardianAcknowledgedAt: detail.task.guardianAcknowledgedAt ?? null,
       guardianNote: detail.task.guardianNote ?? null,
+      skipRequestStatus: detail.task.skipRequestStatus ?? null,
+      skipRequestReason: detail.task.skipRequestReason ?? null,
+      skipRequestedAt: detail.task.skipRequestedAt ?? null,
+      skipReviewedAt: detail.task.skipReviewedAt ?? null,
       evaluation: evaluation
         ? {
             accuracy: evaluation.accuracy,

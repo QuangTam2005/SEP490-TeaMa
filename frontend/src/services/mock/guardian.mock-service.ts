@@ -19,6 +19,7 @@ import type {
   GuardianAcknowledgeRequest,
   GuardianAcknowledgeResponse,
   GuardianDashboardResponse,
+  GuardianSkipReviewRequest,
   GuardianSkipTaskRequest,
   GuardianSkipTaskResponse,
   GuardianSubmissionDetailResponse,
@@ -158,6 +159,10 @@ export const guardianMockService: GuardianService = {
 
             if (shouldSkip) {
               detail.task.status = 'SKIPPED';
+              if (detail.task.skipRequestStatus === 'PENDING') {
+                detail.task.skipRequestStatus = 'APPROVED';
+                detail.task.skipReviewedAt = new Date().toISOString();
+              }
               if (normalizedNote) {
                 detail.task.guardianNote = normalizedNote;
               }
@@ -169,6 +174,10 @@ export const guardianMockService: GuardianService = {
               }
             } else {
               detail.task.guardianNote = null;
+              detail.task.skipRequestStatus = null;
+              detail.task.skipRequestReason = null;
+              detail.task.skipRequestedAt = null;
+              detail.task.skipReviewedAt = null;
               if (detail.task.taskType === 'REVIEW') {
                 detail.task.status = 'NOT_STARTED';
                 if (
@@ -189,6 +198,70 @@ export const guardianMockService: GuardianService = {
               taskId,
               status: detail.task.status,
               guardianNote: detail.task.guardianNote ?? null,
+              skipRequestStatus: detail.task.skipRequestStatus ?? null,
+              skipRequestReason: detail.task.skipRequestReason ?? null,
+              skipRequestedAt: detail.task.skipRequestedAt ?? null,
+              skipReviewedAt: detail.task.skipReviewedAt ?? null,
+            };
+          }
+        }
+        throw new ApiClientError({
+          status: 404,
+          errorCode: 'STUDY_001',
+          message: 'Không tìm thấy nhiệm vụ học tập.',
+        });
+      },
+      { requireRole: 'GUARDIAN' }
+    );
+  },
+
+  async reviewSkipRequest(
+    taskId: number,
+    request: GuardianSkipReviewRequest
+  ): Promise<GuardianSkipTaskResponse> {
+    return runMockOperation(
+      () => {
+        const state = getMockStudyState();
+        const normalizedNote = request.note?.trim() || null;
+
+        for (const bucket of state.buckets) {
+          for (const detail of [bucket.reviewTask, bucket.previewTask]) {
+            if (detail.task.id !== taskId) {
+              continue;
+            }
+            if (detail.task.skipRequestStatus !== 'PENDING') {
+              throw new ApiClientError({
+                status: 400,
+                errorCode: 'VAL_001',
+                message: 'Yêu cầu xin bỏ qua này không còn ở trạng thái chờ duyệt.',
+              });
+            }
+            const reviewedAt = new Date().toISOString();
+            detail.task.skipReviewedAt = reviewedAt;
+            if (request.approved) {
+              detail.task.skipRequestStatus = 'APPROVED';
+              detail.task.status = 'SKIPPED';
+              if (normalizedNote) {
+                detail.task.guardianNote = normalizedNote;
+              }
+              if (detail.task.taskType === 'REVIEW') {
+                bucket.previewTask.reviewCompleted = true;
+                if (bucket.previewTask.task.status === 'BLOCKED') {
+                  bucket.previewTask.task.status = 'NOT_STARTED';
+                }
+              }
+            } else {
+              detail.task.skipRequestStatus = 'REJECTED';
+              detail.task.guardianNote = normalizedNote;
+            }
+            return {
+              taskId,
+              status: detail.task.status,
+              guardianNote: detail.task.guardianNote ?? null,
+              skipRequestStatus: detail.task.skipRequestStatus ?? null,
+              skipRequestReason: detail.task.skipRequestReason ?? null,
+              skipRequestedAt: detail.task.skipRequestedAt ?? null,
+              skipReviewedAt: detail.task.skipReviewedAt ?? null,
             };
           }
         }

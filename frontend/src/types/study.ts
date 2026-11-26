@@ -3,6 +3,8 @@ import type { SubjectCode } from './timetable';
 
 export type StudyTaskType = 'REVIEW' | 'PREVIEW';
 
+export type SkipRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export type StudyTaskStatus =
   | 'NOT_STARTED'
   | 'IN_PROGRESS'
@@ -38,6 +40,14 @@ export interface StudyTaskSummaryResponse {
   latestEvaluationStatus: AIEvaluationResponse['overallStatus'] | null;
   guardianAcknowledgedAt?: string | null;
   guardianNote?: string | null;
+  skipRequestStatus?: SkipRequestStatus | null;
+  skipRequestReason?: string | null;
+  skipRequestedAt?: string | null;
+  skipReviewedAt?: string | null;
+}
+
+export interface StudentSkipRequestPayload {
+  reason: string;
 }
 
 export interface NextDaySubjectPair {

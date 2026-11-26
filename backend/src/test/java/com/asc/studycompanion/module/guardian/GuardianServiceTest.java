@@ -13,8 +13,10 @@ import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
 import com.asc.studycompanion.module.auth.entity.StudentProfile;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
 import com.asc.studycompanion.module.guardian.dto.GuardianDashboardResponse;
+import com.asc.studycompanion.module.guardian.dto.GuardianSkipReviewRequest;
 import com.asc.studycompanion.module.guardian.dto.GuardianSubmissionDetailResponse;
 import com.asc.studycompanion.module.guardian.service.GuardianService;
+import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudyPlan;
 import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
@@ -318,5 +320,56 @@ class GuardianServiceTest {
         GuardianDashboardResponse pastDashboard = guardianService.getDashboard(2L, yesterday, "ALL");
         assertEquals(0, pastDashboard.totalTasks());
         verify(studyPlanRepository, times(1)).saveAndFlush(any(StudyPlan.class));
+    }
+
+    @Test
+    void guardianCanRejectAndApproveStudentSkipRequest() {
+        StudentProfile student = StudentProfile.builder().id(10L).displayName("Khoi").grade(7).build();
+        Subject math = Subject.builder().id(1L).code(SubjectCode.MATH).name("Toán").build();
+        StudyPlan plan = StudyPlan.builder().id(20L).student(student).targetDate(LocalDate.of(2026, 11, 27)).build();
+        StudyTask review = StudyTask.builder()
+                .id(101L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.NOT_STARTED)
+                .skipRequestStatus(SkipRequestStatus.PENDING)
+                .skipRequestReason("Làm bài tập cô giao")
+                .skipRequestedAt(Instant.now())
+                .build();
+        StudyTask preview = StudyTask.builder()
+                .id(102L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.PREVIEW)
+                .status(StudyTaskStatus.BLOCKED)
+                .build();
+
+        when(studyTaskRepository.findById(101L)).thenReturn(Optional.of(review));
+        when(studySubmissionRepository.existsByTaskId(101L)).thenReturn(false);
+        when(studyTaskRepository.findByPlanIdAndSubjectIdAndTaskType(20L, 1L, StudyTaskType.PREVIEW))
+                .thenReturn(Optional.of(preview));
+
+        var rejected = guardianService.reviewSkipRequest(
+                2L,
+                101L,
+                new GuardianSkipReviewRequest(false, "Con vẫn tóm tắt nhanh 5 dòng nhé")
+        );
+        assertEquals(StudyTaskStatus.NOT_STARTED, rejected.status());
+        assertEquals(SkipRequestStatus.REJECTED, rejected.skipRequestStatus());
+        assertEquals("Con vẫn tóm tắt nhanh 5 dòng nhé", rejected.guardianNote());
+        assertEquals(StudyTaskStatus.BLOCKED, preview.getStatus());
+
+        // Student resubmits skip request -> Guardian approves -> SKIPPED & unlocks sibling PREVIEW
+        review.setSkipRequestStatus(SkipRequestStatus.PENDING);
+        var approved = guardianService.reviewSkipRequest(
+                2L,
+                101L,
+                new GuardianSkipReviewRequest(true, "Đồng ý cho con làm phiếu bài tập")
+        );
+        assertEquals(StudyTaskStatus.SKIPPED, approved.status());
+        assertEquals(SkipRequestStatus.APPROVED, approved.skipRequestStatus());
+        assertEquals("Đồng ý cho con làm phiếu bài tập", approved.guardianNote());
+        assertEquals(StudyTaskStatus.NOT_STARTED, preview.getStatus());
     }
 }

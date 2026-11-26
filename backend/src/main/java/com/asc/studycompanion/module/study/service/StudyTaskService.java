@@ -9,9 +9,11 @@ import com.asc.studycompanion.module.ai.entity.EvaluationJob;
 import com.asc.studycompanion.module.ai.repository.AIEvaluationRepository;
 import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
 import com.asc.studycompanion.module.auth.service.StudyAccessGuard;
+import com.asc.studycompanion.module.study.dto.StudentSkipRequestDto;
 import com.asc.studycompanion.module.study.dto.StudySubmissionResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskDetailResponse;
 import com.asc.studycompanion.module.study.dto.StudyTaskSummaryResponse;
+import com.asc.studycompanion.module.study.entity.SkipRequestStatus;
 import com.asc.studycompanion.module.study.entity.StudySubmission;
 import com.asc.studycompanion.module.study.entity.StudyTask;
 import com.asc.studycompanion.module.study.entity.StudyTaskStatus;
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -72,18 +75,10 @@ public class StudyTaskService {
                 .findFirst()
                 .orElse(submissionResponses.isEmpty() ? null : submissionResponses.get(0));
 
-        StudyTaskSummaryResponse summary = new StudyTaskSummaryResponse(
-                task.getId(),
-                task.getSubject().getCode(),
-                task.getSubject().getName(),
-                task.getTaskType(),
-                task.getStatus(),
-                task.getRevisionCount(),
-                StudyTask.MAX_REVISIONS,
+        StudyTaskSummaryResponse summary = StudyTaskSummaryResponse.from(
+                task,
                 current != null ? current.lessonTitle() : null,
-                (current != null && current.evaluation() != null) ? current.evaluation().overallStatus() : null,
-                task.getGuardianAcknowledgedAt(),
-                task.getGuardianNote()
+                (current != null && current.evaluation() != null) ? current.evaluation().overallStatus() : null
         );
 
         return new StudyTaskDetailResponse(
@@ -92,6 +87,66 @@ public class StudyTaskService {
                 reviewCompleted,
                 submissionResponses
         );
+    }
+
+    @Transactional
+    public StudyTaskSummaryResponse requestSkip(
+            Long studentUserId,
+            Long taskId,
+            StudentSkipRequestDto request
+    ) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
+        Long studentId = task.getPlan().getStudent().getId();
+        studyAccessGuard.assertStudentOwner(studentUserId, studentId);
+        studyAccessGuard.assertStudentHasActiveGuardian(studentId);
+
+        if (task.getStatus() == StudyTaskStatus.SKIPPED) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Bài học này đã được phụ huynh đánh dấu bỏ qua");
+        }
+
+        boolean hasSubmission = studySubmissionRepository.existsByTaskId(taskId)
+                || task.getStatus() == StudyTaskStatus.SUBMITTED
+                || task.getStatus() == StudyTaskStatus.EVALUATING
+                || task.getStatus() == StudyTaskStatus.EVALUATED
+                || task.getStatus() == StudyTaskStatus.EVALUATION_FAILED;
+        if (hasSubmission) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Không thể xin bỏ qua bài học đã nộp bài");
+        }
+
+        String normalizedReason = request != null && request.reason() != null ? request.reason().trim() : "";
+        if (normalizedReason.length() < 5 || normalizedReason.length() > 300) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Lý do xin bỏ qua phải từ 5 đến 300 ký tự");
+        }
+
+        task.setSkipRequestStatus(SkipRequestStatus.PENDING);
+        task.setSkipRequestReason(normalizedReason);
+        task.setSkipRequestedAt(Instant.now());
+        task.setSkipReviewedAt(null);
+        task.setSkipReviewedByUserId(null);
+        studyTaskRepository.save(task);
+
+        return StudyTaskSummaryResponse.from(task, null, null);
+    }
+
+    @Transactional
+    public StudyTaskSummaryResponse cancelSkipRequest(Long studentUserId, Long taskId) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.STUDY_TASK_NOT_FOUND));
+        studyAccessGuard.assertStudentOwner(studentUserId, task.getPlan().getStudent().getId());
+
+        if (task.getSkipRequestStatus() != SkipRequestStatus.PENDING) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Chỉ có thể hủy yêu cầu xin bỏ qua đang chờ phụ huynh duyệt");
+        }
+
+        task.setSkipRequestStatus(null);
+        task.setSkipRequestReason(null);
+        task.setSkipRequestedAt(null);
+        task.setSkipReviewedAt(null);
+        task.setSkipReviewedByUserId(null);
+        studyTaskRepository.save(task);
+
+        return StudyTaskSummaryResponse.from(task, null, null);
     }
 
     private boolean isReviewCompleted(StudyTask task, List<StudySubmission> taskSubmissions) {

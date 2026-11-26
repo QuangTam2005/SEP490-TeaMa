@@ -55,7 +55,7 @@
 5. **`timetables`**: `id`, `student_id REFERENCES student_profiles(id)`, `effective_date DATE`, `version INT`, `status` (`ACTIVE` | `ARCHIVED`), `updated_by_user_id REFERENCES users(id)`, `created_at`, `updated_at`.
 6. **`timetable_entries`**: `id`, `timetable_id REFERENCES timetables(id)`, `weekday INT` (`1..7`, Mon–Sun), `subject_id REFERENCES subjects(id)`, `period_note VARCHAR(120)`.
 7. **`study_plans`**: `id`, `student_id REFERENCES student_profiles(id)`, `target_date DATE`, `timetable_id REFERENCES timetables(id)`, `created_at`, `UNIQUE (student_id, target_date)`.
-8. **`study_tasks`**: `id`, `plan_id REFERENCES study_plans(id)`, `subject_id REFERENCES subjects(id)`, `task_type VARCHAR(20)` (`REVIEW` | `PREVIEW`), `status VARCHAR(30)` (`NOT_STARTED` | `IN_PROGRESS` | `SUBMITTED` | `EVALUATING` | `EVALUATED` | `EVALUATION_FAILED` | `BLOCKED` | `SKIPPED`), `revision_count INT DEFAULT 0 CHECK (revision_count BETWEEN 0 AND 2)`, `created_at`, `updated_at`, `UNIQUE (plan_id, subject_id, task_type)`.
+8. **`study_tasks`**: `id`, `plan_id REFERENCES study_plans(id)`, `subject_id REFERENCES subjects(id)`, `task_type VARCHAR(20)` (`REVIEW` | `PREVIEW`), `status VARCHAR(30)` (`NOT_STARTED` | `IN_PROGRESS` | `SUBMITTED` | `EVALUATING` | `EVALUATED` | `EVALUATION_FAILED` | `BLOCKED` | `SKIPPED`), `revision_count INT DEFAULT 0 CHECK (revision_count BETWEEN 0 AND 2)`, `guardian_acknowledged_at`, `guardian_note VARCHAR(300)`, `guardian_acknowledged_by_user_id`, `skip_request_status VARCHAR(20)` (`PENDING` | `APPROVED` | `REJECTED`), `skip_request_reason VARCHAR(300)`, `skip_requested_at`, `skip_reviewed_at`, `skip_reviewed_by_user_id`, `created_at`, `updated_at`, `UNIQUE (plan_id, subject_id, task_type)`.
 9. **`study_submissions`**: `id`, `task_id REFERENCES study_tasks(id)`, `version INT NOT NULL CHECK (version BETWEEN 1 AND 3)`, `is_current BOOLEAN NOT NULL DEFAULT TRUE`, `lesson_title VARCHAR(255) NOT NULL`, `content TEXT NOT NULL`, `char_count INT NOT NULL`, `idempotency_key VARCHAR(64) UNIQUE`, `submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 10. **`ai_evaluations`**: `id`, `submission_id UNIQUE REFERENCES study_submissions(id)`, `accuracy VARCHAR(30)`, `completeness VARCHAR(30)`, `overall_status VARCHAR(30)`, `feedback VARCHAR(1000)`, `incorrect_points JSONB`, `missing_points JSONB`, `confidence VARCHAR(20)`, `raw_sanitized_response JSONB`, `evaluated_at TIMESTAMPTZ`.
 11. **`source_references`**: `id`, `evaluation_id REFERENCES ai_evaluations(id)`, `title VARCHAR(255)`, `url VARCHAR(1000)`, `snippet TEXT`, `retrieved_at TIMESTAMPTZ`.
@@ -85,6 +85,8 @@
 | `GET` | `/api/student/plans/next-day` | Lấy (hoặc tự tạo) kế hoạch ngày học kế tiếp theo `Asia/Ho_Chi_Minh` (học hôm trước để chuẩn bị cho ngày mai) | `STUDENT` |
 | `GET` | `/api/student/tasks/{taskId}` | Chi tiết nhiệm vụ, các phiên bản Submission (`v1..v3`) & Evaluation hiện hành | `STUDENT` (Owner) |
 | `POST` | `/api/student/tasks/{taskId}/submissions` | Submit bài (`400–3,000` chars, kiểm tra `REVIEW` trước `PREVIEW`, tối đa 3 phiên bản `v1..v3`, `Idempotency-Key`) | `STUDENT` (Owner) |
+| `POST` | `/api/student/tasks/{taskId}/skip-request` | Student gửi đơn xin phụ huynh bỏ qua bài học kèm lý do (`5–300` ký tự) | `STUDENT` (Owner + Linked Guardian) |
+| `DELETE` | `/api/student/tasks/{taskId}/skip-request` | Student tự hủy đơn xin bỏ qua đang `PENDING` | `STUDENT` (Owner) |
 | `POST` | `/api/student/submissions/{submissionId}/retry-evaluation` | Thử đánh giá lại khi job bị `EVALUATION_FAILED` | `STUDENT` (Owner) |
 
 ### 3. Guardian Read-Only Dashboard (`GUARDIAN`)
@@ -92,4 +94,5 @@
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/guardian/dashboard` | Tổng quan theo ngày/tuần, lọc theo `date` & `subjectCode` (chỉ Student đã liên kết) | `GUARDIAN` |
 | `POST` | `/api/guardian/tasks/{taskId}/skip` | Phụ huynh đánh dấu bỏ qua (`SKIPPED`) hoặc khôi phục bài chưa nộp (`REVIEW` skipped tự mở khóa `PREVIEW`) | `GUARDIAN` (Linked) |
+| `POST` | `/api/guardian/tasks/{taskId}/skip-request/review` | Phụ huynh duyệt (`approved=true/false`) kèm lời nhắn cho đơn xin bỏ qua của con | `GUARDIAN` (Linked) |
 | `GET` | `/api/guardian/submissions/{submissionId}` | Chi tiết bài viết gốc bất biến, lịch sử phiên bản, kết quả AI & nguồn tham khảo | `GUARDIAN` (Linked) |
