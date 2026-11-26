@@ -42,6 +42,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -164,7 +165,7 @@ class StudyTaskControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(101));
 
-        when(studyTaskService.submitCustomTask(eq(1L), eq(101L), any(StudentCustomSubmitRequest.class)))
+        when(studyTaskService.submitCustomTask(eq(1L), eq(101L), nullable(StudentCustomSubmitRequest.class)))
                 .thenReturn(new StudyTaskSummaryResponse(
                         101L, SubjectCode.MATH, "Toán", StudyTaskType.REVIEW, StudyTaskStatus.SUBMITTED,
                         0, 2, null, null, null, null, null, null, null, null,
@@ -179,10 +180,15 @@ class StudyTaskControllerTest {
                 .andExpect(jsonPath("$.data.status").value("SUBMITTED"))
                 .andExpect(jsonPath("$.data.assignmentMode").value("CUSTOM_DRIVE"));
 
-        // Negative validation on custom-submission (short note & >500-char URL)
+        // 1-click confirmation without body or note succeeds cleanly
+        mockMvc.perform(post("/api/student/tasks/101/custom-submission"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("SUBMITTED"));
+
+        // Negative validation on custom-submission (>300-char note & >500-char URL)
         mockMvc.perform(post("/api/student/tasks/101/custom-submission")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"submissionNote\":\"ok\"}"))
+                        .content("{\"submissionNote\":\"" + "a".repeat(301) + "\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("VAL_001"));
 

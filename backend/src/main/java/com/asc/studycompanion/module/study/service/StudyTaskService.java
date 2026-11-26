@@ -179,10 +179,11 @@ public class StudyTaskService {
             throw new AppException(ErrorCode.REVIEW_REQUIRED_BEFORE_PREVIEW);
         }
 
-        String note = request != null && request.submissionNote() != null ? request.submissionNote().trim() : "";
-        if (note.length() < 5 || note.length() > 300) {
-            throw new AppException(ErrorCode.VALIDATION_FAILED, "Ghi chú nộp bài phải từ 5 đến 300 ký tự");
+        String rawNote = request != null && request.submissionNote() != null ? request.submissionNote().trim() : "";
+        if (rawNote.length() > 300) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Ghi chú nộp bài tối đa 300 ký tự");
         }
+        String note = rawNote.isEmpty() ? null : rawNote;
 
         String validatedFileUrl = normalizeOptionalHttpUrl(request != null ? request.driveFileUrl() : null);
 

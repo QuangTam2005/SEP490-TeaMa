@@ -61,7 +61,7 @@ export interface StudentSkipRequestPayload {
 }
 
 export interface StudentCustomSubmitPayload {
-  submissionNote: string;
+  submissionNote?: string | null;
   driveFileUrl?: string | null;
 }
 

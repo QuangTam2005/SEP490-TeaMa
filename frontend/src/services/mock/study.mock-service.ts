@@ -697,14 +697,15 @@ export const studyMockService: StudyService = {
             message: 'Con cần nộp bài Ôn bài cũ trước khi làm Soạn bài mới nhé.',
           });
         }
-        const note = request.submissionNote.trim();
-        if (note.length < 5 || note.length > 300) {
+        const rawNote = request.submissionNote?.trim() ?? '';
+        if (rawNote.length > 300) {
           throw new ApiClientError({
             status: 400,
             errorCode: 'VAL_001',
-            message: 'Ghi chú nộp bài phải từ 5 đến 300 ký tự.',
+            message: 'Ghi chú nộp bài tối đa 300 ký tự.',
           });
         }
+        const note = rawNote.length > 0 ? rawNote : null;
         const rawFileUrl = request.driveFileUrl?.trim() || null;
         if (rawFileUrl) {
           let isValidHttps = false;

@@ -13,6 +13,7 @@ import {
   Flame,
   FolderUp,
   History,
+  Loader2,
   Lock,
   SkipForward,
   Sparkles,
@@ -38,6 +39,8 @@ function TaskActionButton({
   onOpenSkipDialog,
   onCancelSkip,
   isCancellingSkip,
+  onConfirmCustomTask,
+  isConfirmingCustom,
 }: {
   task: StudyTaskSummaryResponse;
   stepLabel: string;
@@ -45,6 +48,8 @@ function TaskActionButton({
   onOpenSkipDialog: (task: StudyTaskSummaryResponse) => void;
   onCancelSkip: (taskId: number) => void;
   isCancellingSkip: boolean;
+  onConfirmCustomTask: (taskId: number) => void;
+  isConfirmingCustom: boolean;
 }) {
   const isBlocked = task.status === 'BLOCKED';
   const isSkipped = task.status === 'SKIPPED';
@@ -188,6 +193,15 @@ function TaskActionButton({
           </p>
         ) : null}
 
+        {!isSkipped && !isRejectedSkip && task.status === 'IN_PROGRESS' && task.guardianNote ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50/70 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            <p className="font-semibold">Phụ huynh nhắc làm lại</p>
+            <p className="mt-0.5 break-words [overflow-wrap:anywhere]">
+              &ldquo;{task.guardianNote}&rdquo;
+            </p>
+          </div>
+        ) : null}
+
         {!isSkipped && !isRejectedSkip && task.guardianAcknowledgedAt ? (
           <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-2.5 py-1.5 text-xs text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200">
             <p className="font-semibold">Phụ huynh đã xem bài</p>
@@ -221,6 +235,38 @@ function TaskActionButton({
             <Lock className="h-4 w-4" strokeWidth={1.75} />
             Chờ hoàn thành Ôn bài cũ
           </Button>
+        ) : isCustomDrive ? (
+          task.status === 'SUBMITTED' || isDone ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled
+              className="h-11 w-full justify-center gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
+              {isDone ? 'Đã hoàn thành' : 'Đã xác nhận · Chờ PH duyệt'}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              disabled={isConfirmingCustom}
+              onClick={() => onConfirmCustomTask(task.id)}
+              className="h-11 w-full justify-center gap-2 text-sm font-semibold"
+            >
+              {isConfirmingCustom ? (
+                <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
+              )}
+              <span>
+                {task.status === 'IN_PROGRESS'
+                  ? 'Xác nhận đã làm lại'
+                  : task.customDriveFolderUrl
+                    ? 'Xác nhận đã nộp bài'
+                    : 'Xác nhận đã hoàn thành'}
+              </span>
+            </Button>
+          )
         ) : (
           <Button
             asChild
@@ -229,29 +275,13 @@ function TaskActionButton({
           >
             <Link href={`/student/tasks/${task.id}`}>
               <span>
-                {isCustomDrive
-                  ? task.status === 'SUBMITTED'
-                    ? task.customDriveFolderUrl
-                      ? 'Đã nộp Drive · Xem lại'
-                      : 'Đã xác nhận · Xem lại'
-                    : isDone
-                      ? task.customDriveFolderUrl
-                        ? 'Đã hoàn thành bài Drive'
-                        : 'Đã hoàn thành nhiệm vụ'
-                      : task.status === 'IN_PROGRESS'
-                        ? task.customDriveFolderUrl
-                          ? 'Bổ sung & nộp lại Drive'
-                          : 'Thực hiện & xác nhận lại'
-                        : task.customDriveFolderUrl
-                          ? 'Làm bài & nộp lên Drive'
-                          : 'Thực hiện & xác nhận xong'
-                  : isEvaluating
-                    ? 'Xem trạng thái AI'
-                    : isDone
-                      ? 'Xem nhận xét / Sửa bài'
-                      : task.status === 'EVALUATION_FAILED'
-                        ? 'Mở bài & Thử đánh giá lại'
-                        : 'Bắt đầu làm bài'}
+                {isEvaluating
+                  ? 'Xem trạng thái AI'
+                  : isDone
+                    ? 'Xem nhận xét / Sửa bài'
+                    : task.status === 'EVALUATION_FAILED'
+                      ? 'Mở bài & Thử đánh giá lại'
+                      : 'Bắt đầu làm bài'}
               </span>
               <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
             </Link>
@@ -304,7 +334,24 @@ export function NextDayPlanView() {
     void queryClient.invalidateQueries({ queryKey: ['student-task'] });
     void queryClient.invalidateQueries({ queryKey: ['student-history'] });
     void queryClient.invalidateQueries({ queryKey: ['guardian-dashboard'] });
+    void queryClient.invalidateQueries({ queryKey: ['guardian-weekly'] });
+    void queryClient.invalidateQueries({ queryKey: ['student-streak'] });
   };
+
+  const confirmCustomMutation = useMutation({
+    mutationFn: (taskId: number) => studyService.submitCustomTask(taskId, {}),
+    onSuccess: (updated) => {
+      invalidateSkipRelatedQueries();
+      toast.success(
+        updated.customDriveFolderUrl
+          ? 'Đã xác nhận nộp bài lên Drive cho phụ huynh!'
+          : 'Đã xác nhận hoàn thành nhiệm vụ cho phụ huynh!'
+      );
+    },
+    onError: (err) => {
+      toast.error(extractApiErrorMessage(err));
+    },
+  });
 
   const requestSkipMutation = useMutation({
     mutationFn: ({ taskId, reason }: { taskId: number; reason: string }) =>
@@ -437,6 +484,11 @@ export function NextDayPlanView() {
                           cancelSkipMutation.isPending &&
                           cancelSkipMutation.variables === pair.reviewTask.id
                         }
+                        onConfirmCustomTask={(id) => confirmCustomMutation.mutate(id)}
+                        isConfirmingCustom={
+                          confirmCustomMutation.isPending &&
+                          confirmCustomMutation.variables === pair.reviewTask.id
+                        }
                       />
                       <TaskActionButton
                         task={pair.previewTask}
@@ -447,6 +499,11 @@ export function NextDayPlanView() {
                         isCancellingSkip={
                           cancelSkipMutation.isPending &&
                           cancelSkipMutation.variables === pair.previewTask.id
+                        }
+                        onConfirmCustomTask={(id) => confirmCustomMutation.mutate(id)}
+                        isConfirmingCustom={
+                          confirmCustomMutation.isPending &&
+                          confirmCustomMutation.variables === pair.previewTask.id
                         }
                       />
                     </CardContent>

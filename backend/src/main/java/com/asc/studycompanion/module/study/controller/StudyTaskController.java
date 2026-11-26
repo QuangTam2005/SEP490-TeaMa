@@ -94,12 +94,15 @@ public class StudyTaskController {
     public ResponseEntity<ApiResponse<StudyTaskSummaryResponse>> submitCustomTask(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long taskId,
-            @Valid @RequestBody StudentCustomSubmitRequest request
+            @Valid @RequestBody(required = false) StudentCustomSubmitRequest request
     ) {
         if (principal == null) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         StudyTaskSummaryResponse updated = studyTaskService.submitCustomTask(principal.getId(), taskId, request);
-        return ResponseEntity.ok(ApiResponse.ok("Đã gửi xác nhận nộp bài lên Google Drive", updated));
+        String msg = updated != null && updated.customDriveFolderUrl() != null
+                ? "Đã xác nhận nộp bài lên Google Drive"
+                : "Đã xác nhận hoàn thành nhiệm vụ";
+        return ResponseEntity.ok(ApiResponse.ok(msg, updated));
     }
 }

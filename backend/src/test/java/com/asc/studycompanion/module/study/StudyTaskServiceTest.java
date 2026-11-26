@@ -242,6 +242,21 @@ class StudyTaskServiceTest {
                         new StudentCustomSubmitRequest("Con đã nộp bài", "javascript:alert(1)")));
         assertEquals(ErrorCode.VALIDATION_FAILED, badSchemeEx.getErrorCode());
 
+        // 1-click confirmation without submissionNote succeeds cleanly
+        StudyTask customNoNote = StudyTask.builder()
+                .id(204L)
+                .plan(plan)
+                .subject(math)
+                .taskType(StudyTaskType.REVIEW)
+                .status(StudyTaskStatus.NOT_STARTED)
+                .assignmentMode(TaskAssignmentMode.CUSTOM_DRIVE)
+                .customTaskTitle("Xem hết video bài học")
+                .build();
+        when(studyTaskRepository.findById(204L)).thenReturn(Optional.of(customNoNote));
+        StudyTaskSummaryResponse noNoteRes = studyTaskService.submitCustomTask(1L, 204L, null);
+        assertEquals(StudyTaskStatus.SUBMITTED, noNoteRes.status());
+        assertNull(noNoteRes.customSubmissionNote());
+
         // Regression: after Guardian returns a submitted custom task for revision (IN_PROGRESS + customSubmittedAt != null),
         // Student cannot open a deadlock PENDING skip request.
         StudyTask customInRevision = StudyTask.builder()
