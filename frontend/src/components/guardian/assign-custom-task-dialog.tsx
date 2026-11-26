@@ -19,6 +19,7 @@ import type {
 } from '@/types';
 
 const QUICK_CUSTOM_TASKS = [
+  { label: 'Xem video bài học', title: 'Xem hết video bài học & ghi nhớ ý chính' },
   { label: 'Làm phiếu bài tập', title: 'Làm phiếu bài tập & nộp lên Drive' },
   { label: 'Bài tập SGK/SBT', title: 'Giải bài tập SGK/SBT & nộp lên Drive' },
   { label: 'Viết ra vở', title: 'Viết/tóm tắt ra vở & chụp ảnh gửi Drive' },
@@ -50,9 +51,11 @@ export function AssignCustomTaskDialog({
     if (open && task) {
       setTitle(task.customTaskTitle ?? '');
       setDescription(task.customTaskDescription ?? '');
-      setDriveFolderUrl(
-        task.customDriveFolderUrl ?? defaultDriveFolderUrl ?? ''
-      );
+      const initialUrl =
+        task.assignmentMode === 'CUSTOM_DRIVE'
+          ? (task.customDriveFolderUrl ?? '')
+          : (defaultDriveFolderUrl ?? '');
+      setDriveFolderUrl(initialUrl);
       setSaveAsDefault(!defaultDriveFolderUrl);
     }
   }, [open, task, defaultDriveFolderUrl]);
@@ -65,13 +68,15 @@ export function AssignCustomTaskDialog({
   const trimmedDesc = description.trim();
   const trimmedUrl = driveFolderUrl.trim();
   const isUrlValid =
-    trimmedUrl.startsWith('https://') && trimmedUrl.length >= 12;
+    trimmedUrl.length === 0 ||
+    (trimmedUrl.startsWith('https://') &&
+      trimmedUrl.length >= 12 &&
+      trimmedUrl.length <= 500);
   const isValid =
     trimmedTitle.length >= 5 &&
     trimmedTitle.length <= 200 &&
     trimmedDesc.length <= 500 &&
-    isUrlValid &&
-    trimmedUrl.length <= 500;
+    isUrlValid;
 
   const taskLabel = task.taskType === 'REVIEW' ? 'Ôn bài cũ' : 'Soạn bài mới';
 
@@ -84,7 +89,7 @@ export function AssignCustomTaskDialog({
             Giao bài thay thế · {task.subjectName}
           </DialogTitle>
           <DialogDescription>
-            Thay phần <strong>{taskLabel}</strong> · Học sinh nộp bài qua Google Drive.
+            Thay phần <strong>{taskLabel}</strong> bằng nhiệm vụ phụ huynh tự giao.
           </DialogDescription>
         </DialogHeader>
 
@@ -142,18 +147,22 @@ export function AssignCustomTaskDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="custom-drive-url">Link thư mục Google Drive *</Label>
+            <Label htmlFor="custom-drive-url">
+              Link thư mục Google Drive (tùy chọn)
+            </Label>
             <Input
               id="custom-drive-url"
               type="url"
               maxLength={500}
               value={driveFolderUrl}
               onChange={(e) => setDriveFolderUrl(e.target.value)}
-              placeholder="https://drive.google.com/drive/folders/..."
+              placeholder="Bỏ trống nếu không cần nộp ảnh/file lên Drive..."
             />
-            <p className="text-xs text-muted-foreground">
-              Mở quyền chỉnh sửa cho &ldquo;Bất kỳ ai có đường liên kết&rdquo;.
-            </p>
+            {trimmedUrl.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Mở quyền chỉnh sửa cho &ldquo;Bất kỳ ai có đường liên kết&rdquo;.
+              </p>
+            ) : null}
             {trimmedUrl.length > 0 && !isUrlValid ? (
               <p className="text-xs text-rose-600 dark:text-rose-400">
                 Link phải bắt đầu bằng https://
@@ -161,15 +170,17 @@ export function AssignCustomTaskDialog({
             ) : null}
           </div>
 
-          <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-foreground">
-            <input
-              type="checkbox"
-              checked={saveAsDefault}
-              onChange={(e) => setSaveAsDefault(e.target.checked)}
-              className="h-4 w-4 rounded border"
-            />
-            Lưu làm link Drive mặc định
-          </label>
+          {trimmedUrl.length > 0 ? (
+            <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-foreground">
+              <input
+                type="checkbox"
+                checked={saveAsDefault}
+                onChange={(e) => setSaveAsDefault(e.target.checked)}
+                className="h-4 w-4 rounded border"
+              />
+              Lưu làm link Drive mặc định
+            </label>
+          ) : null}
         </div>
 
         <DialogFooter>
@@ -190,8 +201,8 @@ export function AssignCustomTaskDialog({
               onSubmit(task.taskId, {
                 title: trimmedTitle,
                 description: trimmedDesc || null,
-                driveFolderUrl: trimmedUrl,
-                saveAsDefaultDriveFolder: saveAsDefault,
+                driveFolderUrl: trimmedUrl || null,
+                saveAsDefaultDriveFolder: Boolean(trimmedUrl) && saveAsDefault,
               })
             }
           >

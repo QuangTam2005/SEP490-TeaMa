@@ -50,10 +50,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -402,6 +404,21 @@ class GuardianServiceTest {
                 )
         );
         assertEquals(ErrorCode.VALIDATION_FAILED, invalidUrl.getErrorCode());
+
+        var videoOnly = guardianService.assignCustomTask(
+                2L,
+                101L,
+                new GuardianAssignCustomTaskRequest(
+                        "Xem hết video bài học Toán từ Vietjack",
+                        "Ghi lại 3 công thức chính vào vở",
+                        "   ",
+                        true
+                )
+        );
+        assertEquals(TaskAssignmentMode.CUSTOM_DRIVE, videoOnly.assignmentMode());
+        assertEquals("Xem hết video bài học Toán từ Vietjack", videoOnly.customTaskTitle());
+        assertNull(videoOnly.customDriveFolderUrl());
+        verify(studyAccessGuard, never()).updateDefaultDriveFolderUrl(any(), any(), any());
 
         var assigned = guardianService.assignCustomTask(
                 2L,

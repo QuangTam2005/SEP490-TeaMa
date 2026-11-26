@@ -456,7 +456,7 @@ public class GuardianService {
         if (normalizedDesc != null && normalizedDesc.length() > 500) {
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Hướng dẫn chi tiết tối đa 500 ký tự");
         }
-        String validatedDriveUrl = validateRequiredDriveFolderUrl(request != null ? request.driveFolderUrl() : null);
+        String normalizedDriveUrl = normalizeOptionalDriveFolderUrl(request != null ? request.driveFolderUrl() : null);
 
         if (task.getStatus() == StudyTaskStatus.SKIPPED) {
             applySkipDecision(task, false, null, false);
@@ -472,13 +472,13 @@ public class GuardianService {
         task.setAssignmentMode(TaskAssignmentMode.CUSTOM_DRIVE);
         task.setCustomTaskTitle(normalizedTitle);
         task.setCustomTaskDescription(normalizedDesc);
-        task.setCustomDriveFolderUrl(validatedDriveUrl);
+        task.setCustomDriveFolderUrl(normalizedDriveUrl);
         task.setCustomAssignedByUserId(guardianUserId);
         task.setCustomAssignedAt(Instant.now());
         studyTaskRepository.save(task);
 
-        if (Boolean.TRUE.equals(request.saveAsDefaultDriveFolder())) {
-            studyAccessGuard.updateDefaultDriveFolderUrl(guardianUserId, studentId, validatedDriveUrl);
+        if (normalizedDriveUrl != null && Boolean.TRUE.equals(request.saveAsDefaultDriveFolder())) {
+            studyAccessGuard.updateDefaultDriveFolderUrl(guardianUserId, studentId, normalizedDriveUrl);
         }
 
         return GuardianTaskItem.from(task, null, null, null);
@@ -549,9 +549,12 @@ public class GuardianService {
         return GuardianTaskItem.from(task, null, null, null);
     }
 
-    private static String validateRequiredDriveFolderUrl(String rawUrl) {
-        String trimmed = rawUrl == null ? "" : rawUrl.trim();
-        if (trimmed.isEmpty() || trimmed.length() > 500) {
+    private static String normalizeOptionalDriveFolderUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return null;
+        }
+        String trimmed = rawUrl.trim();
+        if (trimmed.length() > 500) {
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Link thư mục Google Drive không hợp lệ (tối đa 500 ký tự)");
         }
         try {

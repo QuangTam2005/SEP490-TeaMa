@@ -688,6 +688,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
               trimmedCustomNote.length >= 5 &&
               trimmedCustomNote.length <= 300 &&
               customFileUrlValid;
+            const hasDriveFolder = Boolean(task.customDriveFolderUrl);
             const isSubmittedOrDone =
               task.status === 'SUBMITTED' || task.status === 'EVALUATED';
 
@@ -725,7 +726,11 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
 
                 {task.status === 'IN_PROGRESS' && task.guardianNote ? (
                   <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-                    <p className="font-semibold">Phụ huynh nhắc con bổ sung lại bài trên Drive</p>
+                    <p className="font-semibold">
+                      {hasDriveFolder
+                        ? 'Phụ huynh nhắc con bổ sung lại bài trên Drive'
+                        : 'Phụ huynh nhắc con thực hiện hoặc bổ sung lại'}
+                    </p>
                     <p className="mt-0.5 break-words text-xs [overflow-wrap:anywhere]">
                       Lời nhắn: &ldquo;{task.guardianNote}&rdquo;
                     </p>
@@ -750,7 +755,9 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-lg">
                           <FolderUp className="h-5 w-5 text-brand-strong" />
-                          Nhiệm vụ từ Phụ huynh &amp; Nộp bài Google Drive
+                          {hasDriveFolder
+                            ? 'Nhiệm vụ từ Phụ huynh & Nộp bài Google Drive'
+                            : 'Nhiệm vụ từ Phụ huynh'}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -784,8 +791,12 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                           <div className="space-y-2 rounded-xl border bg-muted/40 p-4 text-sm">
                             <p className="font-semibold text-foreground">
                               {task.status === 'EVALUATED'
-                                ? 'Bài làm qua Drive đã được phụ huynh xác nhận đạt'
-                                : 'Đã nộp bài lên Drive (chờ phụ huynh kiểm tra)'}
+                                ? hasDriveFolder
+                                  ? 'Bài làm qua Drive đã được phụ huynh xác nhận đạt'
+                                  : 'Nhiệm vụ đã được phụ huynh xác nhận đạt'
+                                : hasDriveFolder
+                                  ? 'Đã nộp bài lên Drive (chờ phụ huynh kiểm tra)'
+                                  : 'Đã xác nhận hoàn thành (chờ phụ huynh kiểm tra)'}
                             </p>
                             {task.customSubmissionNote ? (
                               <p className="whitespace-pre-wrap break-words text-muted-foreground [overflow-wrap:anywhere]">
@@ -799,7 +810,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-xs font-semibold text-brand-strong hover:underline dark:text-sky-300"
                               >
-                                Mở link file con đã đính kèm
+                                Mở link đính kèm
                                 <ExternalLink className="h-3.5 w-3.5" />
                               </a>
                             ) : null}
@@ -809,7 +820,9 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                             <div className="space-y-1.5">
                               <div className="flex items-center justify-between">
                                 <Label htmlFor="custom-sub-note">
-                                  Ghi chú bài nộp *
+                                  {hasDriveFolder
+                                    ? 'Ghi chú bài nộp *'
+                                    : 'Ghi chú / Xác nhận hoàn thành *'}
                                 </Label>
                                 <span className="font-mono text-xs text-muted-foreground">
                                   {trimmedCustomNote.length}/300
@@ -821,14 +834,20 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                                 maxLength={300}
                                 value={customNote}
                                 onChange={(e) => setCustomNote(e.target.value)}
-                                placeholder="VD: Đã tải 2 ảnh bài làm lên thư mục Drive..."
+                                placeholder={
+                                  hasDriveFolder
+                                    ? 'VD: Đã tải 2 ảnh bài làm lên thư mục Drive...'
+                                    : 'VD: Con đã xem hết video bài học và ghi chép ý chính...'
+                                }
                                 className="w-full rounded-lg border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
                               />
                             </div>
 
                             <div className="space-y-1.5">
                               <Label htmlFor="custom-sub-url">
-                                Link file Drive (tùy chọn)
+                                {hasDriveFolder
+                                  ? 'Link file Drive (tùy chọn)'
+                                  : 'Link đính kèm (tùy chọn)'}
                               </Label>
                               <Input
                                 id="custom-sub-url"
@@ -836,11 +855,11 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                                 maxLength={500}
                                 value={customFileUrl}
                                 onChange={(e) => setCustomFileUrl(e.target.value)}
-                                placeholder="https://drive.google.com/file/d/..."
+                                placeholder="https://..."
                               />
                               {!customFileUrlValid ? (
                                 <p className="text-xs text-rose-600 dark:text-rose-400">
-                                  Link file phải bắt đầu bằng https://
+                                  Link phải bắt đầu bằng https://
                                 </p>
                               ) : null}
                             </div>
@@ -856,7 +875,9 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                               ) : (
                                 <CheckCircle2 className="h-4 w-4" />
                               )}
-                              Xác nhận đã nộp bài lên Drive
+                              {hasDriveFolder
+                                ? 'Xác nhận đã nộp bài lên Drive'
+                                : 'Xác nhận đã hoàn thành'}
                             </Button>
                           </div>
                         )}

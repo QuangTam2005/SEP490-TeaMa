@@ -355,12 +355,16 @@ export const guardianMockService: GuardianService = {
       () => {
         const state = getMockStudyState();
         const title = request.title.trim();
-        const driveUrl = request.driveFolderUrl.trim();
-        if (title.length < 5 || !driveUrl.startsWith('https://')) {
+        const driveUrl = request.driveFolderUrl?.trim() || null;
+        if (
+          title.length < 5 ||
+          (driveUrl !== null && !driveUrl.startsWith('https://'))
+        ) {
           throw new ApiClientError({
             status: 400,
             errorCode: 'VAL_001',
-            message: 'Vui lòng nhập tiêu đề (>= 5 ký tự) và link Drive https:// hợp lệ.',
+            message:
+              'Vui lòng nhập tiêu đề (>= 5 ký tự) và link Drive https:// hợp lệ (nếu có).',
           });
         }
         for (const bucket of state.buckets) {
@@ -400,7 +404,7 @@ export const guardianMockService: GuardianService = {
             detail.task.customTaskDescription = request.description?.trim() || null;
             detail.task.customDriveFolderUrl = driveUrl;
             detail.task.customAssignedAt = new Date().toISOString();
-            if (request.saveAsDefaultDriveFolder) {
+            if (request.saveAsDefaultDriveFolder && driveUrl) {
               mockDefaultDriveUrl = driveUrl;
             }
             return toGuardianTaskItem(detail);

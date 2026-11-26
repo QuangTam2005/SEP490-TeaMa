@@ -96,6 +96,6 @@
 | `GET` | `/api/guardian/dashboard` | Tổng quan theo ngày/tuần, lọc theo `date` & `subjectCode` (chỉ Student đã liên kết) | `GUARDIAN` |
 | `POST` | `/api/guardian/tasks/{taskId}/skip` | Phụ huynh đánh dấu bỏ qua (`SKIPPED`) hoặc khôi phục bài chưa nộp (`REVIEW` skipped tự mở khóa `PREVIEW`) | `GUARDIAN` (Linked) |
 | `POST` | `/api/guardian/tasks/{taskId}/skip-request/review` | Phụ huynh duyệt (`approved=true/false`) kèm lời nhắn cho đơn xin bỏ qua của con | `GUARDIAN` (Linked) |
-| `POST / DELETE` | `/api/guardian/tasks/{taskId}/custom-task` | Giao nhiệm vụ thay thế kèm link thư mục Google Drive (hoặc gỡ về `STANDARD_AI` trước khi nộp) | `GUARDIAN` (Linked) |
+| `POST / DELETE` | `/api/guardian/tasks/{taskId}/custom-task` | Giao nhiệm vụ thay thế kèm link thư mục Google Drive tùy chọn (hoặc gỡ về `STANDARD_AI` trước khi nộp) | `GUARDIAN` (Linked) |
 | `POST` | `/api/guardian/tasks/{taskId}/custom-task/verify` | Phụ huynh xác nhận đạt (`EVALUATED`) hoặc nhắc làm lại (`IN_PROGRESS`) sau khi xem Drive | `GUARDIAN` (Linked) |
 | `GET` | `/api/guardian/submissions/{submissionId}` | Chi tiết bài viết gốc bất biến, lịch sử phiên bản, kết quả AI & nguồn tham khảo | `GUARDIAN` (Linked) |

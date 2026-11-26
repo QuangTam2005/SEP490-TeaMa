@@ -359,7 +359,7 @@ export function GuardianDashboardView() {
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Badge variant="brand" className="whitespace-nowrap">
-                    PH giao (Drive)
+                    {row.customDriveFolderUrl ? 'PH giao (Drive)' : 'PH giao'}
                   </Badge>
                   {row.customDriveFolderUrl ? (
                     <a
@@ -970,7 +970,7 @@ export function GuardianDashboardView() {
                       <div className="space-y-1.5 rounded-md border border-brand/25 bg-brand-soft/30 px-2.5 py-2 text-xs">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <Badge variant="brand" className="whitespace-nowrap">
-                            PH giao (Drive)
+                            {item.customDriveFolderUrl ? 'PH giao (Drive)' : 'PH giao'}
                           </Badge>
                           {item.customDriveFolderUrl ? (
                             <a
@@ -1115,7 +1115,7 @@ export function GuardianDashboardView() {
                             onClick={() => setAssignTarget(item)}
                           >
                             <FolderUp className="h-4 w-4" />
-                            Giao bài thay thế (Drive)
+                            Giao bài thay thế
                           </Button>
                         ) : null}
                       </div>
@@ -1130,8 +1130,8 @@ export function GuardianDashboardView() {
                           >
                             <FolderUp className="h-4 w-4" />
                             {item.assignmentMode === 'CUSTOM_DRIVE'
-                              ? 'Sửa bài giao (Drive)'
-                              : 'Giao bài thay thế (Drive)'}
+                              ? 'Sửa bài giao'
+                              : 'Giao bài thay thế'}
                           </Button>
                         ) : null}
                         {item.assignmentMode === 'CUSTOM_DRIVE' &&

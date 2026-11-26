@@ -103,7 +103,7 @@ export interface GuardianSkipReviewRequest {
 export interface GuardianAssignCustomTaskRequest {
   title: string;
   description?: string | null;
-  driveFolderUrl: string;
+  driveFolderUrl?: string | null;
   saveAsDefaultDriveFolder?: boolean;
 }
 

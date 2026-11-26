@@ -107,7 +107,11 @@ function TaskActionButton({
                     : 'Đọc trước và ghi ý chính bài học mới')}
         </p>
 
-        {isCustomDrive && !isSkipped ? (
+        {isCustomDrive &&
+        !isSkipped &&
+        (task.customTaskDescription ||
+          task.customDriveFolderUrl ||
+          task.customSubmissionNote) ? (
           <div className="space-y-1.5 rounded-lg border border-brand/25 bg-brand-soft/30 px-2.5 py-2 text-xs">
             {task.customTaskDescription ? (
               <p className="break-words text-muted-foreground [overflow-wrap:anywhere]">
@@ -226,12 +230,20 @@ function TaskActionButton({
               <span>
                 {isCustomDrive
                   ? task.status === 'SUBMITTED'
-                    ? 'Đã nộp Drive · Xem lại'
+                    ? task.customDriveFolderUrl
+                      ? 'Đã nộp Drive · Xem lại'
+                      : 'Đã xác nhận · Xem lại'
                     : isDone
-                      ? 'Đã hoàn thành bài Drive'
+                      ? task.customDriveFolderUrl
+                        ? 'Đã hoàn thành bài Drive'
+                        : 'Đã hoàn thành nhiệm vụ'
                       : task.status === 'IN_PROGRESS'
-                        ? 'Bổ sung & nộp lại Drive'
-                        : 'Làm bài & nộp lên Drive'
+                        ? task.customDriveFolderUrl
+                          ? 'Bổ sung & nộp lại Drive'
+                          : 'Thực hiện & xác nhận lại'
+                        : task.customDriveFolderUrl
+                          ? 'Làm bài & nộp lên Drive'
+                          : 'Thực hiện & xác nhận xong'
                   : isEvaluating
                     ? 'Xem trạng thái AI'
                     : isDone

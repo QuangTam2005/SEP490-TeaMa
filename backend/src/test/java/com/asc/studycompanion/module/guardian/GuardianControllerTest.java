@@ -217,6 +217,12 @@ class GuardianControllerTest {
                 .andExpect(jsonPath("$.data.assignmentMode").value("CUSTOM_DRIVE"))
                 .andExpect(jsonPath("$.data.customDriveFolderUrl").value("https://drive.google.com/drive/folders/abc"));
 
+        mockMvc.perform(post("/api/guardian/tasks/101/custom-task")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Xem hết video bài học Toán\",\"driveFolderUrl\":null}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.assignmentMode").value("CUSTOM_DRIVE"));
+
         when(guardianService.verifyCustomTask(eq(2L), eq(101L), any())).thenReturn(
                 new com.asc.studycompanion.module.guardian.dto.GuardianTaskItem(
                         101L, null, LocalDate.of(2026, 11, 27), SubjectCode.MATH, "Toán",

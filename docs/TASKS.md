@@ -107,7 +107,7 @@
 - [x] `[TASK-FEAT.4a]` *(3 SP)* Xây dựng `RateLimitFilter` (`/api/auth/login`, `/api/auth/register`, submissions -> `429 SYS_429`) & `GET /api/ops/usage` bảo vệ bằng `X-Ops-Secret` + tests
 - [x] `[TASK-FEAT.4b]` *(3 SP)* Kiểm thử toàn bộ Backend (`.\mvnw.cmd clean test`), Frontend (`tsc`, `lint`, `build`), Docker Compose build & cập nhật `docs/PROGRESS.md`
 
-### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(34 subtasks)*
+### Task 15 — Editor Integrity, Widescreen 24-inch, Streak, Subject, AI Policy & Stability Polish *(35 subtasks)*
 - [x] `[TASK-FEAT.5a]` *(2 SP)* Xây dựng hệ thống chống copy/dán vào ô nội dung bài làm (`anti-paste.ts`, `TaskWorkspaceView`: chặn `paste`/`drop`/`contextmenu`/`Ctrl+V`/`beforeinput` & bulk-insert `delta > 30` giữ nguyên bộ gõ Telex/VNI) & đồng bộ `docs/`
 - [x] `[TASK-FEAT.5b]` *(2 SP)* Tối ưu layout responsive màn hình rộng 24 inch (`max-w-[1600px]` cho `StudentShell`/`GuardianShell`/`AuthLayout`/`LinkStudentView`, `lg:` nav breakpoint chống dồn header, `2xl:grid-cols-2`/`8:4` cho `NextDayPlanView`/`StudyHistoryView`/`TaskWorkspaceView`/`SubmissionDetailView`/`ProfileView`)
 - [x] `[TASK-FEAT.5c]` *(2 SP)* Cập nhật logic tính chuỗi học (`StudyPlanService.getStreak`) bỏ qua các ngày nghỉ không có môn trên thời khóa biểu `ACTIVE` (ví dụ T7, CN trống lịch) mà vẫn ngắt chuỗi khi bỏ lỡ ngày có lịch học & bổ sung unit tests (`StudyPlanServiceTest`)
@@ -142,6 +142,7 @@
 - [x] `[TASK-FEAT.6e]` *(1 SP)* Tinh gọn nội dung giải thích/ghi chú thừa chuẩn Minimal-Text trên `AssignCustomTaskDialog`, `SkipRequestDialog`, `GuardianDashboardView` và `TaskWorkspaceView` (`CUSTOM_DRIVE`), thu gọn chip chọn nhanh thành pill 1 dòng và bỏ card hướng dẫn 3 bước dư thừa (`typecheck`, `lint`, `build` `14/14` routes)
 - [x] `[TASK-FEAT.6f]` *(1 SP)* Đổi trạng thái `Nộp qua Drive (không AI)` ở cột `AI Đánh giá` trên `GuardianDashboardView` thành badge `Manual`, đồng thời gộp các nút cột `Thao tác` lên 1 hàng ngang gọn (`flex-nowrap`, `h-8 px-2.5 text-xs`, bỏ icon thừa) (`typecheck`, `lint`, `build` `14/14` routes)
 - [x] `[TASK-FEAT.6g]` *(1 SP)* Đổi nhãn nút xin bỏ qua trên card nhiệm vụ `NextDayPlanView` từ `Xin phụ huynh bỏ qua...` thành `Xin PH bỏ qua phần này...` (`typecheck`, `lint`, `build` `14/14` routes)
+- [x] `[TASK-FEAT.6h]` *(2 SP)* Chuyển link thư mục Google Drive khi Guardian giao nhiệm vụ thay thế sang **tùy chọn** (`GuardianAssignCustomTaskRequest` bỏ `@NotBlank`, `GuardianService.normalizeOptionalDriveFolderUrl` cho phép `null`/trống và không ghi đè `defaultDriveFolderUrl` khi rỗng; FE thêm gợi ý `"Xem video bài học"`, ẩn ô lưu mặc định khi bỏ trống link, điều chỉnh nhãn `PH giao` / `"Xác nhận đã hoàn thành"` trên `GuardianDashboardView`, `NextDayPlanView`, `TaskWorkspaceView` & `guardian.mock-service.ts`) (`111/111` BE tests, `tsc`/`lint`/`build` `14/14` FE routes)
 
 ---
 
