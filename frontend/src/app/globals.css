@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    --font-be-vietnam-pro: 'Be Vietnam Pro';
+    --font-jetbrains-mono: 'JetBrains Mono';
     --canvas: 204 100% 98%;
     --background: 204 100% 98%;
     --foreground: 215 28% 14%;
