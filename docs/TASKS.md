@@ -151,7 +151,7 @@
 ### Task 17 — Trắc nghiệm đầu ngày 2 lựa chọn (Bank, Cổng xoay vòng & Thống kê Phụ huynh) *(3 subtasks)*
 - [x] `[TASK-FEAT.7a]` *(5 SP)* Xây dựng Backend module `quiz` + Flyway `V9__daily_guardian_quiz.sql` (`daily_quiz_settings`, `guardian_quiz_questions`, `daily_quiz_sessions`, `daily_quiz_session_items`), thuật toán xoay vòng tuần tự (`1–10 -> 11–20 -> 21–25 -> 1–10`) theo lịch thứ `T2–CN`, ẩn đáp án trước khi chọn, trả lời tuần tự từng câu, `PESSIMISTIC_WRITE` chống race condition, CRUD/Bulk-Add & Thống kê Guardian (`/api/guardian/quiz/**`, `/api/student/daily-quiz/**`) + unit/controller/schema tests (`120/120` BE tests)
 - [x] `[TASK-FEAT.7b]` *(3 SP)* Xây dựng Frontend DTOs/Services (`quiz.service.ts` HTTP + Mock) và cổng trắc nghiệm đầu ngày bắt buộc cho Student (`DailyQuizGate` trong `StudentShell`: làm từng câu -> Đúng/Sai + giải thích ngay -> hoàn thành mở `/student/today`) (`tsc`/`lint`/`build` `14/14` FE routes)
-- [ ] `[TASK-FEAT.7c]` *(5 SP)* Xây dựng cổng quản lý Bank câu hỏi, cài đặt hiển thị & trang thống kê `/guardian/quiz` (`GuardianQuizView`, `GuardianQuizSettingsPanel`, `GuardianQuizBankPanel` + Bulk Add, `GuardianQuizStatsPanel` + biểu đồ & chi tiết phiên làm bài)
+- [x] `[TASK-FEAT.7c]` *(5 SP)* Xây dựng cổng quản lý Bank câu hỏi, cài đặt hiển thị & trang thống kê `/guardian/quiz` (`GuardianQuizView`, `GuardianQuizSettingsPanel`, `GuardianQuizBankPanel` + Bulk Add, `GuardianQuizStatsPanel` + biểu đồ & chi tiết phiên làm bài) (`120/120` BE tests, `tsc`/`lint`/`build` `15/15` FE routes)
 
 ---
 

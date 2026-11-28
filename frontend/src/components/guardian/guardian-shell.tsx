@@ -8,6 +8,7 @@ import {
   CalendarDays,
   LayoutDashboard,
   Link2,
+  ListChecks,
   LogOut,
   Menu,
   ShieldCheck,
@@ -32,6 +33,11 @@ const GUARDIAN_NAV_ITEMS = [
     href: '/guardian/timetable',
     label: 'Thời khóa biểu',
     icon: CalendarDays,
+  },
+  {
+    href: '/guardian/quiz',
+    label: 'Trắc nghiệm đầu ngày',
+    icon: ListChecks,
   },
 ] as const;
 
