@@ -46,7 +46,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -325,6 +324,7 @@ public class DailyQuizService {
             SubmitDailyQuizAnswerRequest request
     ) {
         StudentProfile student = studyAccessGuard.requireOwnedStudentProfile(studentUserId);
+        lockStudentProfile(student.getId());
 
         DailyQuizSession session = sessionRepository.findByIdForUpdate(sessionId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy phiên trắc nghiệm"));
@@ -840,12 +840,22 @@ public class DailyQuizService {
         if (raw == null || raw.isBlank()) {
             return Set.of(1, 2, 3, 4, 5, 6, 7);
         }
-        return Arrays.stream(raw.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(Integer::valueOf)
-                .filter(d -> d >= 1 && d <= 7)
-                .collect(Collectors.toCollection(TreeSet::new));
+        Set<Integer> parsed = new TreeSet<>();
+        for (String token : raw.split(",")) {
+            String trimmed = token.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            try {
+                int day = Integer.parseInt(trimmed);
+                if (day >= 1 && day <= 7) {
+                    parsed.add(day);
+                }
+            } catch (NumberFormatException ignored) {
+                // Skip malformed weekday tokens instead of failing with 500
+            }
+        }
+        return parsed.isEmpty() ? Set.of(1, 2, 3, 4, 5, 6, 7) : parsed;
     }
 
     private String serializeWeekdays(List<Integer> weekdays) {

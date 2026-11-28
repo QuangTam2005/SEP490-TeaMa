@@ -29,7 +29,8 @@ import { SkipRequestDialog } from '@/components/student/skip-request-dialog';
 import { formatViDate } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
-import { quizService, studyService } from '@/services';
+import { IS_MOCK_MODE, quizService, studyService } from '@/services';
+import { useAuthStore } from '@/store/auth-store';
 import type { StudyTaskSummaryResponse } from '@/types';
 
 function TaskActionButton({
@@ -307,6 +308,11 @@ function TaskActionButton({
 export function NextDayPlanView() {
   const runtime = useMockRuntime();
   const queryClient = useQueryClient();
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+  const user = useAuthStore((state) => state.user);
+  const isStudentReady = IS_MOCK_MODE
+    ? user?.role !== 'GUARDIAN'
+    : isHydrated && user?.role === 'STUDENT';
   const [skipTarget, setSkipTarget] = useState<StudyTaskSummaryResponse | null>(
     null
   );
@@ -314,6 +320,7 @@ export function NextDayPlanView() {
   const planQuery = useQuery({
     queryKey: ['next-day-plan', runtime.resetCounter, runtime.scenario, runtime.simulatedRole],
     queryFn: () => studyService.getNextDayPlan(),
+    enabled: isStudentReady,
     refetchInterval: (query) => {
       const hasEvaluating = query.state.data?.subjects.some(
         (pair) =>
@@ -327,11 +334,13 @@ export function NextDayPlanView() {
   const streakQuery = useQuery({
     queryKey: ['student-streak', runtime.resetCounter, runtime.scenario, runtime.simulatedRole],
     queryFn: () => studyService.getStreak(),
+    enabled: isStudentReady,
   });
 
   const dailyQuizQuery = useQuery({
-    queryKey: ['student-daily-quiz'],
+    queryKey: ['student-daily-quiz', user?.id ?? null],
     queryFn: () => quizService.getTodayQuiz(),
+    enabled: isStudentReady,
   });
 
   const invalidateSkipRelatedQueries = () => {

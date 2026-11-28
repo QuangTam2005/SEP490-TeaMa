@@ -381,7 +381,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                       này trong ngày học {formatViDate(detail.targetDate)}.
                     </p>
                     {task.guardianNote ? (
-                      <p className="mt-2 rounded-lg border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                      <p className="mt-2 break-words rounded-lg border bg-muted/50 px-3 py-2 text-xs text-muted-foreground [overflow-wrap:anywhere]">
                         Ghi chú phụ huynh: &ldquo;{task.guardianNote}&rdquo;
                       </p>
                     ) : null}
@@ -526,7 +526,7 @@ export function TaskWorkspaceView({ taskId }: TaskWorkspaceViewProps) {
                     {new Date(task.guardianAcknowledgedAt).toLocaleString('vi-VN')})
                   </p>
                   {task.guardianNote ? (
-                    <p className="mt-1 text-emerald-800 dark:text-emerald-300">
+                    <p className="mt-1 break-words text-emerald-800 dark:text-emerald-300 [overflow-wrap:anywhere]">
                       Lời nhắn từ bố mẹ: &ldquo;{task.guardianNote}&rdquo;
                     </p>
                   ) : null}

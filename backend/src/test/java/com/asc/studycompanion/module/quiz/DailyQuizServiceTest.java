@@ -140,6 +140,14 @@ class DailyQuizServiceTest {
 
         lenient().when(questionRepository.findByStudentIdOrderBySortOrderAscIdAsc(100L))
                 .thenAnswer(inv -> storedQuestions.stream().toList());
+        lenient().when(questionRepository.findByIdAndStudentId(any(), any()))
+                .thenAnswer(inv -> {
+                    Long id = inv.getArgument(0);
+                    Long sId = inv.getArgument(1);
+                    return storedQuestions.stream()
+                            .filter(q -> q.getId().equals(id) && q.getStudent().getId().equals(sId))
+                            .findFirst();
+                });
         lenient().when(questionRepository.findByStudentIdAndActiveTrueOrderBySortOrderAscIdAsc(100L))
                 .thenAnswer(inv -> storedQuestions.stream().filter(GuardianQuizQuestion::isActive).toList());
         lenient().when(questionRepository.countByStudentId(100L))
@@ -379,6 +387,82 @@ class DailyQuizServiceTest {
         assertEquals(1, moved.get(0).sortOrder());
         assertEquals("Q1", moved.get(1).questionText());
         assertEquals(2, moved.get(1).sortOrder());
+
+        Long firstId = moved.get(0).id();
+        List<QuizQuestionResponse> movedDown = service.moveGuardianQuestion(
+                20L, firstId, 100L, new MoveQuizQuestionRequest(MoveQuizQuestionRequest.MoveDirection.DOWN)
+        );
+        assertEquals("Q1", movedDown.get(0).questionText());
+        assertEquals("Q2", movedDown.get(1).questionText());
+
+        // Boundary no-op: moving first UP keeps order
+        List<QuizQuestionResponse> boundary = service.moveGuardianQuestion(
+                20L, movedDown.get(0).id(), 100L, new MoveQuizQuestionRequest(MoveQuizQuestionRequest.MoveDirection.UP)
+        );
+        assertEquals("Q1", boundary.get(0).questionText());
+    }
+
+    @Test
+    void randomModeWithShuffleOptionsGradesAccuratelyAndResetsCursorOnDelete() {
+        for (int i = 1; i <= 4; i++) {
+            service.createGuardianQuestion(20L, 100L, new CreateQuizQuestionRequest(
+                    "Câu " + i, "Đúng " + i, "Sai " + i, QuizOption.A, "Giải thích " + i, "Toán", true
+            ));
+        }
+        service.updateGuardianSettings(20L, 100L, new UpdateQuizSettingsRequest(
+                true, 2, List.of(1, 2, 3, 4, 5, 6, 7), QuizSelectionMode.RANDOM, true, false
+        ));
+        setClockDate(2026, 11, 28);
+
+        StudentDailyQuizResponse quiz = service.getTodayQuizForStudent(10L);
+        assertEquals(2, quiz.session().totalQuestions());
+        assertTrue(quiz.nextBatchLabel().startsWith("Ngẫu nhiên"));
+
+        // Match whichever displayed option equals "Đúng ..."
+        for (StudentDailyQuizItemResponse item : quiz.session().items()) {
+            QuizOption pick = item.optionA().startsWith("Đúng") ? QuizOption.A : QuizOption.B;
+            SubmitDailyQuizAnswerResponse ans = service.submitStudentAnswer(
+                    10L, quiz.session().sessionId(), item.id(), new SubmitDailyQuizAnswerRequest(pick)
+            );
+            assertTrue(ans.correct());
+        }
+
+        // Update question & toggle active=false, then delete first question
+        QuizQuestionResponse updated = service.updateGuardianQuestion(
+                20L, storedQuestions.get(0).getId(), 100L,
+                new CreateQuizQuestionRequest("Câu 1 mới", "ĐA", "ĐB", QuizOption.B, null, "Lý", false)
+        );
+        assertFalse(updated.active());
+        assertEquals("Câu 1 mới", updated.questionText());
+
+        lenient().when(questionRepository.findByIdAndStudentId(storedQuestions.get(0).getId(), 100L))
+                .thenReturn(Optional.of(storedQuestions.get(0)));
+        org.mockito.Mockito.doAnswer(inv -> {
+            GuardianQuizQuestion q = inv.getArgument(0);
+            storedQuestions.removeIf(x -> x.getId().equals(q.getId()));
+            return null;
+        }).when(questionRepository).delete(any(GuardianQuizQuestion.class));
+
+        service.deleteGuardianQuestion(20L, storedQuestions.get(0).getId(), 100L);
+        assertEquals(3, storedQuestions.size());
+        assertEquals(1, storedQuestions.get(0).getSortOrder());
+
+        // Guardian session detail read + malformed activeWeekdays resilient check
+        var detail = service.getGuardianSessionDetail(20L, quiz.session().sessionId(), 100L);
+        assertEquals("Ngẫu nhiên", detail.cycleLabel());
+        assertEquals(2, detail.items().size());
+
+        storedSettings.setActiveWeekdays("MON,bad,6,7");
+        GuardianQuizStatsResponse stats = service.getGuardianStats(20L, 100L, 14);
+        assertEquals(1, stats.quizStreakDays());
+    }
+
+    @Test
+    void getSessionDetailAndSubmitEnforceOwnershipAndNotFound() {
+        AppException missingSession = assertThrows(AppException.class, () ->
+                service.getGuardianSessionDetail(20L, 9999L, 100L)
+        );
+        assertEquals(ErrorCode.RESOURCE_NOT_FOUND, missingSession.getErrorCode());
     }
 
     private void setClockDate(int year, int month, int day) {

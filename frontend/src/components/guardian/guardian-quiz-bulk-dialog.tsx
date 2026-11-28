@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +18,7 @@ interface GuardianQuizBulkDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isSubmitting: boolean;
+  resetSignal?: number;
   onSubmit: (questions: CreateQuizQuestionPayload[]) => void;
 }
 
@@ -60,14 +61,28 @@ function parseBulkLines(raw: string): ParsedLineResult {
       errors.push(`Dòng ${index + 1}: câu hỏi và 2 đáp án không được trống.`);
       return;
     }
+    if (questionText.length > 500 || optionA.length > 250 || optionB.length > 250) {
+      errors.push(
+        `Dòng ${index + 1}: nội dung vượt quá giới hạn (câu hỏi <= 500, đáp án <= 250 ký tự).`
+      );
+      return;
+    }
+    if (explanation && explanation.length > 500) {
+      errors.push(`Dòng ${index + 1}: phần giải thích vượt quá 500 ký tự.`);
+      return;
+    }
+    if (topicLabel && topicLabel.length > 80) {
+      errors.push(`Dòng ${index + 1}: chủ đề vượt quá 80 ký tự.`);
+      return;
+    }
 
     questions.push({
-      questionText: questionText.slice(0, 500),
-      optionA: optionA.slice(0, 250),
-      optionB: optionB.slice(0, 250),
+      questionText,
+      optionA,
+      optionB,
       correctOption: upperCorrect as QuizOption,
-      explanation: explanation ? explanation.slice(0, 500) : null,
-      topicLabel: topicLabel ? topicLabel.slice(0, 80) : null,
+      explanation: explanation || null,
+      topicLabel: topicLabel || null,
       active: true,
     });
   });
@@ -83,9 +98,16 @@ export function GuardianQuizBulkDialog({
   open,
   onOpenChange,
   isSubmitting,
+  resetSignal = 0,
   onSubmit,
 }: GuardianQuizBulkDialogProps) {
   const [rawText, setRawText] = useState('');
+
+  useEffect(() => {
+    if (resetSignal > 0) {
+      setRawText('');
+    }
+  }, [resetSignal]);
 
   const parsed = useMemo(() => parseBulkLines(rawText), [rawText]);
 
@@ -94,12 +116,11 @@ export function GuardianQuizBulkDialog({
       return;
     }
     onSubmit(parsed.questions);
-    setRawText('');
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Thêm nhanh nhiều câu hỏi</DialogTitle>
           <DialogDescription>
@@ -118,7 +139,7 @@ export function GuardianQuizBulkDialog({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 text-xs text-brand-strong"
+              className="h-8 text-xs text-brand-strong dark:text-sky-400"
               onClick={() => setRawText(SAMPLE_PLACEHOLDER)}
             >
               Chèn mẫu ví dụ
@@ -131,7 +152,7 @@ export function GuardianQuizBulkDialog({
             value={rawText}
             onChange={(e) => setRawText(e.target.value)}
             placeholder={SAMPLE_PLACEHOLDER}
-            className="w-full rounded-lg border bg-background p-3 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
+            className="w-full rounded-lg border bg-background p-3 font-mono text-base leading-relaxed text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
           />
 
           <div className="flex flex-wrap items-center gap-3 text-xs">

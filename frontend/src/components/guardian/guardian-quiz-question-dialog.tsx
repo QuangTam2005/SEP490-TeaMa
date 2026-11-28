@@ -119,7 +119,7 @@ export function GuardianQuizQuestionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
             {editingQuestion ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới (2 lựa chọn)'}
@@ -140,7 +140,7 @@ export function GuardianQuizQuestionDialog({
               {...register('questionText')}
             />
             {errors.questionText ? (
-              <p className="text-xs text-rose-600">{errors.questionText.message}</p>
+              <p className="text-xs text-rose-600 dark:text-rose-400">{errors.questionText.message}</p>
             ) : null}
           </div>
 
@@ -149,14 +149,14 @@ export function GuardianQuizQuestionDialog({
               <Label htmlFor="quiz-opt-a">Đáp án A *</Label>
               <Input id="quiz-opt-a" placeholder="VD: Library" {...register('optionA')} />
               {errors.optionA ? (
-                <p className="text-xs text-rose-600">{errors.optionA.message}</p>
+                <p className="text-xs text-rose-600 dark:text-rose-400">{errors.optionA.message}</p>
               ) : null}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="quiz-opt-b">Đáp án B *</Label>
               <Input id="quiz-opt-b" placeholder="VD: Bakery" {...register('optionB')} />
               {errors.optionB ? (
-                <p className="text-xs text-rose-600">{errors.optionB.message}</p>
+                <p className="text-xs text-rose-600 dark:text-rose-400">{errors.optionB.message}</p>
               ) : null}
             </div>
           </div>
@@ -197,7 +197,7 @@ export function GuardianQuizQuestionDialog({
                 {...register('topicLabel')}
               />
               {errors.topicLabel ? (
-                <p className="text-xs text-rose-600">{errors.topicLabel.message}</p>
+                <p className="text-xs text-rose-600 dark:text-rose-400">{errors.topicLabel.message}</p>
               ) : null}
             </div>
           </div>
@@ -210,7 +210,7 @@ export function GuardianQuizQuestionDialog({
               {...register('explanation')}
             />
             {errors.explanation ? (
-              <p className="text-xs text-rose-600">{errors.explanation.message}</p>
+              <p className="text-xs text-rose-600 dark:text-rose-400">{errors.explanation.message}</p>
             ) : null}
           </div>
 

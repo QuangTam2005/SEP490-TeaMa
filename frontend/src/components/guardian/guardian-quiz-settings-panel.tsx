@@ -51,6 +51,7 @@ export function GuardianQuizSettingsPanel({
     reset,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -93,12 +94,20 @@ export function GuardianQuizSettingsPanel({
   };
 
   const handleResetCursor = () => {
+    const current = getValues();
+    const parsedPerDay = Number(current.questionsPerDay);
     onSave({
-      enabled: settings.enabled,
-      questionsPerDay: settings.questionsPerDay,
-      activeWeekdays: settings.activeWeekdays,
-      selectionMode: settings.selectionMode,
-      shuffleOptions: settings.shuffleOptions,
+      enabled: current.enabled,
+      questionsPerDay:
+        Number.isFinite(parsedPerDay) && parsedPerDay >= 1 && parsedPerDay <= 50
+          ? Math.trunc(parsedPerDay)
+          : settings.questionsPerDay,
+      activeWeekdays:
+        current.activeWeekdays.length > 0
+          ? current.activeWeekdays
+          : settings.activeWeekdays,
+      selectionMode: current.selectionMode,
+      shuffleOptions: current.shuffleOptions,
       resetCursor: true,
     });
   };
@@ -155,7 +164,7 @@ export function GuardianQuizSettingsPanel({
                 {...register('questionsPerDay')}
               />
               {errors.questionsPerDay ? (
-                <p className="text-xs text-rose-600">
+                <p className="text-xs text-rose-600 dark:text-rose-400">
                   {errors.questionsPerDay.message}
                 </p>
               ) : null}
@@ -221,7 +230,7 @@ export function GuardianQuizSettingsPanel({
               })}
             </div>
             {errors.activeWeekdays ? (
-              <p className="text-xs text-rose-600">
+              <p className="text-xs text-rose-600 dark:text-rose-400">
                 {errors.activeWeekdays.message}
               </p>
             ) : null}

@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ErrorStateCard } from '@/components/shared/error-state-card';
 import { formatViDate } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { quizService } from '@/services';
@@ -33,7 +34,7 @@ export function GuardianQuizSessionDialog({
 
   return (
     <Dialog open={Boolean(sessionId)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[85vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Chi tiết bài trắc nghiệm</DialogTitle>
           <DialogDescription>
@@ -48,6 +49,12 @@ export function GuardianQuizSessionDialog({
             <Loader2 className="h-4 w-4 animate-spin text-brand-strong" />
             <span>Đang tải chi tiết phiên...</span>
           </div>
+        ) : detailQuery.isError ? (
+          <ErrorStateCard
+            error={detailQuery.error}
+            title="Không thể tải chi tiết phiên làm bài"
+            onRetry={() => void detailQuery.refetch()}
+          />
         ) : detailQuery.data ? (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 p-3 text-sm">
@@ -105,7 +112,7 @@ export function GuardianQuizSessionDialog({
                           <div
                             key={opt}
                             className={cn(
-                              'rounded-lg border px-3 py-2 text-xs',
+                              'break-words rounded-lg border px-3 py-2 text-xs [overflow-wrap:anywhere]',
                               isCorrect
                                 ? 'border-emerald-300 bg-emerald-50/70 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200'
                                 : isPicked
@@ -121,7 +128,7 @@ export function GuardianQuizSessionDialog({
                     </div>
 
                     {item.explanation ? (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">
                         Giải thích: {item.explanation}
                       </p>
                     ) : null}

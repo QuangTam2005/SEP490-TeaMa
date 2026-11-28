@@ -153,6 +153,9 @@
 - [x] `[TASK-FEAT.7b]` *(3 SP)* Xây dựng Frontend DTOs/Services (`quiz.service.ts` HTTP + Mock) và cổng trắc nghiệm đầu ngày bắt buộc cho Student (`DailyQuizGate` trong `StudentShell`: làm từng câu -> Đúng/Sai + giải thích ngay -> hoàn thành mở `/student/today`) (`tsc`/`lint`/`build` `14/14` FE routes)
 - [x] `[TASK-FEAT.7c]` *(5 SP)* Xây dựng cổng quản lý Bank câu hỏi, cài đặt hiển thị & trang thống kê `/guardian/quiz` (`GuardianQuizView`, `GuardianQuizSettingsPanel`, `GuardianQuizBankPanel` + Bulk Add, `GuardianQuizStatsPanel` + biểu đồ & chi tiết phiên làm bài) (`120/120` BE tests, `tsc`/`lint`/`build` `15/15` FE routes)
 
+### Task 18 — Kiểm thử toàn diện Back-end & Front-end + Vá lỗi biên *(1 subtask)*
+- [x] `[TASK-FEAT.8a]` *(3 SP)* Kiểm toán toàn diện 2 phía BE + FE và kiểm thử E2E trên trình duyệt: bổ sung `@NotNull` phần tử danh sách trong `BulkCreateQuizQuestionsRequest`/`UpdateTimetableRequest` (`500 -> 400 VAL_001`), khóa `StudentProfile` trước `DailyQuizSession` trong `DailyQuizService.submitStudentAnswer`, bảo vệ `parseWeekdays` trước token lỗi, mở rộng `InMemoryStudyHarness` + `AcceptanceDailyQuizTest` + `DailyQuizServiceTest` (`124/124` BE tests); vá race cache `DailyQuizGate` (`setQueryData` + giữ `pendingFeedback` trên câu cuối), đồng bộ query key `['linked-children']`, trạng thái lỗi/xác nhận xóa trên `GuardianQuizView`/`BulkDialog`/`SessionDialog`/`BankPanel` & kiểm chứng E2E Chromium (`15/15` FE routes)
+
 ---
 
 ## Phase 8: Production Ubuntu VPS Deployment (5-Phase Rollout, Zero Impact on `skillswap-*`)

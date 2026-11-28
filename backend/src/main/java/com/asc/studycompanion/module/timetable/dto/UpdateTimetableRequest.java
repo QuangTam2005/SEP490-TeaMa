@@ -10,6 +10,6 @@ import java.util.List;
  */
 public record UpdateTimetableRequest(
         @NotNull(message = "Danh sách tiết học không được để trống")
-        List<@Valid TimetableEntryDto> entries
+        List<@NotNull(message = "Phần tử tiết học không được để trống") @Valid TimetableEntryDto> entries
 ) {
 }

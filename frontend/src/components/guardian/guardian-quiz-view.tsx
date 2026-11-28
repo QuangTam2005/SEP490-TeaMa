@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ErrorStateCard } from '@/components/shared/error-state-card';
 import { QueryStateBoundary } from '@/components/shared/query-state-boundary';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
 import { GuardianQuizBankPanel } from '@/components/guardian/guardian-quiz-bank-panel';
@@ -51,23 +52,29 @@ export function GuardianQuizView() {
   const [editingQuestion, setEditingQuestion] =
     useState<QuizQuestionResponse | null>(null);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkResetCounter, setBulkResetCounter] = useState(0);
   const [inspectSessionId, setInspectSessionId] = useState<number | null>(null);
 
   const childrenQuery = useQuery({
-    queryKey: ['guardian-children', runtime.resetCounter, runtime.simulatedRole],
+    queryKey: ['linked-children', runtime.resetCounter, runtime.simulatedRole],
     queryFn: () => linkService.getLinkedChildren(),
     enabled: isGuardianReady,
   });
 
   const children = useMemo(() => childrenQuery.data ?? [], [childrenQuery.data]);
   const hasLinkedChildren = children.length > 0;
-  const effectiveStudentId = selectedStudentId ?? children[0]?.studentId ?? null;
+  const isSelectedValid =
+    selectedStudentId !== null &&
+    children.some((c) => c.studentId === selectedStudentId);
+  const effectiveStudentId = isSelectedValid
+    ? selectedStudentId
+    : (children[0]?.studentId ?? null);
 
   useEffect(() => {
-    if (!selectedStudentId && children.length > 0) {
+    if (children.length > 0 && !isSelectedValid) {
       setSelectedStudentId(children[0].studentId);
     }
-  }, [children, selectedStudentId, setSelectedStudentId]);
+  }, [children, isSelectedValid, setSelectedStudentId]);
 
   const settingsQuery = useQuery({
     queryKey: ['guardian-quiz-settings', effectiveStudentId, runtime.resetCounter],
@@ -141,6 +148,7 @@ export function GuardianQuizView() {
     onSuccess: (created) => {
       toast.success(`Đã thêm ${created.length} câu hỏi vào ngân hàng`);
       setBulkDialogOpen(false);
+      setBulkResetCounter((prev) => prev + 1);
       invalidateQuizQueries();
     },
     onError: (err) => toast.error(extractApiErrorMessage(err)),
@@ -196,6 +204,16 @@ export function GuardianQuizView() {
           <span>Đang kiểm tra tài khoản con đã liên kết...</span>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (childrenQuery.isError) {
+    return (
+      <ErrorStateCard
+        error={childrenQuery.error}
+        title="Không thể tải danh sách con đã liên kết"
+        onRetry={() => void childrenQuery.refetch()}
+      />
     );
   }
 
@@ -329,35 +347,46 @@ export function GuardianQuizView() {
             error={questionsQuery.error}
             onRetry={() => void questionsQuery.refetch()}
           >
-            {(questions) =>
-              settingsQuery.data ? (
-                <GuardianQuizBankPanel
-                  questions={questions}
-                  settings={settingsQuery.data}
-                  isBusy={
-                    saveQuestionMutation.isPending ||
-                    bulkCreateMutation.isPending ||
-                    toggleActiveMutation.isPending ||
-                    moveMutation.isPending ||
-                    deleteMutation.isPending
+            {(questions) => (
+              <GuardianQuizBankPanel
+                questions={questions}
+                settings={
+                  settingsQuery.data ?? {
+                    studentId: effectiveStudentId ?? 0,
+                    enabled: false,
+                    questionsPerDay: 10,
+                    activeWeekdays: [1, 2, 3, 4, 5, 6, 7],
+                    selectionMode: 'SEQUENTIAL_ROTATION',
+                    shuffleOptions: false,
+                    rotationCursor: 0,
+                    totalQuestionCount: questions.length,
+                    activeQuestionCount: questions.filter((q) => q.active).length,
+                    nextBatchLabel: '',
                   }
-                  onAddSingle={() => {
-                    setEditingQuestion(null);
-                    setQuestionDialogOpen(true);
-                  }}
-                  onAddBulk={() => setBulkDialogOpen(true)}
-                  onEdit={(q) => {
-                    setEditingQuestion(q);
-                    setQuestionDialogOpen(true);
-                  }}
-                  onToggleActive={(q) => toggleActiveMutation.mutate(q)}
-                  onMove={(questionId, direction) =>
-                    moveMutation.mutate({ questionId, direction })
-                  }
-                  onDelete={(questionId) => deleteMutation.mutate(questionId)}
-                />
-              ) : null
-            }
+                }
+                isBusy={
+                  saveQuestionMutation.isPending ||
+                  bulkCreateMutation.isPending ||
+                  toggleActiveMutation.isPending ||
+                  moveMutation.isPending ||
+                  deleteMutation.isPending
+                }
+                onAddSingle={() => {
+                  setEditingQuestion(null);
+                  setQuestionDialogOpen(true);
+                }}
+                onAddBulk={() => setBulkDialogOpen(true)}
+                onEdit={(q) => {
+                  setEditingQuestion(q);
+                  setQuestionDialogOpen(true);
+                }}
+                onToggleActive={(q) => toggleActiveMutation.mutate(q)}
+                onMove={(questionId, direction) =>
+                  moveMutation.mutate({ questionId, direction })
+                }
+                onDelete={(questionId) => deleteMutation.mutate(questionId)}
+              />
+            )}
           </QueryStateBoundary>
         </div>
       )}
@@ -376,6 +405,7 @@ export function GuardianQuizView() {
         open={bulkDialogOpen}
         onOpenChange={setBulkDialogOpen}
         isSubmitting={bulkCreateMutation.isPending}
+        resetSignal={bulkResetCounter}
         onSubmit={(questions) => bulkCreateMutation.mutate(questions)}
       />
 

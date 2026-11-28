@@ -268,6 +268,14 @@ export const quizMockService: QuizService = {
         errorCode: 'SYS_409',
       });
     }
+    const firstUnanswered = session.items.find((i) => i.selectedOption === null);
+    if (firstUnanswered && firstUnanswered.id !== item.id) {
+      throw new ApiClientError({
+        message: 'Vui lòng trả lời lần lượt từng câu hỏi',
+        status: 400,
+        errorCode: 'SYS_400',
+      });
+    }
 
     const correct = payload.selectedOption === item.correctOption;
     item.selectedOption = payload.selectedOption;

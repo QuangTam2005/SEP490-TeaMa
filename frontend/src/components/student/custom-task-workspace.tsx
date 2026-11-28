@@ -110,7 +110,7 @@ export function CustomTaskWorkspace({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <FolderUp className="h-5 w-5 text-brand-strong" />
+              <FolderUp className="h-5 w-5 text-brand-strong dark:text-sky-400" />
               {hasDriveFolder
                 ? 'Nhiệm vụ từ Phụ huynh & Nộp bài Google Drive'
                 : 'Nhiệm vụ từ Phụ huynh'}
@@ -118,7 +118,7 @@ export function CustomTaskWorkspace({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2 rounded-xl border border-brand/25 bg-brand-soft/30 p-4">
-              <p className="text-sm font-semibold text-foreground">
+              <p className="break-words text-sm font-semibold text-foreground [overflow-wrap:anywhere]">
                 {task.customTaskTitle}
               </p>
               {task.customTaskDescription ? (

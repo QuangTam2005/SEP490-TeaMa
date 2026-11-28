@@ -51,6 +51,7 @@ export function GuardianQuizBankPanel({
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PAUSED'>(
     'ALL'
   );
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   // Map active question ID -> 1-based active index & rotation batch number (1-10 -> Lô 1, 11-20 -> Lô 2...)
   const activeBatchMap = useMemo(() => {
@@ -248,7 +249,7 @@ export function GuardianQuizBankPanel({
                         disabled={isBusy || originalIndex <= 0}
                         onClick={() => onMove(q.id, 'UP')}
                         aria-label="Đưa lên"
-                        className="h-9 w-9"
+                        className="h-10 w-10 sm:h-9 sm:w-9"
                       >
                         <ArrowUp className="h-4 w-4" strokeWidth={1.75} />
                       </Button>
@@ -259,7 +260,7 @@ export function GuardianQuizBankPanel({
                         disabled={isBusy || originalIndex >= questions.length - 1}
                         onClick={() => onMove(q.id, 'DOWN')}
                         aria-label="Đưa xuống"
-                        className="h-9 w-9"
+                        className="h-10 w-10 sm:h-9 sm:w-9"
                       >
                         <ArrowDown className="h-4 w-4" strokeWidth={1.75} />
                       </Button>
@@ -271,7 +272,7 @@ export function GuardianQuizBankPanel({
                         onClick={() => onToggleActive(q)}
                         aria-label={q.active ? 'Tạm tắt câu hỏi' : 'Bật lại câu hỏi'}
                         title={q.active ? 'Tạm tắt câu hỏi' : 'Bật lại câu hỏi'}
-                        className="h-9 w-9"
+                        className="h-10 w-10 sm:h-9 sm:w-9"
                       >
                         {q.active ? (
                           <Eye className="h-4 w-4" strokeWidth={1.75} />
@@ -286,21 +287,49 @@ export function GuardianQuizBankPanel({
                         disabled={isBusy}
                         onClick={() => onEdit(q)}
                         aria-label="Sửa câu hỏi"
-                        className="h-9 w-9"
+                        className="h-10 w-10 sm:h-9 sm:w-9"
                       >
                         <Edit3 className="h-4 w-4" strokeWidth={1.75} />
                       </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        disabled={isBusy}
-                        onClick={() => onDelete(q.id)}
-                        aria-label="Xóa câu hỏi"
-                        className="h-9 w-9 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400"
-                      >
-                        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                      </Button>
+                      {confirmDeleteId === q.id ? (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            disabled={isBusy}
+                            onClick={() => {
+                              setConfirmDeleteId(null);
+                              onDelete(q.id);
+                            }}
+                            className="h-10 px-2.5 text-xs sm:h-9"
+                          >
+                            Xác nhận xóa
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={isBusy}
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="h-10 px-2 text-xs sm:h-9"
+                          >
+                            Hủy
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          disabled={isBusy}
+                          onClick={() => setConfirmDeleteId(q.id)}
+                          aria-label="Xóa câu hỏi"
+                          className="h-10 w-10 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 sm:h-9 sm:w-9"
+                        >
+                          <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

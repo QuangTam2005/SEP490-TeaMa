@@ -12,6 +12,17 @@ import com.asc.studycompanion.module.ai.repository.EvaluationJobRepository;
 import com.asc.studycompanion.module.ai.repository.KnowledgeCacheRepository;
 import com.asc.studycompanion.module.guardian.controller.GuardianController;
 import com.asc.studycompanion.module.guardian.service.GuardianService;
+import com.asc.studycompanion.module.quiz.controller.GuardianQuizController;
+import com.asc.studycompanion.module.quiz.controller.StudentDailyQuizController;
+import com.asc.studycompanion.module.quiz.entity.DailyQuizSession;
+import com.asc.studycompanion.module.quiz.entity.DailyQuizSessionItem;
+import com.asc.studycompanion.module.quiz.entity.DailyQuizSettings;
+import com.asc.studycompanion.module.quiz.entity.GuardianQuizQuestion;
+import com.asc.studycompanion.module.quiz.repository.DailyQuizSessionItemRepository;
+import com.asc.studycompanion.module.quiz.repository.DailyQuizSessionRepository;
+import com.asc.studycompanion.module.quiz.repository.DailyQuizSettingsRepository;
+import com.asc.studycompanion.module.quiz.repository.GuardianQuizQuestionRepository;
+import com.asc.studycompanion.module.quiz.service.DailyQuizService;
 import com.asc.studycompanion.module.auth.controller.AuthController;
 import com.asc.studycompanion.module.auth.controller.LinkController;
 import com.asc.studycompanion.module.auth.controller.StudentProfileController;
@@ -105,6 +116,10 @@ final class InMemoryStudyHarness {
     final List<AIEvaluation> evaluations = new ArrayList<>();
     final List<AIUsageLog> usageLogs = new ArrayList<>();
     final List<KnowledgeCache> knowledgeCaches = new ArrayList<>();
+    final List<DailyQuizSettings> quizSettings = new ArrayList<>();
+    final List<GuardianQuizQuestion> quizQuestions = new ArrayList<>();
+    final List<DailyQuizSession> quizSessions = new ArrayList<>();
+    final List<DailyQuizSessionItem> quizSessionItems = new ArrayList<>();
 
     final UserRepository userRepository = mock(UserRepository.class);
     final StudentProfileRepository studentProfileRepository = mock(StudentProfileRepository.class);
@@ -118,6 +133,10 @@ final class InMemoryStudyHarness {
     final AIEvaluationRepository aiEvaluationRepository = mock(AIEvaluationRepository.class);
     final AIUsageLogRepository aiUsageLogRepository = mock(AIUsageLogRepository.class);
     final KnowledgeCacheRepository knowledgeCacheRepository = mock(KnowledgeCacheRepository.class);
+    final DailyQuizSettingsRepository dailyQuizSettingsRepository = mock(DailyQuizSettingsRepository.class);
+    final GuardianQuizQuestionRepository guardianQuizQuestionRepository = mock(GuardianQuizQuestionRepository.class);
+    final DailyQuizSessionRepository dailyQuizSessionRepository = mock(DailyQuizSessionRepository.class);
+    final DailyQuizSessionItemRepository dailyQuizSessionItemRepository = mock(DailyQuizSessionItemRepository.class);
 
     final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
     final JwtProperties jwtProperties;
@@ -133,6 +152,7 @@ final class InMemoryStudyHarness {
     final StudyTaskService studyTaskService;
     final StudySubmissionService studySubmissionService;
     final GuardianService guardianService;
+    final DailyQuizService dailyQuizService;
     final ObjectMapper objectMapper;
     final MockMvc mockMvc;
 
@@ -221,6 +241,17 @@ final class InMemoryStudyHarness {
         if (fixedClock != null) {
             guardianService.setClock(fixedClock);
         }
+        dailyQuizService = new DailyQuizService(
+                studyAccessGuard,
+                userRepository,
+                dailyQuizSettingsRepository,
+                guardianQuizQuestionRepository,
+                dailyQuizSessionRepository,
+                dailyQuizSessionItemRepository
+        );
+        if (fixedClock != null) {
+            dailyQuizService.setClock(fixedClock);
+        }
 
         objectMapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
@@ -235,7 +266,9 @@ final class InMemoryStudyHarness {
                 new StudyPlanController(studyPlanService),
                 new StudyTaskController(studyTaskService, studySubmissionService),
                 new StudySubmissionController(studySubmissionService),
-                new GuardianController(guardianService)
+                new GuardianController(guardianService),
+                new GuardianQuizController(dailyQuizService),
+                new StudentDailyQuizController(dailyQuizService)
         ));
         controllers.addAll(List.of(extraControllers));
 
@@ -557,6 +590,155 @@ final class InMemoryStudyHarness {
             return knowledgeCaches.stream().filter(c -> key.equals(c.getCacheKey())).findFirst();
         });
         lenient().when(knowledgeCacheRepository.save(any(KnowledgeCache.class))).thenAnswer(inv -> persistKnowledgeCache(inv.getArgument(0)));
+
+        // DailyQuizSettings
+        lenient().when(dailyQuizSettingsRepository.findByStudentId(anyLong())).thenAnswer(inv -> {
+            Long sId = inv.getArgument(0);
+            return quizSettings.stream().filter(s -> Objects.equals(s.getStudent().getId(), sId)).findFirst();
+        });
+        lenient().when(dailyQuizSettingsRepository.save(any(DailyQuizSettings.class))).thenAnswer(inv -> {
+            DailyQuizSettings s = inv.getArgument(0);
+            if (s.getId() == null) s.setId(seq.incrementAndGet());
+            if (s.getCreatedAt() == null) s.setCreatedAt(Instant.now());
+            s.setUpdatedAt(Instant.now());
+            quizSettings.removeIf(x -> Objects.equals(x.getId(), s.getId()));
+            quizSettings.add(s);
+            return s;
+        });
+
+        // GuardianQuizQuestions
+        lenient().when(guardianQuizQuestionRepository.findByStudentIdOrderBySortOrderAscIdAsc(anyLong())).thenAnswer(inv -> {
+            Long sId = inv.getArgument(0);
+            return quizQuestions.stream()
+                    .filter(q -> Objects.equals(q.getStudent().getId(), sId))
+                    .sorted(Comparator.comparingInt(GuardianQuizQuestion::getSortOrder).thenComparingLong(GuardianQuizQuestion::getId))
+                    .toList();
+        });
+        lenient().when(guardianQuizQuestionRepository.findByStudentIdAndActiveTrueOrderBySortOrderAscIdAsc(anyLong())).thenAnswer(inv -> {
+            Long sId = inv.getArgument(0);
+            return quizQuestions.stream()
+                    .filter(q -> Objects.equals(q.getStudent().getId(), sId) && q.isActive())
+                    .sorted(Comparator.comparingInt(GuardianQuizQuestion::getSortOrder).thenComparingLong(GuardianQuizQuestion::getId))
+                    .toList();
+        });
+        lenient().when(guardianQuizQuestionRepository.findByIdAndStudentId(anyLong(), anyLong())).thenAnswer(inv -> {
+            Long id = inv.getArgument(0);
+            Long sId = inv.getArgument(1);
+            return quizQuestions.stream()
+                    .filter(q -> Objects.equals(q.getId(), id) && Objects.equals(q.getStudent().getId(), sId))
+                    .findFirst();
+        });
+        lenient().when(guardianQuizQuestionRepository.countByStudentId(anyLong())).thenAnswer(inv -> {
+            Long sId = inv.getArgument(0);
+            return quizQuestions.stream().filter(q -> Objects.equals(q.getStudent().getId(), sId)).count();
+        });
+        lenient().when(guardianQuizQuestionRepository.countByStudentIdAndActiveTrue(anyLong())).thenAnswer(inv -> {
+            Long sId = inv.getArgument(0);
+            return quizQuestions.stream().filter(q -> Objects.equals(q.getStudent().getId(), sId) && q.isActive()).count();
+        });
+        lenient().when(guardianQuizQuestionRepository.save(any(GuardianQuizQuestion.class))).thenAnswer(inv -> persistQuizQuestion(inv.getArgument(0)));
+        lenient().when(guardianQuizQuestionRepository.saveAll(any())).thenAnswer(inv -> {
+            Iterable<GuardianQuizQuestion> items = inv.getArgument(0);
+            List<GuardianQuizQuestion> saved = new ArrayList<>();
+            items.forEach(item -> saved.add(persistQuizQuestion(item)));
+            return saved;
+        });
+        org.mockito.Mockito.lenient().doAnswer(inv -> {
+            GuardianQuizQuestion q = inv.getArgument(0);
+            quizQuestions.removeIf(x -> Objects.equals(x.getId(), q.getId()));
+            quizSessionItems.stream()
+                    .filter(item -> Objects.equals(item.getQuestionId(), q.getId()))
+                    .forEach(item -> item.setQuestionId(null));
+            return null;
+        }).when(guardianQuizQuestionRepository).delete(any(GuardianQuizQuestion.class));
+
+        // DailyQuizSessions
+        lenient().when(dailyQuizSessionRepository.findByStudentIdAndSessionDate(anyLong(), any(LocalDate.class))).thenAnswer(inv -> {
+            Long sId = inv.getArgument(0);
+            LocalDate date = inv.getArgument(1);
+            return quizSessions.stream()
+                    .filter(s -> Objects.equals(s.getStudent().getId(), sId) && Objects.equals(s.getSessionDate(), date))
+                    .findFirst();
+        });
+        lenient().when(dailyQuizSessionRepository.findByIdAndStudentId(anyLong(), anyLong())).thenAnswer(inv -> {
+            Long id = inv.getArgument(0);
+            Long sId = inv.getArgument(1);
+            return quizSessions.stream()
+                    .filter(s -> Objects.equals(s.getId(), id) && Objects.equals(s.getStudent().getId(), sId))
+                    .findFirst();
+        });
+        lenient().when(dailyQuizSessionRepository.findByIdForUpdate(anyLong())).thenAnswer(inv -> {
+            Long id = inv.getArgument(0);
+            return quizSessions.stream().filter(s -> Objects.equals(s.getId(), id)).findFirst();
+        });
+        lenient().when(dailyQuizSessionRepository.findByStudentIdOrderBySessionDateDesc(anyLong())).thenAnswer(inv -> {
+            Long sId = inv.getArgument(0);
+            return quizSessions.stream()
+                    .filter(s -> Objects.equals(s.getStudent().getId(), sId))
+                    .sorted(Comparator.comparing(DailyQuizSession::getSessionDate).reversed())
+                    .toList();
+        });
+        lenient().when(dailyQuizSessionRepository.findByStudentIdAndSessionDateBetweenOrderBySessionDateDesc(
+                anyLong(), any(LocalDate.class), any(LocalDate.class))).thenAnswer(inv -> {
+            Long sId = inv.getArgument(0);
+            LocalDate from = inv.getArgument(1);
+            LocalDate to = inv.getArgument(2);
+            return quizSessions.stream()
+                    .filter(s -> Objects.equals(s.getStudent().getId(), sId)
+                            && !s.getSessionDate().isBefore(from)
+                            && !s.getSessionDate().isAfter(to))
+                    .sorted(Comparator.comparing(DailyQuizSession::getSessionDate).reversed())
+                    .toList();
+        });
+        lenient().when(dailyQuizSessionRepository.save(any(DailyQuizSession.class))).thenAnswer(inv -> {
+            DailyQuizSession s = inv.getArgument(0);
+            if (s.getId() == null) s.setId(seq.incrementAndGet());
+            if (s.getCreatedAt() == null) s.setCreatedAt(Instant.now());
+            s.setUpdatedAt(Instant.now());
+            if (s.getItems() != null) {
+                for (DailyQuizSessionItem item : s.getItems()) {
+                    if (item.getId() == null) item.setId(seq.incrementAndGet());
+                    quizSessionItems.removeIf(x -> Objects.equals(x.getId(), item.getId()));
+                    quizSessionItems.add(item);
+                }
+            }
+            quizSessions.removeIf(x -> Objects.equals(x.getId(), s.getId()));
+            quizSessions.add(s);
+            return s;
+        });
+
+        // DailyQuizSessionItems
+        lenient().when(dailyQuizSessionItemRepository.findBySessionIdOrderByItemOrderAsc(anyLong())).thenAnswer(inv -> {
+            Long sessionId = inv.getArgument(0);
+            return quizSessionItems.stream()
+                    .filter(i -> Objects.equals(i.getSession().getId(), sessionId))
+                    .sorted(Comparator.comparingInt(DailyQuizSessionItem::getItemOrder))
+                    .toList();
+        });
+        lenient().when(dailyQuizSessionItemRepository.findBySessionIdInOrderBySessionIdAscItemOrderAsc(org.mockito.ArgumentMatchers.anyList())).thenAnswer(inv -> {
+            Collection<Long> ids = inv.getArgument(0);
+            return quizSessionItems.stream()
+                    .filter(i -> ids.contains(i.getSession().getId()))
+                    .sorted(Comparator.comparingLong((DailyQuizSessionItem i) -> i.getSession().getId())
+                            .thenComparingInt(DailyQuizSessionItem::getItemOrder))
+                    .toList();
+        });
+        lenient().when(dailyQuizSessionItemRepository.save(any(DailyQuizSessionItem.class))).thenAnswer(inv -> {
+            DailyQuizSessionItem item = inv.getArgument(0);
+            if (item.getId() == null) item.setId(seq.incrementAndGet());
+            quizSessionItems.removeIf(x -> Objects.equals(x.getId(), item.getId()));
+            quizSessionItems.add(item);
+            return item;
+        });
+    }
+
+    private GuardianQuizQuestion persistQuizQuestion(GuardianQuizQuestion q) {
+        if (q.getId() == null) q.setId(seq.incrementAndGet());
+        if (q.getCreatedAt() == null) q.setCreatedAt(Instant.now());
+        q.setUpdatedAt(Instant.now());
+        quizQuestions.removeIf(x -> Objects.equals(x.getId(), q.getId()));
+        quizQuestions.add(q);
+        return q;
     }
 
     private User persistUser(User user) {

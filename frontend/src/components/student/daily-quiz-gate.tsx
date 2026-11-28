@@ -16,11 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { extractApiErrorMessage } from '@/components/shared/form-error-utils';
 import { cn } from '@/lib/utils';
-import { quizService } from '@/services';
+import { IS_MOCK_MODE, quizService } from '@/services';
 import { useAuthStore } from '@/store/auth-store';
 import type {
   QuizOption,
   StudentDailyQuizItemResponse,
+  StudentDailyQuizResponse,
   SubmitDailyQuizAnswerResponse,
 } from '@/types';
 
@@ -37,7 +38,10 @@ export function DailyQuizGate({ children }: DailyQuizGateProps) {
   const queryClient = useQueryClient();
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const user = useAuthStore((state) => state.user);
-  const isStudent = isHydrated && user?.role === 'STUDENT';
+  const isStudent = IS_MOCK_MODE
+    ? user?.role !== 'GUARDIAN'
+    : isHydrated && user?.role === 'STUDENT';
+  const quizQueryKey = ['student-daily-quiz', user?.id ?? null] as const;
 
   const [pendingFeedback, setPendingFeedback] =
     useState<PendingFeedbackState | null>(null);
@@ -45,7 +49,7 @@ export function DailyQuizGate({ children }: DailyQuizGateProps) {
     useState<SubmitDailyQuizAnswerResponse | null>(null);
 
   const quizQuery = useQuery({
-    queryKey: ['student-daily-quiz'],
+    queryKey: quizQueryKey,
     queryFn: () => quizService.getTodayQuiz(),
     enabled: isStudent,
   });
@@ -62,11 +66,42 @@ export function DailyQuizGate({ children }: DailyQuizGateProps) {
     }) =>
       quizService.submitStudentAnswer(sessionId, item.id, { selectedOption }),
     onSuccess: (result, variables) => {
+      // Immediately patch cache synchronously so clicking "Câu tiếp theo" or "Vào bài học hôm nay"
+      // never flashes the just-answered question or allows a stale double-submit 409.
+      queryClient.setQueryData<StudentDailyQuizResponse>(quizQueryKey, (prev) => {
+        if (!prev?.session) {
+          return prev;
+        }
+        return {
+          ...prev,
+          gateLocked: result.gateLocked,
+          session: {
+            ...prev.session,
+            status: result.sessionStatus,
+            answeredCount: result.answeredCount,
+            correctCount: result.correctCount,
+            accuracyPercent: result.accuracyPercent,
+            completedAt: result.completedAt,
+            items: prev.session.items.map((item) =>
+              item.id === variables.item.id
+                ? {
+                    ...item,
+                    selectedOption: result.selectedOption,
+                    correctOption: result.correctOption,
+                    correct: result.correct,
+                    explanation: result.explanation,
+                    answeredAt: new Date().toISOString(),
+                  }
+                : item
+            ),
+          },
+        };
+      });
       setPendingFeedback({ item: variables.item, result });
     },
     onError: (err) => {
       toast.error(extractApiErrorMessage(err));
-      void queryClient.invalidateQueries({ queryKey: ['student-daily-quiz'] });
+      void queryClient.invalidateQueries({ queryKey: quizQueryKey });
     },
   });
 
@@ -145,7 +180,7 @@ export function DailyQuizGate({ children }: DailyQuizGateProps) {
                 setCompletionSummary(null);
                 setPendingFeedback(null);
                 void queryClient.invalidateQueries({
-                  queryKey: ['student-daily-quiz'],
+                  queryKey: quizQueryKey,
                 });
               }}
             >
@@ -161,7 +196,7 @@ export function DailyQuizGate({ children }: DailyQuizGateProps) {
   const data = quizQuery.data;
   const session = data?.session;
 
-  if (!data?.gateLocked || !session) {
+  if (!session || (!pendingFeedback && !data?.gateLocked)) {
     return <>{children}</>;
   }
 
@@ -182,7 +217,7 @@ export function DailyQuizGate({ children }: DailyQuizGateProps) {
     (currentAnswered * 100) / Math.max(1, session.totalQuestions)
   );
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (!feedback) {
       return;
     }
@@ -192,7 +227,6 @@ export function DailyQuizGate({ children }: DailyQuizGateProps) {
       return;
     }
     setPendingFeedback(null);
-    await queryClient.invalidateQueries({ queryKey: ['student-daily-quiz'] });
   };
 
   return (
