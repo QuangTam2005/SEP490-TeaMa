@@ -29,7 +29,7 @@ import { SkipRequestDialog } from '@/components/student/skip-request-dialog';
 import { formatViDate } from '@/lib/study-utils';
 import { cn } from '@/lib/utils';
 import { useMockRuntime } from '@/mocks/mock-runtime';
-import { studyService } from '@/services';
+import { quizService, studyService } from '@/services';
 import type { StudyTaskSummaryResponse } from '@/types';
 
 function TaskActionButton({
@@ -329,6 +329,11 @@ export function NextDayPlanView() {
     queryFn: () => studyService.getStreak(),
   });
 
+  const dailyQuizQuery = useQuery({
+    queryKey: ['student-daily-quiz'],
+    queryFn: () => quizService.getTodayQuiz(),
+  });
+
   const invalidateSkipRelatedQueries = () => {
     void queryClient.invalidateQueries({ queryKey: ['next-day-plan'] });
     void queryClient.invalidateQueries({ queryKey: ['student-task'] });
@@ -434,6 +439,15 @@ export function NextDayPlanView() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
+                  {dailyQuizQuery.data?.session?.status === 'COMPLETED' ? (
+                    <div className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3.5 py-2 text-sm font-semibold text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-200">
+                      <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" strokeWidth={1.75} />
+                      <span>
+                        Quiz: {dailyQuizQuery.data.session.correctCount}/{dailyQuizQuery.data.session.totalQuestions} đúng
+                      </span>
+                    </div>
+                  ) : null}
+
                   <div
                     className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/70 px-3.5 py-2 text-sm font-semibold text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200"
                     title={`Kỷ lục dài nhất: ${streakQuery.data?.longestStreak ?? 0} ngày`}

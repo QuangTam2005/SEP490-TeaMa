@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BrandLogo } from '@/components/shared/brand-logo';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { DailyQuizGate } from '@/components/student/daily-quiz-gate';
 import { useAuthStore } from '@/store/auth-store';
 import { useGuardianStore } from '@/store/guardian-store';
 import { cn } from '@/lib/utils';
@@ -230,7 +231,7 @@ export function StudentShell({ children }: StudentShellProps) {
         id="student-main-content"
         className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-12"
       >
-        {children}
+        <DailyQuizGate>{children}</DailyQuizGate>
       </main>
     </div>
   );

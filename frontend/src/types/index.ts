@@ -4,3 +4,4 @@ export * from './timetable';
 export * from './ai';
 export * from './study';
 export * from './guardian';
+export * from './quiz';

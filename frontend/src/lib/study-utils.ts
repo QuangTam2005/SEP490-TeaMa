@@ -82,19 +82,32 @@ export function getSubjectName(code: SubjectCode): string {
   return ALL_SUBJECTS.find((s) => s.code === code)?.name ?? code;
 }
 
+function formatLocalIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getNowInVietnam(): Date {
+  const now = new Date();
+  return new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+}
+
+/**
+ * Returns today's ISO date string (YYYY-MM-DD) in Asia/Ho_Chi_Minh timezone.
+ */
+export function getTodayDateIso(): string {
+  return formatLocalIsoDate(getNowInVietnam());
+}
+
 /**
  * Returns tomorrow's ISO date string (YYYY-MM-DD) in Asia/Ho_Chi_Minh timezone.
  */
 export function getNextTargetDateIso(): string {
-  const now = new Date();
-  const vnNow = new Date(
-    now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })
-  );
+  const vnNow = getNowInVietnam();
   vnNow.setDate(vnNow.getDate() + 1);
-  const year = vnNow.getFullYear();
-  const month = String(vnNow.getMonth() + 1).padStart(2, '0');
-  const day = String(vnNow.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return formatLocalIsoDate(vnNow);
 }
 
 export function getWeekdayFromIsoDate(isoDate: string): Weekday {
