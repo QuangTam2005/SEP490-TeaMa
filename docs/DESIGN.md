@@ -62,6 +62,10 @@
 12. **`ai_usage_logs`**: `id`, `job_id`, `provider VARCHAR(50)`, `model VARCHAR(80)`, `input_tokens INT`, `output_tokens INT`, `search_count INT`, `cache_hit BOOLEAN`, `estimated_cost_usd NUMERIC(10,6)`, `latency_ms INT`, `status VARCHAR(30)`, `error_code VARCHAR(50)`, `created_at`.
 13. **`knowledge_cache`**: `id`, `cache_key VARCHAR(255) UNIQUE`, `grade INT NOT NULL CHECK (grade BETWEEN 1 AND 12)`, `subject_code VARCHAR(20)`, `normalized_lesson_title VARCHAR(255)`, `sources_json JSONB`, `cache_allowed BOOLEAN`, `policy_version VARCHAR(20)`, `created_at`, `expires_at TIMESTAMPTZ`.
 14. **`evaluation_jobs`**: `id`, `submission_id UNIQUE REFERENCES study_submissions(id)`, `idempotency_key VARCHAR(64) UNIQUE`, `status VARCHAR(30)` (`PENDING` | `RUNNING` | `SUCCEEDED` | `FAILED`), `attempts INT DEFAULT 0`, `max_attempts INT DEFAULT 3`, `next_retry_at TIMESTAMPTZ`, `last_error TEXT`, `created_at`, `updated_at`.
+15. **`daily_quiz_settings`**: `id`, `student_id UNIQUE REFERENCES student_profiles(id)`, `enabled BOOLEAN`, `questions_per_day INT DEFAULT 10`, `active_weekdays VARCHAR(20)`, `selection_mode VARCHAR(30)` (`SEQUENTIAL_ROTATION` | `RANDOM`), `shuffle_options BOOLEAN`, `rotation_cursor INT`, `updated_by_user_id`, `created_at`, `updated_at`.
+16. **`guardian_quiz_questions`**: `id`, `student_id REFERENCES student_profiles(id)`, `sort_order INT`, `question_text VARCHAR(500)`, `option_a VARCHAR(250)`, `option_b VARCHAR(250)`, `correct_option VARCHAR(10)` (`A` | `B`), `explanation VARCHAR(500)`, `topic_label VARCHAR(80)`, `is_active BOOLEAN`, `created_by_user_id`, `created_at`, `updated_at`.
+17. **`daily_quiz_sessions`**: `id`, `student_id REFERENCES student_profiles(id)`, `session_date DATE`, `status VARCHAR(20)` (`IN_PROGRESS` | `COMPLETED`), `total_questions`, `answered_count`, `correct_count`, `cycle_start_index`, `cycle_end_index`, `started_at`, `completed_at`, `UNIQUE (student_id, session_date)`.
+18. **`daily_quiz_session_items`**: `id`, `session_id REFERENCES daily_quiz_sessions(id)`, `question_id REFERENCES guardian_quiz_questions(id) ON DELETE SET NULL`, `item_order`, `question_text`, `display_option_a`, `display_option_b`, `correct_display_option`, `explanation`, `topic_label`, `selected_option`, `is_correct`, `answered_at`, `UNIQUE (session_id, item_order)`.
 
 ---
 
@@ -99,3 +103,14 @@
 | `POST / DELETE` | `/api/guardian/tasks/{taskId}/custom-task` | Giao nhiệm vụ thay thế kèm link thư mục Google Drive tùy chọn (hoặc gỡ về `STANDARD_AI` trước khi nộp) | `GUARDIAN` (Linked) |
 | `POST` | `/api/guardian/tasks/{taskId}/custom-task/verify` | Phụ huynh xác nhận đạt (`EVALUATED`) hoặc nhắc làm lại (`IN_PROGRESS`) sau khi xem Drive | `GUARDIAN` (Linked) |
 | `GET` | `/api/guardian/submissions/{submissionId}` | Chi tiết bài viết gốc bất biến, lịch sử phiên bản, kết quả AI & nguồn tham khảo | `GUARDIAN` (Linked) |
+
+### 4. Daily Guardian Quiz & Statistics (`STUDENT` & `GUARDIAN`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/student/daily-quiz/today` | Lấy trạng thái & phiên trắc nghiệm 2 lựa chọn hôm nay (`Asia/Ho_Chi_Minh`, tự khởi tạo theo lô xoay vòng/ngẫu nhiên, ẩn đáp án chưa chọn) | `STUDENT` |
+| `POST` | `/api/student/daily-quiz/sessions/{sessionId}/items/{itemId}/answer` | Nộp đáp án từng câu (`A`/`B`), trả kết quả đúng/sai + giải thích ngay lập tức, mở cổng khi hoàn thành đủ câu | `STUDENT` (Owner) |
+| `GET / PUT` | `/api/guardian/quiz/settings` | Xem / cập nhật cấu hình quiz đầu ngày (bật/tắt, số câu/ngày, ngày trong tuần `1..7`, chế độ bóc câu, xáo A/B, đặt lại con trỏ) | `GUARDIAN` (Linked) |
+| `GET / POST` | `/api/guardian/quiz/questions` | Danh sách / thêm câu hỏi 2 lựa chọn vào bank của con (`POST /bulk` hỗ trợ thêm nhanh tối đa 100 câu) | `GUARDIAN` (Linked) |
+| `PUT / DELETE` | `/api/guardian/quiz/questions/{questionId}` | Sửa / bật-tắt / xóa câu hỏi (`POST .../move` đổi thứ tự lên/xuống) | `GUARDIAN` (Linked) |
+| `GET` | `/api/guardian/quiz/stats` | Thống kê tổng quan (`days` mặc định 30 ngày), tiến độ từng ngày, chuỗi ngày & top câu con hay trả lời sai | `GUARDIAN` (Linked) |
+| `GET` | `/api/guardian/quiz/sessions/{sessionId}` | Chi tiết từng câu đã làm trong một phiên trắc nghiệm của con | `GUARDIAN` (Linked) |

@@ -141,4 +141,19 @@ class FlywayMigrationSchemaTest {
         assertTrue(sql.contains("study_tasks_assignment_mode_check"));
         assertTrue(sql.contains("'STANDARD_AI', 'CUSTOM_DRIVE'"));
     }
+
+    @Test
+    void v9MigrationCreatesDailyQuizTablesAndConstraints() throws IOException {
+        ClassPathResource resource = new ClassPathResource("db/migration/V9__daily_guardian_quiz.sql");
+        assertTrue(resource.exists(), "V9 migration must exist on classpath");
+
+        String sql = resource.getContentAsString(StandardCharsets.UTF_8);
+        assertTrue(sql.contains("CREATE TABLE daily_quiz_settings"));
+        assertTrue(sql.contains("CREATE TABLE guardian_quiz_questions"));
+        assertTrue(sql.contains("CREATE TABLE daily_quiz_sessions"));
+        assertTrue(sql.contains("CREATE TABLE daily_quiz_session_items"));
+        assertTrue(sql.contains("SEQUENTIAL_ROTATION"));
+        assertTrue(sql.contains("uq_daily_quiz_sessions_student_date"));
+        assertTrue(sql.contains("uq_daily_quiz_session_items_order"));
+    }
 }
